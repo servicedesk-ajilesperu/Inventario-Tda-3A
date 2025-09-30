@@ -9,19 +9,65 @@
 *{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
 body,html{height:100%;width:100%;}
 .hidden{display:none;}
-/* Sidebar */
-.sidebar{width:260px;position:fixed;height:100%;overflow:hidden;background:#0f62fe;color:white;display:flex;flex-direction:column;gap:12px;padding:20px;transition:width 0.3s;}
+#app{display:flex;height:100vh;width:100vw;}
+.sidebar{
+    width:260px;
+    transition: width 0.3s ease, padding 0.3s ease, left 0.3s ease;
+    position:fixed;height:100%;overflow-y:auto;
+    background:#0f62fe;color:white;display:flex;flex-direction:column;gap:12px;padding:20px;
+    left: 0;
+}
 .sidebar.collapsed{width:60px;padding:20px 5px;}
-.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.15rem;position:relative;}
-#toggleSidebar{position:absolute; right:10px; top:10px; background:#0f62fe; color:white; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; z-index:1000;}
-.menu-section .accordion{background:transparent;color:white;border:none;padding:10px;width:100%;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;border-radius:8px;transition:0.2s;position:relative;}
-.menu-section .accordion:hover{background: rgba(255,255,255,0.1);}
+.brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    font-size:1.15rem;
+    position:relative;
+}
+#toggleSidebar{
+    position:absolute;
+    right:10px;
+    top:10px;
+    background:#0f62fe;
+    color:white;
+    border:none;
+    border-radius:6px;
+    padding:4px 8px;
+    cursor:pointer;
+    z-index:1000;
+}
+.menu-section button{
+    background:transparent;
+    color:white;
+    border:none;
+    padding:10px;
+    width:100%;
+    cursor:pointer;
+    font-weight:600;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-radius:8px;
+    transition:0.2s;
+    position:relative;
+    gap: 10px;
+}
+.menu-section button:hover{background: rgba(255,255,255,0.1);}
+.menu-section button i:first-child {margin-right: auto;}
+.menu-section button i:last-child {margin-left: auto;}
 .menu-section .panel{display:flex;flex-direction:column;padding-left:10px;gap:6px;overflow:hidden;max-height:0;transition:max-height 0.3s ease;}
 .menu-section .accordion.active + .panel{max-height:500px;}
 .menu-section .panel button{padding:6px 10px;font-size:0.9rem;text-align:left;background:rgba(255,255,255,0.05);border:none;border-radius:6px;color:white;cursor:pointer;display:flex;align-items:center;gap:6px;position:relative;}
 .menu-section .panel button:hover{background: rgba(255,255,255,0.15);}
-.sidebar.collapsed .brand span,.sidebar.collapsed .panel button span,.sidebar.collapsed .accordion span,.sidebar.collapsed .menu-section button span { display: none; }
-.sidebar.collapsed .panel button::after,.sidebar.collapsed .accordion::after,.sidebar.collapsed .menu-section button::after{
+.sidebar.collapsed .brand span,
+.sidebar.collapsed .menu-section button span,
+.sidebar.collapsed .panel button span {display: none;}
+.sidebar.collapsed .accordion i:last-child {display: none;}
+.sidebar.collapsed .menu-section button::after,
+.sidebar.collapsed .panel button::after,
+.sidebar.collapsed .accordion::after {
   content: attr(title);
   position: absolute;
   left: 70px;
@@ -34,10 +80,19 @@ body,html{height:100%;width:100%;}
   font-size: 0.8rem;
   z-index:1000;
 }
-.sidebar.collapsed .panel button:hover::after,.sidebar.collapsed .accordion:hover::after,.sidebar.collapsed .menu-section button:hover::after{ display: block; }
-.main{flex:1;margin-left:260px;transition:margin-left 0.3s;display:flex;flex-direction:column;height:100vh;}
+.sidebar.collapsed .menu-section button:hover::after,
+.sidebar.collapsed .panel button:hover::after,
+.sidebar.collapsed .accordion:hover::after {display: block;}
+.main{
+    flex:1;
+    margin-left:260px;
+    transition:margin-left 0.3s, transform 0.3s;
+    display:flex;flex-direction:column;height:100vh;
+}
 .sidebar.collapsed ~ .main{margin-left:60px;}
-header.appbar{height:64px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:0 2px 8px rgba(15,98,254,0.06);position:sticky;top:0;z-index:10;}
+header.appbar{
+    height:64px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:0 2px 8px rgba(15,98,254,0.06);position:sticky;top:0;z-index:10;
+}
 .app-title{font-weight:700;color:#0f62fe;}
 .counter{background:linear-gradient(90deg, rgba(15,98,254,0.08), rgba(255,77,0,0.06));padding:8px 12px;border-radius:999px;font-weight:600;display:flex;gap:10px;align-items:center;font-size:0.95rem;}
 .content{padding:20px;height:calc(100vh - 64px);overflow:auto;display:flex;flex-direction:column;gap:18px;}
@@ -58,20 +113,51 @@ tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical
 .btn-edit:hover{background:#ffa500;}
 .btn-del{background:#ff6b6b;color:white;}
 .btn-del:hover{background:#ff3b3b;}
+.btn-export{background:#42b72a;color:white;}
+.btn-export:hover{background:#2d8c1a;}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:50;}
 .modal{background:white;padding:20px;border-radius:12px;width:400px;max-width:95%;}
 .search-input{margin-bottom:10px;padding:6px;border-radius:6px;border:1px solid #ccc;width:300px;}
-@media(max-width:768px){.sidebar{left:-260px;position:fixed}.sidebar.collapsed{left:0}.main{margin-left:0}}
+@media (max-width: 768px) {
+    .sidebar {width: 260px; left: -260px; padding: 15px; box-shadow: 2px 0 5px rgba(0,0,0,0.2);}
+    .sidebar.collapsed {left: 0; width: 260px; padding: 20px;}
+    .main {margin-left: 0; transform: translateX(0);}
+    .sidebar.collapsed ~ .main {transform: translateX(260px); margin-left: 0;}
+    #toggleSidebar {left: 10px; right: auto;}
+    .brand {justify-content: flex-start;}
+    .brand span {display: inline !important;}
+    .sidebar.collapsed .brand span {display: inline;}
+    .sidebar.collapsed #toggleSidebar {right: 10px; left: auto;}
+    .sidebar:not(.collapsed) .menu-section button span, .sidebar:not(.collapsed) .brand span {display: none;}
+    .sidebar:not(.collapsed) .menu-section button i:first-child {margin-right: 0;}
+    .cards {flex-direction: column; gap: 10px;}
+    .card {width: 100%; min-width: unset;}
+    table, thead, tbody, th, td, tr {display: block;}
+    thead tr {position: absolute; top: -9999px; left: -9999px;}
+    tr { border: 1px solid #edf0f5; margin-bottom: 5px; }
+    td {border: none; border-bottom: 1px solid #eee; position: relative; padding-left: 50%; text-align: right;}
+    td:before {position: absolute; left: 6px; content: attr(data-label); font-weight: bold; text-align: left;}
+    .actions {display: flex; justify-content: flex-end; align-items: center; padding-top: 10px;}
+    .search-input {width: 100%;}
+}
 </style>
 </head>
 <body>
-
 <div id="app">
   <aside class="sidebar">
-    <div class="brand"><i class="fa-solid fa-boxes-stacked"></i><span>Inventario</span><button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button></div>
-    
-    <div class="menu-section"><button title="Dashboard" onclick="nav('dashboard')"><i class="fa-solid fa-house"></i><span>Dashboard</span></button></div>
-    
+    <div class="brand">
+      <i class="fa-solid fa-boxes-stacked"></i>
+      <span>Inventario</span>
+      <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
+    </div>
+
+    <div class="menu-section">
+      <button title="Dashboard" onclick="nav('dashboard')">
+        <i class="fa-solid fa-house"></i>
+        <span>Dashboard</span>
+      </button>
+    </div>
+
     <div class="menu-section">
       <button class="accordion" title="Equipos"><i class="fa-solid fa-computer"></i> <span>Equipos</span> <i class="fa-solid fa-chevron-down"></i></button>
       <div class="panel">
@@ -80,7 +166,7 @@ tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical
         <button title="Exportar Inventario" onclick="exportExcel()"><i class="fa-solid fa-file-excel"></i> <span>Exportar</span></button>
       </div>
     </div>
-    
+
     <div class="menu-section">
       <button class="accordion" title="Categorías"><i class="fa-solid fa-tags"></i> <span>Categorías</span> <i class="fa-solid fa-chevron-down"></i></button>
       <div class="panel">
@@ -88,7 +174,7 @@ tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical
         <button title="Agregar categoría" onclick="openCategoryModal()"><i class="fa-solid fa-plus"></i> <span>Agregar categoría</span></button>
       </div>
     </div>
-    
+
     <div class="menu-section">
       <button class="accordion" title="Tiendas"><i class="fa-solid fa-store"></i> <span>Tiendas</span> <i class="fa-solid fa-chevron-down"></i></button>
       <div class="panel">
@@ -99,11 +185,13 @@ tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical
   </aside>
 
   <div class="main">
-    <header class="appbar"><div class="app-title">Inventario Tiendas 3A</div><div class="counter" id="header-counter">Total: 0</div></header>
+    <header class="appbar">
+      <div class="app-title">Inventario Tiendas 3A</div>
+      <div class="counter" id="header-counter">Total: 0</div>
+    </header>
     <main class="content" id="main-content"></main>
   </div>
 
-  <!-- Modal Agregar/Editar Equipo -->
   <div class="modal-backdrop" id="modal">
     <div class="modal">
       <h3 id="modalTitle">Agregar Equipo</h3>
@@ -123,7 +211,6 @@ tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical
     </div>
   </div>
 
-  <!-- Modal Agregar/Editar Categoría/Tienda -->
   <div class="modal-backdrop" id="modal-category-store">
     <div class="modal">
       <h3 id="modalCategoryStoreTitle"></h3>
@@ -137,97 +224,92 @@ tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical
 </div>
 
 <script>
-// URL de Google Apps Script
 const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec';
 
-let inventario=[], categorias=[], tiendas=[], state={view:'dashboard'}, editIdx=null, categoryOrStore='';
+let inventario = [], categorias = [], tiendas = [], state = { view: 'dashboard' }, editIdx = null, categoryOrStore='';
 
-// --- Inicialización ---
-window.onload=function(){ initApp(); }
+window.onload = initApp;
+
 async function initApp(){
-  await loadAllData();
-  document.querySelectorAll('.accordion').forEach(a=>a.addEventListener('click',function(){this.classList.toggle('active'); let p=this.nextElementSibling; if(p){p.style.maxHeight=p.style.maxHeight?'0':p.scrollHeight+'px';}}));
-  document.getElementById('toggleSidebar').addEventListener('click',()=>document.querySelector('.sidebar').classList.toggle('collapsed'));
-  render();
+    await loadAllData();
+    document.querySelectorAll('.accordion').forEach(a=>{
+        a.addEventListener('click',function(){
+            this.classList.toggle('active');
+            let p = this.nextElementSibling;
+            if (p) {p.style.maxHeight = p.style.maxHeight ? null : p.scrollHeight+'px';}
+        });
+    });
+    const sidebar=document.querySelector('.sidebar');
+    document.getElementById('toggleSidebar').addEventListener('click', ()=>{sidebar.classList.toggle('collapsed');});
+    render();
 }
 
-// --- Fetch/POST/PUT/DELETE ---
-async function fetchData(sheet){ 
-  const res = await fetch(GAS_WEB_APP_URL+'?action=get&sheet='+sheet); 
-  return await res.json(); 
-}
+async function fetchData(sheet){return await fetch(`${GAS_WEB_APP_URL}?sheet=${sheet}`).then(r=>r.json()).then(d=>d.error?[]:d);}
+async function postData(sheet,item){return await fetch(`${GAS_WEB_APP_URL}?sheet=${sheet}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(item)}).then(r=>r.json()).then(d=>d.data?d.data:null);}
+async function putData(sheet,idCol,idValue,fields){return await fetch(`${GAS_WEB_APP_URL}?sheet=${sheet}&idCol=${idCol}&idValue=${idValue}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)}).then(r=>r.json()).then(d=>d.updated?true:false);}
+async function deleteData(sheet,idCol,idValue){return await fetch(`${GAS_WEB_APP_URL}?sheet=${sheet}&idCol=${idCol}&idValue=${idValue}`,{method:'DELETE'}).then(r=>r.json()).then(d=>d.success?true:false);}
 
-async function postData(sheet,data){ 
-  await fetch(GAS_WEB_APP_URL,{method:'POST',body:JSON.stringify({action:'add',sheet:sheet,data:data})});
-}
-
-async function updateData(sheet,index,data){ 
-  await fetch(GAS_WEB_APP_URL,{method:'POST',body:JSON.stringify({action:'update',sheet:sheet,index:index,data:data})});
-}
-
-async function deleteData(sheet,index){ 
-  await fetch(GAS_WEB_APP_URL,{method:'POST',body:JSON.stringify({action:'delete',sheet:sheet,index:index})});
-}
-
-// --- Cargar todo ---
 async function loadAllData(){
-  inventario = await fetchData('Inventario');
-  categorias = await fetchData('Categorias');
-  tiendas = await fetchData('Tiendas');
+    inventario=await fetchData('Inventario');
+    categorias=(await fetchData('Categorias')).map(i=>i.Nombre).filter(n=>n);
+    tiendas=(await fetchData('Tiendas')).map(i=>i.Nombre).filter(n=>n);
+    updateCounter();
 }
 
-// --- Navegación ---
-function nav(view){ state.view=view; render(); }
+function nav(v){state.view=v;render();}
 
-// --- Render ---
-function render(){
-  const main = document.getElementById('main-content');
-  main.innerHTML='';
-  if(state.view==='dashboard'){
-    main.innerHTML=`<h3>Dashboard</h3>
-    <div class="cards">
-      <div class="card" onclick="nav('list')"><i class="fa-solid fa-computer"></i><div class="card-title">Equipos</div><div class="card-count">${inventario.length}</div></div>
-      <div class="card" onclick="showCategories()"><i class="fa-solid fa-tags"></i><div class="card-title">Categorías</div><div class="card-count">${categorias.length}</div></div>
-      <div class="card" onclick="showStores()"><i class="fa-solid fa-store"></i><div class="card-title">Tiendas</div><div class="card-count">${tiendas.length}</div></div>
-    </div>`;
-  } else if(state.view==='list'){
-    main.innerHTML=`<input class="search-input" placeholder="Buscar..." oninput="filterTable(this.value)"/>
-      <table id="inventario-table"><thead><tr><th>ID</th><th>Código</th><th>Serie</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Categoria</th><th>Tienda</th><th>Acciones</th></tr></thead><tbody>${inventario.map((i,idx)=>`<tr>
-        <td>${idx+1}</td><td>${i.codigo}</td><td>${i.serie}</td><td>${i.equipo}</td><td>${i.marca}</td><td>${i.modelo}</td><td>${i.categoria}</td><td>${i.tienda}</td>
-        <td class="actions"><button class="btn-edit" onclick="editItem(${idx})"><i class="fa-solid fa-pen"></i></button>
-        <button class="btn-del" onclick="removeItem(${idx})"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')}</tbody></table>`;
-  }
-  updateCounter();
+async function openModal(item=null){
+    const cat=document.getElementById('f_categoria'); cat.innerHTML='<option value="">Seleccione Categoría</option>'; categorias.forEach(c=>{const o=document.createElement('option');o.value=c;o.innerText=c;cat.appendChild(o);});
+    const t=document.getElementById('f_tienda'); t.innerHTML='<option value="">Seleccione Tienda</option>'; tiendas.forEach(s=>{const o=document.createElement('option');o.value=s;o.innerText=s;t.appendChild(o);});
+    if(item){editIdx=item.Código;document.getElementById('modalTitle').innerText='Editar Equipo';document.getElementById('f_codigo').value=item.Código;document.getElementById('f_codigo').disabled=true;document.getElementById('f_serie').value=item.Serie;document.getElementById('f_equipo').value=item.Equipo;document.getElementById('f_marca').value=item.Marca;document.getElementById('f_modelo').value=item.Modelo;document.getElementById('f_categoria').value=item.Categoria;document.getElementById('f_tienda').value=item.Tienda;} else {editIdx=null;document.getElementById('modalTitle').innerText='Agregar Equipo';document.getElementById('f_codigo').disabled=false;document.querySelectorAll('#modal input, #modal select').forEach(i=>i.value='');}
+    document.getElementById('modal').style.display='flex';
 }
-
-// --- Contador ---
-function updateCounter(){ document.getElementById('header-counter').innerText='Total: '+inventario.length; }
-
-// --- Filtrar tabla ---
-function filterTable(q){ const table=document.getElementById('inventario-table'); if(!table) return; table.querySelectorAll('tbody tr').forEach(tr=>{tr.style.display=tr.innerText.toLowerCase().includes(q.toLowerCase())?'':'none';}); }
-
-// --- Modal Equipo ---
-function openModal(){ editIdx=null; document.getElementById('modalTitle').innerText='Agregar Equipo'; document.getElementById('f_codigo').value=''; document.getElementById('f_serie').value=''; document.getElementById('f_equipo').value=''; document.getElementById('f_marca').value=''; document.getElementById('f_modelo').value=''; fillSelect('f_categoria',categorias); fillSelect('f_tienda',tiendas); document.getElementById('modal').style.display='flex';}
-function closeModal(){ document.getElementById('modal').style.display='none'; }
-function fillSelect(id,arr){ const sel=document.getElementById(id); sel.innerHTML=''; arr.forEach(e=>{const opt=document.createElement('option'); opt.value=e.nombre||e.tienda; opt.text=e.nombre||e.tienda; sel.add(opt);});}
+function closeModal(){document.getElementById('modal').style.display='none';}
 async function saveFromModal(){
-  const data={codigo:document.getElementById('f_codigo').value, serie:document.getElementById('f_serie').value, equipo:document.getElementById('f_equipo').value, marca:document.getElementById('f_marca').value, modelo:document.getElementById('f_modelo').value, categoria:document.getElementById('f_categoria').value, tienda:document.getElementById('f_tienda').value};
-  if(editIdx!==null){ await updateData('Inventario',editIdx,data);} else { await postData('Inventario',data);}
-  await loadAllData(); closeModal(); render();
+    const item={Código:document.getElementById('f_codigo').value,Serie:document.getElementById('f_serie').value,Equipo:document.getElementById('f_equipo').value,Marca:document.getElementById('f_marca').value,Modelo:document.getElementById('f_modelo').value,Categoria:document.getElementById('f_categoria').value,Tienda:document.getElementById('f_tienda').value};
+    if(!item.Código || !item.Serie || !item.Equipo){alert('Código, Serie y Equipo son obligatorios');return;}
+    if(editIdx){await putData('Inventario','Código',editIdx,item);} else {await postData('Inventario',item);}
+    await loadAllData(); closeModal(); render();
 }
-function editItem(idx){ editIdx=idx; const i=inventario[idx]; document.getElementById('modalTitle').innerText='Editar Equipo'; document.getElementById('f_codigo').value=i.codigo; document.getElementById('f_serie').value=i.serie; document.getElementById('f_equipo').value=i.equipo; document.getElementById('f_marca').value=i.marca; document.getElementById('f_modelo').value=i.modelo; fillSelect('f_categoria',categorias); document.getElementById('f_categoria').value=i.categoria; fillSelect('f_tienda',tiendas); document.getElementById('f_tienda').value=i.tienda; document.getElementById('modal').style.display='flex'; }
-async function removeItem(idx){ if(confirm('Eliminar equipo?')){ await deleteData('Inventario',idx); await loadAllData(); render(); }}
 
-// --- Modal Categoría/Tienda ---
-function openCategoryModal(){ categoryOrStore='Categorias'; document.getElementById('modalCategoryStoreTitle').innerText='Agregar Categoría'; document.getElementById('f_category_store_name').value=''; document.getElementById('modal-category-store').style.display='flex'; }
-function openStoreModal(){ categoryOrStore='Tiendas'; document.getElementById('modalCategoryStoreTitle').innerText='Agregar Tienda'; document.getElementById('f_category_store_name').value=''; document.getElementById('modal-category-store').style.display='flex'; }
-function closeCategoryStoreModal(){ document.getElementById('modal-category-store').style.display='none'; }
-async function saveCategoryStore(){ const name=document.getElementById('f_category_store_name').value; if(!name) return alert('Ingrese nombre'); await postData(categoryOrStore,{nombre:name}); await loadAllData(); closeCategoryStoreModal(); render(); }
-function showCategories(){ state.view='categories'; const main=document.getElementById('main-content'); main.innerHTML='<h3>Categorías</h3><ul>'+categorias.map(c=>`<li>${c.nombre}</li>`).join('')+'</ul>'; }
-function showStores(){ state.view='stores'; const main=document.getElementById('main-content'); main.innerHTML='<h3>Tiendas</h3><ul>'+tiendas.map(t=>`<li>${t.tienda}</li>`).join('')+'</ul>'; }
+function updateCounter(){document.getElementById('header-counter').innerText=`Total: ${inventario.length}`;}
 
-// --- Export CSV ---
-function exportExcel(){ let csv='Código,Serie,Equipo,Marca,Modelo,Categoria,Tienda\n'; inventario.forEach(i=>csv+=`${i.codigo},${i.serie},${i.equipo},${i.marca},${i.modelo},${i.categoria},${i.tienda}\n`); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='inventario.csv'; a.click(); URL.revokeObjectURL(url);}
+function render(){
+    const mc=document.getElementById('main-content'); mc.innerHTML='';
+    if(state.view==='dashboard'){
+        const cards=['Inventario','Categorias','Tiendas'].map(name=>{
+            const icon=name==='Inventario'?'fa-computer':name==='Categorias'?'fa-tags':'fa-store';
+            const count=name==='Inventario'?inventario.length:name==='Categorias'?categorias.length:tiendas.length;
+            const c=document.createElement('div'); c.className='card'; c.innerHTML=`<i class="fa-solid ${icon}"></i><div class="card-title">${name}</div><div class="card-count">${count} items</div>`; mc.appendChild(c);
+        });
+    } else if(state.view==='list'){
+        const search=`<input class="search-input" placeholder="Buscar por Código, Equipo..." oninput="filterTable(this.value)"/>`;
+        const t=document.createElement('table'); t.id='inventory-table';
+        const th=`<thead><tr>${Object.keys(inventario[0]||{}).map(k=>`<th>${k}</th>`).join('')}<th>Acciones</th></tr></thead>`;
+        const tbody=`<tbody>${inventario.map((i,idx)=>`<tr>${Object.keys(i).map(k=>`<td data-label="${k}">${i[k]}</td>`).join('')}<td class="actions"><button class="btn-edit" onclick='openModal(${JSON.stringify(i)})'><i class="fa-solid fa-pen"></i></button><button class="btn-del" onclick='delItem("${i.Código}")'><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')}</tbody>`;
+        t.innerHTML=th+tbody;
+        mc.innerHTML=search; mc.appendChild(t);
+    }
+}
+
+function filterTable(q){
+    const rows=document.querySelectorAll('#inventory-table tbody tr'); rows.forEach(r=>{r.style.display=Array.from(r.querySelectorAll('td')).some(td=>td.innerText.toLowerCase().includes(q.toLowerCase()))?'':'none';});
+}
+
+async function delItem(codigo){if(confirm('¿Eliminar este equipo?')){await deleteData('Inventario','Código',codigo);await loadAllData();render();}}
+
+function exportExcel(){const data=inventario.map(i=>Object.values(i).join('\t')).join('\n');const blob=new Blob([Object.keys(inventario[0]||{}).join('\t')+'\n'+data],{type:'text/tab-separated-values'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='inventario.tsv';a.click();URL.revokeObjectURL(url);}
+
+function openCategoryModal(){categoryOrStore='category';document.getElementById('modalCategoryStoreTitle').innerText='Agregar Categoría';document.getElementById('f_category_store_name').value='';document.getElementById('modal-category-store').style.display='flex';}
+function openStoreModal(){categoryOrStore='store';document.getElementById('modalCategoryStoreTitle').innerText='Agregar Tienda';document.getElementById('f_category_store_name').value='';document.getElementById('modal-category-store').style.display='flex';}
+function closeCategoryStoreModal(){document.getElementById('modal-category-store').style.display='none';}
+async function saveCategoryStore(){
+    const name=document.getElementById('f_category_store_name').value.trim(); if(!name){alert('Nombre requerido');return;}
+    if(categoryOrStore==='category'){await postData('Categorias',{Nombre:name});} else {await postData('Tiendas',{Nombre:name});}
+    await loadAllData(); closeCategoryStoreModal(); render();
+}
+async function showCategories(){state.view='list';inventario=categorias.map(c=>({Nombre:c}));render();}
+async function showStores(){state.view='list';inventario=tiendas.map(t=>({Nombre:t}));render();}
 </script>
 </body>
 </html>
