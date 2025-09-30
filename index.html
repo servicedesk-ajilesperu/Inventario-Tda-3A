@@ -6,93 +6,22 @@
 <title>Inventario Tiendas 3A</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
-/* Estilos CSS (Sin cambios mayores aquí respecto a la última versión para responsividad y estilo) */
 *{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
 body,html{height:100%;width:100%;}
 .hidden{display:none;}
-
-/* App Inventario */
-#app{display:flex;height:100vh;width:100vw;}
 /* Sidebar */
-.sidebar{
-    width:260px;
-    transition: width 0.3s ease, padding 0.3s ease, left 0.3s ease;
-    position:fixed;height:100%;overflow-y:auto;
-    background:#0f62fe;color:white;display:flex;flex-direction:column;gap:12px;padding:20px;
-    left: 0;
-}
+.sidebar{width:260px;position:fixed;height:100%;overflow:hidden;background:#0f62fe;color:white;display:flex;flex-direction:column;gap:12px;padding:20px;transition:width 0.3s;}
 .sidebar.collapsed{width:60px;padding:20px 5px;}
-.brand{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-weight:700;
-    font-size:1.15rem;
-    position:relative;
-}
-#toggleSidebar{
-    position:absolute;
-    right:10px;
-    top:10px;
-    background:#0f62fe;
-    color:white;
-    border:none;
-    border-radius:6px;
-    padding:4px 8px;
-    cursor:pointer;
-    z-index:1000;
-}
-
-/* Estilo general para todos los botones dentro de .menu-section */
-.menu-section button{
-    background:transparent;
-    color:white;
-    border:none;
-    padding:10px;
-    width:100%;
-    cursor:pointer;
-    font-weight:600;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    border-radius:8px;
-    transition:0.2s;
-    position:relative;
-    gap: 10px;
-}
-.menu-section button:hover{background: rgba(255,255,255,0.1);}
-
-/* Alineación específica para elementos que no son el icono de chevron */
-.menu-section button i:first-child {
-    margin-right: auto;
-}
-.menu-section button i:last-child {
-    margin-left: auto;
-}
-
-
-/* Panel para sub-menús (el dashboard no tiene, pero otros sí) */
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.15rem;position:relative;}
+#toggleSidebar{position:absolute; right:10px; top:10px; background:#0f62fe; color:white; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; z-index:1000;}
+.menu-section .accordion{background:transparent;color:white;border:none;padding:10px;width:100%;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;border-radius:8px;transition:0.2s;position:relative;}
+.menu-section .accordion:hover{background: rgba(255,255,255,0.1);}
 .menu-section .panel{display:flex;flex-direction:column;padding-left:10px;gap:6px;overflow:hidden;max-height:0;transition:max-height 0.3s ease;}
 .menu-section .accordion.active + .panel{max-height:500px;}
 .menu-section .panel button{padding:6px 10px;font-size:0.9rem;text-align:left;background:rgba(255,255,255,0.05);border:none;border-radius:6px;color:white;cursor:pointer;display:flex;align-items:center;gap:6px;position:relative;}
 .menu-section .panel button:hover{background: rgba(255,255,255,0.15);}
-
-/* Oculta solo los span de los botones y acordeones */
-.sidebar.collapsed .brand span,
-.sidebar.collapsed .menu-section button span,
-.sidebar.collapsed .panel button span {
-  display: none;
-}
-/* Asegura que la flecha del acordeón se oculte también al colapsar */
-.sidebar.collapsed .accordion i:last-child {
-    display: none;
-}
-
-
-/* Tooltips al colapsar */
-.sidebar.collapsed .menu-section button::after,
-.sidebar.collapsed .panel button::after,
-.sidebar.collapsed .accordion::after {
+.sidebar.collapsed .brand span,.sidebar.collapsed .panel button span,.sidebar.collapsed .accordion span,.sidebar.collapsed .menu-section button span { display: none; }
+.sidebar.collapsed .panel button::after,.sidebar.collapsed .accordion::after,.sidebar.collapsed .menu-section button::after{
   content: attr(title);
   position: absolute;
   left: 70px;
@@ -105,23 +34,10 @@ body,html{height:100%;width:100%;}
   font-size: 0.8rem;
   z-index:1000;
 }
-.sidebar.collapsed .menu-section button:hover::after,
-.sidebar.collapsed .panel button:hover::after,
-.sidebar.collapsed .accordion:hover::after {
-  display: block;
-}
-
-/* Main content area */
-.main{
-    flex:1;
-    margin-left:260px;
-    transition:margin-left 0.3s, transform 0.3s;
-    display:flex;flex-direction:column;height:100vh;
-}
+.sidebar.collapsed .panel button:hover::after,.sidebar.collapsed .accordion:hover::after,.sidebar.collapsed .menu-section button:hover::after{ display: block; }
+.main{flex:1;margin-left:260px;transition:margin-left 0.3s;display:flex;flex-direction:column;height:100vh;}
 .sidebar.collapsed ~ .main{margin-left:60px;}
-header.appbar{
-    height:64px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:0 2px 8px rgba(15,98,254,0.06);position:sticky;top:0;z-index:10;
-}
+header.appbar{height:64px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:0 2px 8px rgba(15,98,254,0.06);position:sticky;top:0;z-index:10;}
 .app-title{font-weight:700;color:#0f62fe;}
 .counter{background:linear-gradient(90deg, rgba(15,98,254,0.08), rgba(255,77,0,0.06));padding:8px 12px;border-radius:999px;font-weight:600;display:flex;gap:10px;align-items:center;font-size:0.95rem;}
 .content{padding:20px;height:calc(100vh - 64px);overflow:auto;display:flex;flex-direction:column;gap:18px;}
@@ -131,7 +47,6 @@ header.appbar{
 .card i{font-size:24px;color:#0f62fe;}
 .card .card-title{font-weight:700;font-size:1.2rem;}
 .card .card-count{font-size:0.9rem;color:#555;}
-
 input, select{padding:6px;border-radius:6px;border:1px solid #ccc;width:100%;}
 button.btn-save{background:#0f62fe;color:white;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
 button.btn-cancel{background:#ccc;color:black;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
@@ -143,120 +58,20 @@ tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical
 .btn-edit:hover{background:#ffa500;}
 .btn-del{background:#ff6b6b;color:white;}
 .btn-del:hover{background:#ff3b3b;}
-.btn-export{background:#42b72a;color:white;}
-.btn-export:hover{background:#2d8c1a;}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:50;}
 .modal{background:white;padding:20px;border-radius:12px;width:400px;max-width:95%;}
 .search-input{margin-bottom:10px;padding:6px;border-radius:6px;border:1px solid #ccc;width:300px;}
-
-/* Estilos responsivos */
-@media (max-width: 768px) {
-    .sidebar {
-        width: 260px;
-        left: -260px;
-        padding: 15px;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-    }
-    .sidebar.collapsed {
-        left: 0;
-        width: 260px;
-        padding: 20px;
-    }
-    .main {
-        margin-left: 0;
-        transform: translateX(0);
-    }
-    .sidebar.collapsed ~ .main {
-        transform: translateX(260px);
-        margin-left: 0;
-    }
-    #toggleSidebar {
-        left: 10px;
-        right: auto;
-    }
-    .brand {
-        justify-content: flex-start;
-    }
-    .brand span {
-        display: inline !important;
-    }
-    .sidebar.collapsed .brand span {
-         display: inline;
-    }
-    .sidebar.collapsed #toggleSidebar {
-        right: 10px;
-        left: auto;
-    }
-
-    .sidebar:not(.collapsed) .menu-section button span,
-    .sidebar:not(.collapsed) .brand span {
-        display: none;
-    }
-    .sidebar:not(.collapsed) .menu-section button i:first-child {
-        margin-right: 0;
-    }
-
-    .cards {
-        flex-direction: column;
-        gap: 10px;
-    }
-    .card {
-        width: 100%;
-        min-width: unset;
-    }
-
-    table, thead, tbody, th, td, tr {
-        display: block;
-    }
-    thead tr {
-        position: absolute;
-        top: -9999px;
-        left: -9999px;
-    }
-    tr { border: 1px solid #edf0f5; margin-bottom: 5px; }
-    td {
-        border: none;
-        border-bottom: 1px solid #eee;
-        position: relative;
-        padding-left: 50%;
-        text-align: right;
-    }
-    td:before {
-        position: absolute;
-        left: 6px;
-        content: attr(data-label);
-        font-weight: bold;
-        text-align: left;
-    }
-    .actions {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        padding-top: 10px;
-    }
-    .search-input {
-        width: 100%;
-    }
-}
+@media(max-width:768px){.sidebar{left:-260px;position:fixed}.sidebar.collapsed{left:0}.main{margin-left:0}}
 </style>
 </head>
 <body>
 
 <div id="app">
   <aside class="sidebar">
-    <div class="brand">
-      <i class="fa-solid fa-boxes-stacked"></i>
-      <span>Inventario</span>
-      <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
-    </div>
-
-    <div class="menu-section">
-      <button title="Dashboard" onclick="nav('dashboard')">
-        <i class="fa-solid fa-house"></i>
-        <span>Dashboard</span>
-        </button>
-      </div>
-
+    <div class="brand"><i class="fa-solid fa-boxes-stacked"></i><span>Inventario</span><button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button></div>
+    
+    <div class="menu-section"><button title="Dashboard" onclick="nav('dashboard')"><i class="fa-solid fa-house"></i><span>Dashboard</span></button></div>
+    
     <div class="menu-section">
       <button class="accordion" title="Equipos"><i class="fa-solid fa-computer"></i> <span>Equipos</span> <i class="fa-solid fa-chevron-down"></i></button>
       <div class="panel">
@@ -265,7 +80,7 @@ tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical
         <button title="Exportar Inventario" onclick="exportExcel()"><i class="fa-solid fa-file-excel"></i> <span>Exportar</span></button>
       </div>
     </div>
-
+    
     <div class="menu-section">
       <button class="accordion" title="Categorías"><i class="fa-solid fa-tags"></i> <span>Categorías</span> <i class="fa-solid fa-chevron-down"></i></button>
       <div class="panel">
@@ -273,7 +88,7 @@ tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical
         <button title="Agregar categoría" onclick="openCategoryModal()"><i class="fa-solid fa-plus"></i> <span>Agregar categoría</span></button>
       </div>
     </div>
-
+    
     <div class="menu-section">
       <button class="accordion" title="Tiendas"><i class="fa-solid fa-store"></i> <span>Tiendas</span> <i class="fa-solid fa-chevron-down"></i></button>
       <div class="panel">
@@ -284,13 +99,11 @@ tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical
   </aside>
 
   <div class="main">
-    <header class="appbar">
-      <div class="app-title">Inventario Tiendas 3A</div>
-      <div class="counter" id="header-counter">Total: 0</div>
-    </header>
+    <header class="appbar"><div class="app-title">Inventario Tiendas 3A</div><div class="counter" id="header-counter">Total: 0</div></header>
     <main class="content" id="main-content"></main>
   </div>
 
+  <!-- Modal Agregar/Editar Equipo -->
   <div class="modal-backdrop" id="modal">
     <div class="modal">
       <h3 id="modalTitle">Agregar Equipo</h3>
@@ -310,6 +123,7 @@ tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical
     </div>
   </div>
 
+  <!-- Modal Agregar/Editar Categoría/Tienda -->
   <div class="modal-backdrop" id="modal-category-store">
     <div class="modal">
       <h3 id="modalCategoryStoreTitle"></h3>
@@ -323,477 +137,97 @@ tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical
 </div>
 
 <script>
-// --- APP INVENTARIO ---
-// ¡YA REEMPLAZADO CON TU URL!
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwzK3-sGbTObe9xwIxc-bhWD5u10aTaHcMs4ofogmIH7u6oS_slybff34AU9ph3IM4kvw/exec';
+// URL de Google Apps Script
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec';
 
-let inventario = [];
-let categorias = [];
-let tiendas = [];
-let state = { view: 'dashboard' };
-let editIdx = null; // Para edición en el array local (ahora index del item por su ID de GS)
-let categoryOrStore = ''; // Para saber si estamos agregando categoría o tienda
+let inventario=[], categorias=[], tiendas=[], state={view:'dashboard'}, editIdx=null, categoryOrStore='';
 
-window.onload = function() {
-  initApp();
-};
-
+// --- Inicialización ---
+window.onload=function(){ initApp(); }
 async function initApp(){
-    await loadAllData(); // Cargar datos al inicio
-    document.querySelectorAll('.accordion').forEach(a=>{
-        a.addEventListener('click',function(){
-            if (this.title === 'Dashboard') {
-                nav('dashboard');
-                return;
-            }
-            this.classList.toggle('active');
-            let p = this.nextElementSibling;
-            if (p) {
-                if (p.style.maxHeight) {
-                    p.style.maxHeight = null;
-                } else {
-                    p.style.maxHeight = p.scrollHeight + 'px';
-                }
-            }
-        });
-    });
-
-    const sidebar = document.querySelector('.sidebar');
-    const toggleButton = document.getElementById('toggleSidebar');
-
-    toggleButton.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        if (window.innerWidth <= 768) {
-            if (sidebar.classList.contains('collapsed')) {
-                document.querySelector('.main').style.transform = 'translateX(260px)';
-            } else {
-                document.querySelector('.main').style.transform = 'translateX(0)';
-            }
-        }
-    });
-
-    if (window.innerWidth <= 768) {
-        sidebar.classList.remove('collapsed');
-        document.querySelector('.main').style.transform = 'translateX(0)';
-    } else {
-        sidebar.classList.add('collapsed');
-    }
-
-    render();
+  await loadAllData();
+  document.querySelectorAll('.accordion').forEach(a=>a.addEventListener('click',function(){this.classList.toggle('active'); let p=this.nextElementSibling; if(p){p.style.maxHeight=p.style.maxHeight?'0':p.scrollHeight+'px';}}));
+  document.getElementById('toggleSidebar').addEventListener('click',()=>document.querySelector('.sidebar').classList.toggle('collapsed'));
+  render();
 }
 
-// --- Funciones de Interacción con Google Sheets ---
-
-async function fetchData(sheetName) {
-    try {
-        const response = await fetch(`${GAS_WEB_APP_URL}?sheet=${sheetName}`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        if (data.error) throw new Error(data.error);
-        return data;
-    } catch (error) {
-        console.error(`Error fetching ${sheetName}:`, error);
-        alert(`Error al cargar datos de ${sheetName}: ${error.message}`);
-        return [];
-    }
+// --- Fetch/POST/PUT/DELETE ---
+async function fetchData(sheet){ 
+  const res = await fetch(GAS_WEB_APP_URL+'?action=get&sheet='+sheet); 
+  return await res.json(); 
 }
 
-async function postData(sheetName, item) {
-    try {
-        const response = await fetch(`${GAS_WEB_APP_URL}?sheet=${sheetName}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(item)
-        });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const result = await response.json();
-        if (result.error) throw new Error(result.error);
-        return result.data;
-    } catch (error) {
-        console.error(`Error adding to ${sheetName}:`, error);
-        alert(`Error al agregar a ${sheetName}: ${error.message}`);
-        return null;
-    }
+async function postData(sheet,data){ 
+  await fetch(GAS_WEB_APP_URL,{method:'POST',body:JSON.stringify({action:'add',sheet:sheet,data:data})});
 }
 
-async function putData(sheetName, idColHeader, idValue, updatedFields) {
-    try {
-        const response = await fetch(`${GAS_WEB_APP_URL}?sheet=${sheetName}&idCol=${idColHeader}&idValue=${idValue}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedFields)
-        });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const result = await response.json();
-        if (result.error) throw new Error(result.error);
-        return result.updated;
-    } catch (error) {
-        console.error(`Error updating ${sheetName}:`, error);
-        alert(`Error al actualizar en ${sheetName}: ${error.message}`);
-        return null;
-    }
+async function updateData(sheet,index,data){ 
+  await fetch(GAS_WEB_APP_URL,{method:'POST',body:JSON.stringify({action:'update',sheet:sheet,index:index,data:data})});
 }
 
-async function deleteData(sheetName, idColHeader, idValue) {
-    try {
-        const response = await fetch(`${GAS_WEB_APP_URL}?sheet=${sheetName}&idCol=${idColHeader}&idValue=${idValue}`, {
-            method: 'DELETE'
-        });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const result = await response.json();
-        if (result.error) throw new Error(result.error);
-        return result.success;
-    } catch (error) {
-        console.error(`Error deleting from ${sheetName}:`, error);
-        alert(`Error al eliminar de ${sheetName}: ${error.message}`);
-        return false;
-    }
+async function deleteData(sheet,index){ 
+  await fetch(GAS_WEB_APP_URL,{method:'POST',body:JSON.stringify({action:'delete',sheet:sheet,index:index})});
 }
 
-async function loadAllData() {
-    inventario = await fetchData('Inventario');
-    const rawCategorias = await fetchData('Categorias');
-    categorias = rawCategorias.map(item => item.Nombre).filter(name => name);
-    const rawTiendas = await fetchData('Tiendas');
-    tiendas = rawTiendas.map(item => item.Nombre).filter(name => name);
-    updateCounter();
+// --- Cargar todo ---
+async function loadAllData(){
+  inventario = await fetchData('Inventario');
+  categorias = await fetchData('Categorias');
+  tiendas = await fetchData('Tiendas');
 }
 
-function nav(v){ state.view=v; render(); }
+// --- Navegación ---
+function nav(view){ state.view=view; render(); }
 
-async function openModal(itemToEdit = null){
-    await loadAllData();
-
-    const cat=document.getElementById('f_categoria');
-    cat.innerHTML='<option value="">Seleccione Categoría</option>';
-    categorias.forEach(c=>{const o=document.createElement('option');o.value=c;o.innerText=c;cat.appendChild(o);});
-
-    const t=document.getElementById('f_tienda');
-    t.innerHTML='<option value="">Seleccione Tienda</option>';
-    tiendas.forEach(s=>{const o=document.createElement('option');o.value=s;o.innerText=s;t.appendChild(o);});
-
-    if (itemToEdit) {
-        editIdx = itemToEdit.Código;
-        document.getElementById('modalTitle').innerText = 'Editar Equipo';
-        document.getElementById('f_codigo').value = itemToEdit.Código;
-        document.getElementById('f_codigo').disabled = true;
-        document.getElementById('f_serie').value = itemToEdit.Serie;
-        document.getElementById('f_equipo').value = itemToEdit.Equipo;
-        document.getElementById('f_marca').value = itemToEdit.Marca;
-        document.getElementById('f_modelo').value = itemToEdit.Modelo;
-        document.getElementById('f_categoria').value = itemToEdit.Categoria;
-        document.getElementById('f_tienda').value = itemToEdit.Tienda;
-    } else {
-        editIdx = null;
-        document.getElementById('modalTitle').innerText = 'Agregar Equipo';
-        document.getElementById('f_codigo').value = '';
-        document.getElementById('f_codigo').disabled = false;
-        document.getElementById('f_serie').value = '';
-        document.getElementById('f_equipo').value = '';
-        document.getElementById('f_marca').value = '';
-        document.getElementById('f_modelo').value = '';
-        document.getElementById('f_categoria').value = '';
-        document.getElementById('f_tienda').value = '';
-    }
-    document.getElementById('modal').style.display='flex';
+// --- Render ---
+function render(){
+  const main = document.getElementById('main-content');
+  main.innerHTML='';
+  if(state.view==='dashboard'){
+    main.innerHTML=`<h3>Dashboard</h3>
+    <div class="cards">
+      <div class="card" onclick="nav('list')"><i class="fa-solid fa-computer"></i><div class="card-title">Equipos</div><div class="card-count">${inventario.length}</div></div>
+      <div class="card" onclick="showCategories()"><i class="fa-solid fa-tags"></i><div class="card-title">Categorías</div><div class="card-count">${categorias.length}</div></div>
+      <div class="card" onclick="showStores()"><i class="fa-solid fa-store"></i><div class="card-title">Tiendas</div><div class="card-count">${tiendas.length}</div></div>
+    </div>`;
+  } else if(state.view==='list'){
+    main.innerHTML=`<input class="search-input" placeholder="Buscar..." oninput="filterTable(this.value)"/>
+      <table id="inventario-table"><thead><tr><th>ID</th><th>Código</th><th>Serie</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Categoria</th><th>Tienda</th><th>Acciones</th></tr></thead><tbody>${inventario.map((i,idx)=>`<tr>
+        <td>${idx+1}</td><td>${i.codigo}</td><td>${i.serie}</td><td>${i.equipo}</td><td>${i.marca}</td><td>${i.modelo}</td><td>${i.categoria}</td><td>${i.tienda}</td>
+        <td class="actions"><button class="btn-edit" onclick="editItem(${idx})"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn-del" onclick="removeItem(${idx})"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')}</tbody></table>`;
+  }
+  updateCounter();
 }
-function closeModal(){document.getElementById('modal').style.display='none';}
 
+// --- Contador ---
+function updateCounter(){ document.getElementById('header-counter').innerText='Total: '+inventario.length; }
+
+// --- Filtrar tabla ---
+function filterTable(q){ const table=document.getElementById('inventario-table'); if(!table) return; table.querySelectorAll('tbody tr').forEach(tr=>{tr.style.display=tr.innerText.toLowerCase().includes(q.toLowerCase())?'':'none';}); }
+
+// --- Modal Equipo ---
+function openModal(){ editIdx=null; document.getElementById('modalTitle').innerText='Agregar Equipo'; document.getElementById('f_codigo').value=''; document.getElementById('f_serie').value=''; document.getElementById('f_equipo').value=''; document.getElementById('f_marca').value=''; document.getElementById('f_modelo').value=''; fillSelect('f_categoria',categorias); fillSelect('f_tienda',tiendas); document.getElementById('modal').style.display='flex';}
+function closeModal(){ document.getElementById('modal').style.display='none'; }
+function fillSelect(id,arr){ const sel=document.getElementById(id); sel.innerHTML=''; arr.forEach(e=>{const opt=document.createElement('option'); opt.value=e.nombre||e.tienda; opt.text=e.nombre||e.tienda; sel.add(opt);});}
 async function saveFromModal(){
-    const codigo=document.getElementById('f_codigo').value.trim();
-    const serie=document.getElementById('f_serie').value.trim();
-    const equipo=document.getElementById('f_equipo').value.trim();
-    const marca=document.getElementById('f_marca').value.trim();
-    const modelo=document.getElementById('f_modelo').value.trim();
-    const categoria=document.getElementById('f_categoria').value;
-    const tienda=document.getElementById('f_tienda').value;
+  const data={codigo:document.getElementById('f_codigo').value, serie:document.getElementById('f_serie').value, equipo:document.getElementById('f_equipo').value, marca:document.getElementById('f_marca').value, modelo:document.getElementById('f_modelo').value, categoria:document.getElementById('f_categoria').value, tienda:document.getElementById('f_tienda').value};
+  if(editIdx!==null){ await updateData('Inventario',editIdx,data);} else { await postData('Inventario',data);}
+  await loadAllData(); closeModal(); render();
+}
+function editItem(idx){ editIdx=idx; const i=inventario[idx]; document.getElementById('modalTitle').innerText='Editar Equipo'; document.getElementById('f_codigo').value=i.codigo; document.getElementById('f_serie').value=i.serie; document.getElementById('f_equipo').value=i.equipo; document.getElementById('f_marca').value=i.marca; document.getElementById('f_modelo').value=i.modelo; fillSelect('f_categoria',categorias); document.getElementById('f_categoria').value=i.categoria; fillSelect('f_tienda',tiendas); document.getElementById('f_tienda').value=i.tienda; document.getElementById('modal').style.display='flex'; }
+async function removeItem(idx){ if(confirm('Eliminar equipo?')){ await deleteData('Inventario',idx); await loadAllData(); render(); }}
 
-    if(!codigo||!serie||!equipo||!categoria||!tienda){alert('Completa todos los campos obligatorios'); return;}
+// --- Modal Categoría/Tienda ---
+function openCategoryModal(){ categoryOrStore='Categorias'; document.getElementById('modalCategoryStoreTitle').innerText='Agregar Categoría'; document.getElementById('f_category_store_name').value=''; document.getElementById('modal-category-store').style.display='flex'; }
+function openStoreModal(){ categoryOrStore='Tiendas'; document.getElementById('modalCategoryStoreTitle').innerText='Agregar Tienda'; document.getElementById('f_category_store_name').value=''; document.getElementById('modal-category-store').style.display='flex'; }
+function closeCategoryStoreModal(){ document.getElementById('modal-category-store').style.display='none'; }
+async function saveCategoryStore(){ const name=document.getElementById('f_category_store_name').value; if(!name) return alert('Ingrese nombre'); await postData(categoryOrStore,{nombre:name}); await loadAllData(); closeCategoryStoreModal(); render(); }
+function showCategories(){ state.view='categories'; const main=document.getElementById('main-content'); main.innerHTML='<h3>Categorías</h3><ul>'+categorias.map(c=>`<li>${c.nombre}</li>`).join('')+'</ul>'; }
+function showStores(){ state.view='stores'; const main=document.getElementById('main-content'); main.innerHTML='<h3>Tiendas</h3><ul>'+tiendas.map(t=>`<li>${t.tienda}</li>`).join('')+'</ul>'; }
 
-    const newItem = {
-        'Código': codigo,
-        'Serie': serie,
-        'Equipo': equipo,
-        'Marca': marca,
-        'Modelo': modelo,
-        'Categoria': categoria,
-        'Tienda': tienda
-    };
-
-    if(editIdx !== null){
-        const success = await putData('Inventario', 'Código', editIdx, newItem);
-        if (success) {
-            alert('Equipo actualizado con éxito!');
-        } else {
-            alert('Error al actualizar el equipo.');
-        }
-    } else {
-        const existingItem = inventario.find(item => item.Código === codigo);
-        if (existingItem) {
-            alert('Ya existe un equipo con este código de inventario.');
-            return;
-        }
-        const success = await postData('Inventario', newItem);
-        if (success) {
-            alert('Equipo agregado con éxito!');
-        } else {
-            alert('Error al agregar el equipo.');
-        }
-    }
-    closeModal();
-    await loadAllData();
-    render();
-}
-
-async function editItem(itemCode){
-    const item = inventario.find(i => i.Código === itemCode);
-    if (item) {
-        openModal(item);
-    } else {
-        alert('Equipo no encontrado para edición.');
-    }
-}
-
-async function delItem(itemCode){
-    if(confirm(`¿Eliminar el equipo con Código: ${itemCode}?`)){
-        const success = await deleteData('Inventario', 'Código', itemCode);
-        if (success) {
-            alert('Equipo eliminado con éxito!');
-            await loadAllData();
-            render();
-        } else {
-            alert('Error al eliminar el equipo.');
-        }
-    }
-}
-
-// Categorías y Tiendas
-async function openCategoryModal(categoryName = null){
-    categoryOrStore='category';
-    document.getElementById('modalCategoryStoreTitle').innerText= categoryName ? 'Editar Categoría' : 'Agregar Categoría';
-    document.getElementById('f_category_store_name').value= categoryName || '';
-    if (categoryName) {
-        document.getElementById('f_category_store_name').dataset.oldName = categoryName; // Guarda el nombre anterior para edición
-    } else {
-        delete document.getElementById('f_category_store_name').dataset.oldName;
-    }
-    document.getElementById('modal-category-store').style.display='flex';
-}
-async function openStoreModal(storeName = null){
-    categoryOrStore='store';
-    document.getElementById('modalCategoryStoreTitle').innerText= storeName ? 'Editar Tienda' : 'Agregar Tienda';
-    document.getElementById('f_category_store_name').value= storeName || '';
-     if (storeName) {
-        document.getElementById('f_category_store_name').dataset.oldName = storeName; // Guarda el nombre anterior para edición
-    } else {
-        delete document.getElementById('f_category_store_name').dataset.oldName;
-    }
-    document.getElementById('modal-category-store').style.display='flex';
-}
-function closeCategoryStoreModal(){document.getElementById('modal-category-store').style.display='none';}
-
-async function saveCategoryStore(){
-    const name=document.getElementById('f_category_store_name').value.trim();
-    if(!name){alert('Ingresa un nombre'); return;}
-
-    const sheetName = categoryOrStore === 'category' ? 'Categorias' : 'Tiendas';
-    const currentList = categoryOrStore === 'category' ? categorias : tiendas;
-    const oldName = document.getElementById('f_category_store_name').dataset.oldName;
-
-    if (oldName) { // Editar
-        const success = await putData(sheetName, 'Nombre', oldName, { 'Nombre': name });
-        if (success) {
-            alert(`${categoryOrStore === 'category' ? 'Categoría' : 'Tienda'} actualizada con éxito!`);
-            // Actualizar referencias en inventario
-            if (categoryOrStore === 'category') {
-                for (let i = 0; i < inventario.length; i++) {
-                    if (inventario[i].Categoria === oldName) {
-                        inventario[i].Categoria = name;
-                        await putData('Inventario', 'Código', inventario[i].Código, { 'Categoria': name }); // Actualiza cada equipo individualmente en Sheets
-                    }
-                }
-            } else { // store
-                for (let i = 0; i < inventario.length; i++) {
-                    if (inventario[i].Tienda === oldName) {
-                        inventario[i].Tienda = name;
-                        await putData('Inventario', 'Código', inventario[i].Código, { 'Tienda': name }); // Actualiza cada equipo individualmente en Sheets
-                    }
-                }
-            }
-        } else {
-            alert(`Error al actualizar ${categoryOrStore === 'category' ? 'categoría' : 'tienda'}.`);
-        }
-    } else { // Agregar nuevo
-        if (currentList.includes(name)) {
-            alert(`Ya existe una ${categoryOrStore === 'category' ? 'categoría' : 'tienda'} con ese nombre.`);
-            return;
-        }
-        const success = await postData(sheetName, { 'Nombre': name });
-        if (success) {
-            alert(`${categoryOrStore === 'category' ? 'Categoría' : 'Tienda'} agregada con éxito!`);
-        } else {
-            alert(`Error al agregar ${categoryOrStore === 'category' ? 'categoría' : 'tienda'}.`);
-        }
-    }
-    closeCategoryStoreModal();
-    await loadAllData();
-    render();
-}
-
-async function showCategories(){
-    state.view='categories';
-    const main=document.getElementById('main-content');
-    main.innerHTML='<h3>Categorías</h3>';
-    if(categorias.length===0){main.innerHTML+='<p>No hay categorías.</p>'; return;}
-    let table='<table id="category-table"><thead><tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr></thead><tbody>';
-    categorias.forEach((c,i)=>{
-        table+=`<tr><td data-label="ID">${i+1}</td><td data-label="Nombre">${c}</td><td data-label="Acciones" class="actions"><button class="btn-edit" onclick="openCategoryModal('${c}')"><i class="fa-solid fa-pen"></i></button><button class="btn-del" onclick="deleteCategory('${c}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-    });
-    table+='</tbody></table>';
-    main.innerHTML+=table;
-}
-async function editCategory(categoryName){
-    openCategoryModal(categoryName);
-}
-async function deleteCategory(categoryName){
-    if(confirm(`¿Eliminar la categoría "${categoryName}"? Los equipos asociados se desvincularán.`)){
-        const success = await deleteData('Categorias', 'Nombre', categoryName);
-        if (success) {
-            // Actualizar inventario local para desvincular equipos
-            for (let i = 0; i < inventario.length; i++) {
-                if (inventario[i].Categoria === categoryName) {
-                    inventario[i].Categoria = ''; // O a un valor predeterminado como 'N/A'
-                    await putData('Inventario', 'Código', inventario[i].Código, { 'Categoria': '' }); // Actualiza en Sheets
-                }
-            }
-            alert('Categoría eliminada y equipos desvinculados.');
-            await loadAllData();
-            render();
-        } else {
-            alert('Error al eliminar la categoría.');
-        }
-    }
-}
-
-
-async function showStores(){
-    state.view='stores';
-    const main=document.getElementById('main-content');
-    main.innerHTML='<h3>Tiendas</h3>';
-    if(tiendas.length===0){main.innerHTML+='<p>No hay tiendas.</p>'; return;}
-    let table='<table id="store-table"><thead><tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr></thead><tbody>';
-    tiendas.forEach((s,i)=>{
-        table+=`<tr><td data-label="ID">${i+1}</td><td data-label="Nombre">${s}</td><td data-label="Acciones" class="actions"><button class="btn-edit" onclick="openStoreModal('${s}')"><i class="fa-solid fa-pen"></i></button><button class="btn-del" onclick="deleteStore('${s}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-    });
-    table+='</tbody></table>';
-    main.innerHTML+=table;
-}
-async function editStore(storeName){
-    openStoreModal(storeName);
-}
-async function deleteStore(storeName){
-    if(confirm(`¿Eliminar la tienda "${storeName}"? Los equipos asociados se desvincularán.`)){
-        const success = await deleteData('Tiendas', 'Nombre', storeName);
-        if (success) {
-             // Actualizar inventario local para desvincular equipos
-            for (let i = 0; i < inventario.length; i++) {
-                if (inventario[i].Tienda === storeName) {
-                    inventario[i].Tienda = ''; // O a un valor predeterminado como 'N/A'
-                    await putData('Inventario', 'Código', inventario[i].Código, { 'Tienda': '' }); // Actualiza en Sheets
-                }
-            }
-            alert('Tienda eliminada y equipos desvinculados.');
-            await loadAllData();
-            render();
-        } else {
-            alert('Error al eliminar la tienda.');
-        }
-    }
-}
-
-async function render(){
-    const main=document.getElementById('main-content');
-    main.innerHTML='';
-    if(state.view==='dashboard'){
-        main.innerHTML=`<h3>Dashboard</h3>
-        <div class="cards">
-            <div class="card" onclick="nav('list')">
-                <i class="fa-solid fa-computer"></i>
-                <span class="card-title">Equipos</span>
-                <span class="card-count" id="count-equipos">Total: ${inventario.length}</span>
-            </div>
-            <div class="card" onclick="showCategories()">
-                <i class="fa-solid fa-tags"></i>
-                <span class="card-title">Categorías</span>
-                <span class="card-count" id="count-categorias">Total: ${categorias.length}</span>
-            </div>
-            <div class="card" onclick="showStores()">
-                <i class="fa-solid fa-store"></i>
-                <span class="card-title">Tiendas</span>
-                <span class="card-count" id="count-tiendas">Total: ${tiendas.length}</span>
-            </div>
-        </div>`;
-    } else if(state.view==='list'){
-        main.innerHTML='<input class="search-input" placeholder="Buscar..." oninput="filterTable(this.value)"/>';
-        let table='<table id="inventario-table"><thead><tr><th>ID</th><th>Código</th><th>Serie</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Categoria</th><th>Tienda</th><th>Acciones</th></tr></thead><tbody>';
-        inventario.forEach((i,idx)=>{table+=`<tr>
-            <td data-label="ID">${idx+1}</td>
-            <td data-label="Código">${i.Código}</td>
-            <td data-label="Serie">${i.Serie}</td>
-            <td data-label="Equipo">${i.Equipo}</td>
-            <td data-label="Marca">${i.Marca}</td>
-            <td data-label="Modelo">${i.Modelo}</td>
-            <td data-label="Categoria">${i.Categoria}</td>
-            <td data-label="Tienda">${i.Tienda}</td>
-            <td data-label="Acciones" class="actions">
-                <button class="btn-edit" onclick="editItem('${i.Código}')"><i class="fa-solid fa-pen"></i></button>
-                <button class="btn-del" onclick="delItem('${i.Código}')"><i class="fa-solid fa-trash"></i></button>
-            </td></tr>`;});
-        table+='</tbody></table>'; main.innerHTML+=table;
-    } else if (state.view === 'categories') {
-        await showCategories();
-    } else if (state.view === 'stores') {
-        await showStores();
-    }
-    updateCounter();
-}
-
-function filterTable(q){
-    const table=document.getElementById('inventario-table');
-    if(!table) return;
-    table.querySelectorAll('tbody tr').forEach(tr=>{
-        const cells = tr.querySelectorAll('td');
-        let rowText = '';
-        cells.forEach(cell => {
-            if (cell.dataset.label !== 'Acciones') {
-                rowText += cell.textContent + ' ';
-            }
-        });
-        tr.style.display=rowText.toLowerCase().includes(q.toLowerCase())?'':'none';
-    });
-}
-function updateCounter(){
-    document.getElementById('header-counter').innerText='Total: '+inventario.length;
-}
-
-// --- Export Excel ---
-function exportExcel() {
-    if(inventario.length === 0){ alert('No hay datos para exportar'); return; }
-    const headers = ["ID","Código","Serie","Equipo","Marca","Modelo","Categoría","Tienda"];
-    let csv = headers.join(",") + "\n";
-    inventario.forEach((item, idx) => {
-        const row = [idx+1,item.Código,item.Serie,item.Equipo,item.Marca,item.Modelo,item.Categoria,item.Tienda];
-        csv += row.map(v => `"${v}"`).join(",") + "\n";
-    });
-    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "inventario_equipos.csv";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
+// --- Export CSV ---
+function exportExcel(){ let csv='Código,Serie,Equipo,Marca,Modelo,Categoria,Tienda\n'; inventario.forEach(i=>csv+=`${i.codigo},${i.serie},${i.equipo},${i.marca},${i.modelo},${i.categoria},${i.tienda}\n`); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='inventario.csv'; a.click(); URL.revokeObjectURL(url);}
 </script>
-
 </body>
 </html>
