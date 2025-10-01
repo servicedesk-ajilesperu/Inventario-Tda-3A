@@ -1,187 +1,335 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Inventario Tiendas 3A</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    body{margin:0;font-family:Arial,sans-serif;display:flex;height:100vh}
-    .sidebar{width:220px;background:#333;color:#fff;padding:20px}
-    .sidebar h2{font-size:20px;margin-bottom:20px}
-    .sidebar a{display:block;color:#fff;text-decoration:none;margin:10px 0;padding:8px;border-radius:4px}
-    .sidebar a:hover{background:#444}
-    .content{flex:1;padding:20px;overflow:auto}
-    .dashboard{display:flex;gap:20px;margin-bottom:20px}
-    .card{flex:1;padding:20px;border-radius:10px;background:#f5f5f5;box-shadow:0 2px 5px rgba(0,0,0,0.1);text-align:center}
-    table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{border:1px solid #ccc;padding:8px;text-align:left}
-    th{background:#eee}
-    .actions button{margin:0 2px;padding:6px;border-radius:50%;border:none;cursor:pointer;width:32px;height:32px}
-    .btn-edit{background:#ffb86b;color:white}
-    .btn-del{background:#ff6b6b;color:white}
-    .btn-add{padding:6px 12px;margin:10px 0;background:#4CAF50;color:#fff;border:none;border-radius:5px;cursor:pointer}
-    .search-input{padding:5px;margin-bottom:10px;width:200px}
-    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center}
-    .modal-content{background:#fff;padding:20px;border-radius:8px;min-width:300px}
-    .modal-content input,select{width:100%;margin:5px 0;padding:6px}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventario Tiendas 3A</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
+body,html{height:100%;width:100%;background:#f4f6fa;}
+
+/* Sidebar */
+#app{display:flex;height:100vh;width:100vw;}
+.sidebar{
+    width:260px;
+    position:fixed;
+    height:100%;
+    overflow:hidden;
+    background:#0f62fe;
+    color:white;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    padding:20px;
+    transition: width 0.3s ease, padding 0.3s ease;
+}
+.sidebar.collapsed{width:60px;padding:20px 5px;}
+.brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    font-size:1.15rem;
+    position:relative;
+}
+#toggleSidebar{
+    position:absolute; 
+    right:10px;
+    top:10px;
+    background:#0f62fe;
+    color:white;
+    border:none;
+    border-radius:6px;
+    padding:4px 8px;
+    cursor:pointer;
+    z-index:1000;
+}
+.menu-section .accordion, .menu-section > button{background:transparent;color:white;border:none;padding:10px;width:100%;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;border-radius:8px;transition:0.2s;position:relative;}
+.menu-section .accordion:hover, .menu-section > button:hover{background: rgba(255,255,255,0.1);}
+.menu-section .panel{display:flex;flex-direction:column;padding-left:10px;gap:6px;overflow:hidden;max-height:0;transition:max-height 0.3s ease;}
+.menu-section .accordion.active + .panel{max-height:500px;}
+.menu-section .panel button{padding:6px 10px;font-size:0.9rem;text-align:left;background:rgba(255,255,255,0.05);border:none;border-radius:6px;color:white;cursor:pointer;display:flex;align-items:center;gap:6px;position:relative;}
+.menu-section .panel button:hover{background: rgba(255,255,255,0.15);}
+
+/* Ocultar texto al colapsar */
+.sidebar.collapsed .brand span,
+.sidebar.collapsed .panel button span,
+.sidebar.collapsed .accordion span,
+.sidebar.collapsed .menu-section > button span {
+  display: none;
+}
+/* Tooltips al colapsar */
+.sidebar.collapsed .panel button::after,
+.sidebar.collapsed .accordion::after,
+.sidebar.collapsed .menu-section > button::after{
+  content: attr(title);
+  position: absolute;
+  left: 70px;
+  background: #0f62fe;
+  color: white;
+  padding: 3px 6px;
+  border-radius: 4px;
+  display: none;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  z-index:1000;
+}
+.sidebar.collapsed .panel button:hover::after,
+.sidebar.collapsed .accordion:hover::after,
+.sidebar.collapsed .menu-section > button:hover::after{
+  display: block;
+}
+
+/* Main */
+.main{flex:1;margin-left:260px;transition:margin-left 0.3s;display:flex;flex-direction:column;height:100vh;}
+.sidebar.collapsed ~ .main{margin-left:60px;}
+header.appbar{height:64px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:0 2px 8px rgba(15,98,254,0.06);position:sticky;top:0;z-index:10;}
+.app-title{font-weight:700;color:#0f62fe;}
+.counter{background:linear-gradient(90deg, rgba(15,98,254,0.08), rgba(255,77,0,0.06));padding:8px 12px;border-radius:999px;font-weight:600;display:flex;gap:10px;align-items:center;font-size:0.95rem;}
+.content{padding:20px;height:calc(100vh - 64px);overflow:auto;display:flex;flex-direction:column;gap:18px;}
+.cards{display:flex;gap:20px;flex-wrap:nowrap;overflow-x:auto;}
+.card{min-width:150px;background:white;padding:15px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center;cursor:pointer;transition:0.2s;flex-shrink:0;}
+.card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+.card i{font-size:24px;color:#0f62fe;}
+.card span{font-weight:700;font-size:1.2rem;}
+input, select{padding:6px;border-radius:6px;border:1px solid #ccc;width:100%;}
+button.btn-save{background:#0f62fe;color:white;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
+button.btn-cancel{background:#ccc;color:black;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
+table{width:100%;border-collapse:collapse;font-size:0.95rem;margin-top:10px;}
+thead th{background:#ff4d00;color:#fff;padding:12px;text-align:center;}
+tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical-align:middle;}
+.actions button{margin:0 2px;padding:6px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:32px;height:32px;transition:0.2s;}
+.btn-edit{background:#ffb86b;color:white;}
+.btn-edit:hover{background:#ffa500;}
+.btn-del{background:#ff6b6b;color:white;}
+.btn-del:hover{background:#ff3b3b;}
+.btn-export{background:#42b72a;color:white;}
+.btn-export:hover{background:#2d8c1a;}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:50;}
+.modal{background:white;padding:20px;border-radius:12px;width:400px;max-width:95%;}
+.search-input{margin-bottom:10px;padding:6px;border-radius:6px;border:1px solid #ccc;width:300px;}
+@media(max-width:768px){.sidebar{left:-260px;position:fixed}.sidebar.collapsed{left:0}.main{margin-left:0}}
+</style>
 </head>
 <body>
-  <div class="sidebar">
-    <h2>Menú</h2>
-    <a href="#" onclick="renderInventario()">Inventario</a>
-    <a href="#" onclick="showCategories()">Categorías</a>
-    <a href="#" onclick="showStores()">Tiendas</a>
-  </div>
 
-  <div class="content">
-    <div class="dashboard">
-      <div class="card"><h3>Inventario</h3><p id="countInventario">0</p></div>
-      <div class="card"><h3>Categorías</h3><p id="countCategorias">0</p></div>
-      <div class="card"><h3>Tiendas</h3><p id="countTiendas">0</p></div>
+<!-- APP -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <i class="fa-solid fa-boxes-stacked"></i>
+      <span>Inventario</span>
+      <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
     </div>
-    <div id="main-content"></div>
+
+    <div class="menu-section">
+      <button title="Dashboard" onclick="nav('dashboard')">
+        <i class="fa-solid fa-house"></i>
+        <span>Dashboard</span>
+      </button>
+    </div>
+
+    <div class="menu-section">
+      <button class="accordion" title="Equipos"><i class="fa-solid fa-computer"></i> <span>Equipos</span> <i class="fa-solid fa-chevron-down"></i></button>
+      <div class="panel">
+        <button title="Agregar equipo" onclick="openModal()"><i class="fa-solid fa-plus"></i> <span>Agregar equipo</span></button>
+        <button title="Ver inventario" onclick="nav('list')"><i class="fa-solid fa-table-list"></i> <span>Ver inventario</span></button>
+        <button title="Exportar Inventario" onclick="exportExcel()"><i class="fa-solid fa-file-excel"></i> <span>Exportar</span></button>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <button class="accordion" title="Categorías"><i class="fa-solid fa-tags"></i> <span>Categorías</span> <i class="fa-solid fa-chevron-down"></i></button>
+      <div class="panel">
+        <button title="Ver categorías" onclick="nav('categories')"><i class="fa-solid fa-table-list"></i> <span>Ver categorías</span></button>
+        <button title="Agregar categoría" onclick="openCategoryModal()"><i class="fa-solid fa-plus"></i> <span>Agregar categoría</span></button>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <button class="accordion" title="Tiendas"><i class="fa-solid fa-store"></i> <span>Tiendas</span> <i class="fa-solid fa-chevron-down"></i></button>
+      <div class="panel">
+        <button title="Ver tiendas" onclick="nav('stores')"><i class="fa-solid fa-table-list"></i> <span>Ver tiendas</span></button>
+        <button title="Agregar tienda" onclick="openStoreModal()"><i class="fa-solid fa-plus"></i> <span>Agregar tienda</span></button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="appbar">
+      <div class="app-title">Inventario Tiendas 3A</div>
+      <div class="counter" id="header-counter">Total: 0</div>
+    </header>
+    <main class="content" id="main-content"></main>
   </div>
 
-  <!-- Modal Inventario -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <h3>Equipo</h3>
-      <input id="f_codigo" placeholder="Código">
-      <input id="f_serie" placeholder="Serie">
-      <input id="f_equipo" placeholder="Equipo">
-      <input id="f_marca" placeholder="Marca">
-      <input id="f_modelo" placeholder="Modelo">
-      <select id="f_categoria"></select>
-      <select id="f_tienda"></select>
-      <button onclick="saveFromModal()">Guardar</button>
-      <button onclick="closeModal()">Cancelar</button>
+  <!-- Modales -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal">
+      <h3 id="modalTitle">Agregar Equipo</h3>
+      <div class="form-grid" style="display:flex;flex-direction:column;gap:10px;">
+        <input id="f_codigo" placeholder="Código de Inventario *"/>
+        <input id="f_serie" placeholder="Serie *"/>
+        <input id="f_equipo" placeholder="Nombre Equipo *"/>
+        <input id="f_marca" placeholder="Marca"/>
+        <input id="f_modelo" placeholder="Modelo"/>
+        <select id="f_categoria"></select>
+        <select id="f_tienda"></select>
+      </div>
+      <div style="text-align:right;margin-top:12px">
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveFromModal()">Guardar</button>
+      </div>
     </div>
   </div>
 
-  <!-- Modal Categoría/Tienda -->
-  <div id="modal-category-store" class="modal">
-    <div class="modal-content">
+  <div class="modal-backdrop" id="modal-category-store">
+    <div class="modal">
       <h3 id="modalCategoryStoreTitle"></h3>
-      <input id="f_category_store_name" placeholder="Nombre">
-      <button onclick="saveCategoryStore()">Guardar</button>
-      <button onclick="closeCategoryStoreModal()">Cancelar</button>
+      <input type="text" id="f_category_store_name" placeholder="Nombre *"/>
+      <div style="text-align:right;margin-top:12px">
+        <button class="btn-cancel" onclick="closeCategoryStoreModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveCategoryStore()">Guardar</button>
+      </div>
     </div>
   </div>
+</div>
 
-  <script>
-    const API_URL="https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
-    let inventario=[],categorias=[],tiendas=[];
-    let categoryOrStore="";
+<script>
+const APP_URL = "https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
 
-    async function loadData(){
-      [inventario,categorias,tiendas]=await Promise.all([
-        fetch(API_URL+"?sheet=Inventario&action=get").then(r=>r.json()),
-        fetch(API_URL+"?sheet=Categorias&action=get").then(r=>r.json()),
-        fetch(API_URL+"?sheet=Tiendas&action=get").then(r=>r.json())
-      ]);
-      document.getElementById("countInventario").innerText=inventario.length;
-      document.getElementById("countCategorias").innerText=categorias.length;
-      document.getElementById("countTiendas").innerText=tiendas.length;
-      renderInventario();
-    }
+let inventario=[], categorias=[], tiendas=[], state={view:'dashboard'}, editIdx=null;
+let categoryOrStore='';
 
-    /* --- INVENTARIO --- */
-    function renderInventario(){
-      const main=document.getElementById('main-content');
-      let table='<h3>Inventario</h3><button class="btn-add" onclick="openModal()">+ Agregar</button>';
-      table+='<table><thead><tr><th>ID</th><th>Código</th><th>Serie</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Categoría</th><th>Tienda</th><th>Acciones</th></tr></thead><tbody>';
-      inventario.forEach((i,idx)=>{
-        table+=`<tr>
-          <td>${idx+1}</td><td>${i.Codigo}</td><td>${i.Serie}</td><td>${i.Equipo}</td><td>${i.Marca}</td><td>${i.Modelo}</td>
-          <td>${i.Categoría}</td><td>${i.Tienda}</td>
-          <td class="actions">
-            <button class="btn-edit" onclick="editEquipo(${idx})"><i class="fa fa-pen"></i></button>
-            <button class="btn-del" onclick="deleteEquipo('${i.Codigo}')"><i class="fa fa-trash"></i></button>
-          </td>
-        </tr>`;
-      });
-      table+='</tbody></table>'; 
-      main.innerHTML=table;
-    }
-    function openModal(){document.getElementById('modal').style.display='flex';fillSelects(); }
-    function closeModal(){document.getElementById('modal').style.display='none';clearForm();}
-    function fillSelects(){
-      let selC=document.getElementById('f_categoria');selC.innerHTML=categorias.map(c=>`<option>${c.Nombre||c.Categoria||c}</option>`).join("");
-      let selT=document.getElementById('f_tienda');selT.innerHTML=tiendas.map(t=>`<option>${t.Nombre||t.Tienda||t}</option>`).join("");
-    }
-    function clearForm(){['f_codigo','f_serie','f_equipo','f_marca','f_modelo'].forEach(id=>document.getElementById(id).value="");document.getElementById('modal').removeAttribute('data-edit');}
-    function editEquipo(idx){
-      const e=inventario[idx];openModal();
-      f_codigo.value=e.Codigo;f_serie.value=e.Serie;f_equipo.value=e.Equipo;f_marca.value=e.Marca;f_modelo.value=e.Modelo;
-      f_categoria.value=e.Categoría;f_tienda.value=e.Tienda;
-      document.getElementById('modal').setAttribute('data-edit',e.Codigo);
-    }
-    async function saveFromModal(){
-      const codigo=f_codigo.value.trim(),serie=f_serie.value.trim(),equipo=f_equipo.value.trim(),marca=f_marca.value.trim(),modelo=f_modelo.value.trim();
-      const categoria=f_categoria.value,tienda=f_tienda.value;
-      if(!codigo||!serie||!equipo||!categoria||!tienda){alert("Campos obligatorios");return;}
-      const editId=document.getElementById('modal').getAttribute('data-edit');
-      if(editId){
-        await fetch(`${API_URL}?sheet=Inventario&action=update&idCol=Codigo&idValue=${editId}&Codigo=${codigo}&Serie=${serie}&Equipo=${equipo}&Marca=${marca}&Modelo=${modelo}&Categoría=${categoria}&Tienda=${tienda}`);
-      }else{
-        await fetch(`${API_URL}?sheet=Inventario&action=add&Codigo=${codigo}&Serie=${serie}&Equipo=${equipo}&Marca=${marca}&Modelo=${modelo}&Categoría=${categoria}&Tienda=${tienda}`);
-      }
-      closeModal();loadData();
-    }
-    async function deleteEquipo(codigo){
-      if(confirm("¿Eliminar este equipo?")){
-        await fetch(`${API_URL}?sheet=Inventario&action=delete&idCol=Codigo&idValue=${codigo}`);
-        loadData();
-      }
-    }
+// INIT
+function initApp(){
+    document.querySelectorAll('.accordion').forEach(a=>a.addEventListener('click',function(){
+        this.classList.toggle('active'); 
+        let p=this.nextElementSibling; 
+        p.style.display=p.style.display==='flex'?'none':'flex';
+    }));
+    const sidebar=document.querySelector('.sidebar');
+    document.getElementById('toggleSidebar').addEventListener('click',()=>sidebar.classList.toggle('collapsed'));
+    fetchData();
+}
 
-    /* --- CATEGORÍAS --- */
-    function showCategories(){
-      const main=document.getElementById('main-content');
-      let table='<h3>Categorías</h3><button class="btn-add" onclick="openCategoryModal(\'Categorias\')">+ Agregar</button>';
-      table+='<table><thead><tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr></thead><tbody>';
-      categorias.forEach((c,i)=>{
-        let nombre=c.Nombre||c.Categoria||c;
-        table+=`<tr><td>${i+1}</td><td>${nombre}</td>
-          <td class="actions">
-            <button class="btn-edit" onclick="editCategory('${nombre}')"><i class="fa fa-pen"></i></button>
-            <button class="btn-del" onclick="deleteCategory('${nombre}')"><i class="fa fa-trash"></i></button>
-          </td></tr>`;
-      });
-      table+='</tbody></table>';main.innerHTML=table;
-    }
-    function openCategoryModal(type){categoryOrStore=type;document.getElementById('modalCategoryStoreTitle').innerText="Nueva "+type;document.getElementById('modal-category-store').style.display='flex';}
-    function closeCategoryStoreModal(){document.getElementById('modal-category-store').style.display='none';f_category_store_name.value="";document.getElementById('modal-category-store').removeAttribute('data-edit');}
-    function editCategory(nombre){categoryOrStore='Categorias';document.getElementById('modalCategoryStoreTitle').innerText='Editar Categoría';f_category_store_name.value=nombre;document.getElementById('modal-category-store').setAttribute('data-edit',nombre);document.getElementById('modal-category-store').style.display='flex';}
-    async function saveCategoryStore(){
-      const name=f_category_store_name.value.trim();if(!name){alert("Ingresa un nombre");return;}
-      const editId=document.getElementById('modal-category-store').getAttribute('data-edit');
-      if(editId){await fetch(`${API_URL}?sheet=${categoryOrStore}&action=update&idCol=Nombre&idValue=${editId}&Nombre=${name}`);}
-      else{await fetch(`${API_URL}?sheet=${categoryOrStore}&action=add&Nombre=${name}`);}
-      closeCategoryStoreModal();loadData();
-    }
-    async function deleteCategory(nombre){if(confirm("¿Eliminar esta categoría?")){await fetch(`${API_URL}?sheet=Categorias&action=delete&idCol=Nombre&idValue=${nombre}`);loadData();}}
+function fetchData(){
+    fetch(`${APP_URL}?sheet=Inventario&action=get`).then(r=>r.json()).then(data=>{
+        inventario = data;
+        updateCounter();
+        render();
+    });
+    fetch(`${APP_URL}?sheet=Categorias&action=get`).then(r=>r.json()).then(data=>{
+        categorias = data.map(c=>c.Nombre || c.categoria || c.Categoria || c.name || c);
+    });
+    fetch(`${APP_URL}?sheet=Tiendas&action=get`).then(r=>r.json()).then(data=>{
+        tiendas = data.map(s=>s.Nombre || s.tienda || s.name || s);
+    });
+}
 
-    /* --- TIENDAS --- */
-    function showStores(){
-      const main=document.getElementById('main-content');
-      let table='<h3>Tiendas</h3><button class="btn-add" onclick="openCategoryModal(\'Tiendas\')">+ Agregar</button>';
-      table+='<table><thead><tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr></thead><tbody>';
-      tiendas.forEach((t,i)=>{
-        let nombre=t.Nombre||t.Tienda||t;
-        table+=`<tr><td>${i+1}</td><td>${nombre}</td>
-          <td class="actions">
-            <button class="btn-edit" onclick="editStore('${nombre}')"><i class="fa fa-pen"></i></button>
-            <button class="btn-del" onclick="deleteStore('${nombre}')"><i class="fa fa-trash"></i></button>
-          </td></tr>`;
-      });
-      table+='</tbody></table>';main.innerHTML=table;
-    }
-    function editStore(nombre){categoryOrStore='Tiendas';document.getElementById('modalCategoryStoreTitle').innerText='Editar Tienda';f_category_store_name.value=nombre;document.getElementById('modal-category-store').setAttribute('data-edit',nombre);document.getElementById('modal-category-store').style.display='flex';}
-    async function deleteStore(nombre){if(confirm("¿Eliminar esta tienda?")){await fetch(`${API_URL}?sheet=Tiendas&action=delete&idCol=Nombre&idValue=${nombre}`);loadData();}}
+function nav(v){ state.view=v; render(); }
+function updateCounter(){ document.getElementById('header-counter').innerText='Total: '+inventario.length; }
 
-    loadData();
-  </script>
+// MODALES
+function openModal(){
+    const cat=document.getElementById('f_categoria'); cat.innerHTML='<option value="">Seleccione Categoría</option>'; categorias.forEach(c=>{const o=document.createElement('option');o.value=c;o.innerText=c;cat.appendChild(o);});
+    const t=document.getElementById('f_tienda'); t.innerHTML='<option value="">Seleccione Tienda</option>'; tiendas.forEach(s=>{const o=document.createElement('option');o.value=s;o.innerText=s;t.appendChild(o);});
+    document.getElementById('f_codigo').value='';document.getElementById('f_serie').value='';document.getElementById('f_equipo').value='';document.getElementById('f_marca').value='';document.getElementById('f_modelo').value='';
+    document.getElementById('modal').style.display='flex';
+}
+function closeModal(){document.getElementById('modal').style.display='none';}
+
+function saveFromModal(){
+    const codigo=document.getElementById('f_codigo').value.trim();
+    const serie=document.getElementById('f_serie').value.trim();
+    const equipo=document.getElementById('f_equipo').value.trim();
+    const marca=document.getElementById('f_marca').value.trim();
+    const modelo=document.getElementById('f_modelo').value.trim();
+    const categoria=document.getElementById('f_categoria').value;
+    const tienda=document.getElementById('f_tienda').value;
+    if(!codigo||!serie||!equipo||!categoria||!tienda){alert('Completa todos los campos obligatorios'); return;}
+    let params = {sheet:'Inventario',action:'add',Codigo:codigo,Serie:serie,Equipo:equipo,Marca:marca,Modelo:modelo,Categoría:categoria,Tienda:tienda};
+    fetch(APP_URL + "?" + new URLSearchParams(params)).then(r=>r.json()).then(res=>{
+        if(res.success){ fetchData(); closeModal(); } else { alert('Error al guardar'); }
+    });
+}
+
+// Categorías y Tiendas
+function openCategoryModal(){categoryOrStore='category'; document.getElementById('modalCategoryStoreTitle').innerText='Agregar Categoría'; document.getElementById('f_category_store_name').value=''; document.getElementById('modal-category-store').style.display='flex';}
+function openStoreModal(){categoryOrStore='store'; document.getElementById('modalCategoryStoreTitle').innerText='Agregar Tienda'; document.getElementById('f_category_store_name').value=''; document.getElementById('modal-category-store').style.display='flex';}
+function closeCategoryStoreModal(){document.getElementById('modal-category-store').style.display='none';}
+function saveCategoryStore(){ 
+    const name=document.getElementById('f_category_store_name').value.trim(); 
+    if(!name){alert('Ingresa un nombre'); return;} 
+    let sheet = categoryOrStore==='category'?'Categorias':'Tiendas';
+    fetch(APP_URL + "?" + new URLSearchParams({sheet,action:'add',Nombre:name})).then(r=>r.json()).then(res=>{
+        if(res.success){ fetchData(); closeCategoryStoreModal(); } else { alert('Error al guardar'); }
+    });
+}
+
+// RENDER
+function render(){
+    const main=document.getElementById('main-content');
+    main.innerHTML='';
+    if(state.view==='dashboard'){
+        main.innerHTML='<h3>Dashboard</h3><div class="cards"><div class="card" onclick="nav(\'list\')"><i class="fa-solid fa-computer"></i><span>Equipos</span></div><div class="card" onclick="nav(\'categories\')"><i class="fa-solid fa-tags"></i><span>Categorías</span></div><div class="card" onclick="nav(\'stores\')"><i class="fa-solid fa-store"></i><span>Tiendas</span></div></div>';
+    }
+    else if(state.view==='list'){ renderTable('Inventario',inventario); }
+    else if(state.view==='categories'){ renderTable('Categorias',categorias); }
+    else if(state.view==='stores'){ renderTable('Tiendas',tiendas); }
+}
+
+function renderTable(type,data){
+    const main=document.getElementById('main-content');
+    main.innerHTML='';
+    main.innerHTML=`<input class="search-input" placeholder="Buscar..." oninput="filterTable(this.value)"/>`;
+    let table='<table id="data-table"><thead><tr>';
+    if(type==='Inventario'){ table+='<th>ID</th><th>Código</th><th>Serie</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Categoria</th><th>Tienda</th><th>Acciones</th>'; }
+    else{ table+='<th>ID</th><th>Nombre</th><th>Acciones</th>'; }
+    table+='</tr></thead><tbody>';
+    data.forEach((i,idx)=>{
+        if(type==='Inventario'){
+            table+=`<tr><td>${idx+1}</td><td>${i.Codigo}</td><td>${i.Serie}</td><td>${i.Equipo}</td><td>${i.Marca}</td><td>${i.Modelo}</td><td>${i.Categoría}</td><td>${i.Tienda}</td><td class="actions"><button class="btn-edit" onclick="editItem(${idx})"><i class="fa-solid fa-pen"></i></button><button class="btn-del" onclick="delItem(${idx})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+        } else{
+            table+=`<tr><td>${idx+1}</td><td>${i.Nombre || i.name || i.Categoria || i.Tienda}</td><td class="actions"><button class="btn-edit" onclick="editCategoryStore(${idx},'${type}')"><i class="fa-solid fa-pen"></i></button><button class="btn-del" onclick="delCategoryStore(${idx},'${type}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+        }
+    });
+    table+='</tbody></table>';
+    main.innerHTML+=table;
+}
+
+// BUSCAR
+function filterTable(q){ const table=document.getElementById('data-table'); if(!table) return; table.querySelectorAll('tbody tr').forEach(tr=>{tr.style.display=tr.innerText.toLowerCase().includes(q.toLowerCase())?'':'none';});}
+
+// ACCIONES TABLAS
+function editItem(idx){ const i=inventario[idx]; openModal(); document.getElementById('f_codigo').value=i.Codigo; document.getElementById('f_serie').value=i.Serie; document.getElementById('f_equipo').value=i.Equipo; document.getElementById('f_marca').value=i.Marca; document.getElementById('f_modelo').value=i.Modelo; document.getElementById('f_categoria').value=i.Categoría; document.getElementById('f_tienda').value=i.Tienda; editIdx=idx; }
+function delItem(idx){ if(confirm('Eliminar equipo?')){ let i=inventario[idx]; fetch(APP_URL + "?" + new URLSearchParams({sheet:'Inventario',action:'delete',idCol:'Codigo',idValue:i.Codigo})).then(r=>r.json()).then(res=>{ if(res.deleted){ fetchData(); } else alert('Error al eliminar'); }); } }
+
+function editCategoryStore(idx,type){ const item=type==='Categorias'?categorias[idx]:tiendas[idx]; const name=prompt('Editar', item); if(name){ let sheet=type; fetch(APP_URL + "?" + new URLSearchParams({sheet,action:'update',idCol:'Nombre',idValue:item,Nombre:name})).then(r=>r.json()).then(res=>{ fetchData(); }); } }
+function delCategoryStore(idx,type){ if(confirm('Eliminar?')){ let item=type==='Categorias'?categorias[idx]:tiendas[idx]; let sheet=type; fetch(APP_URL + "?" + new URLSearchParams({sheet,action:'delete',idCol:'Nombre',idValue:item})).then(r=>r.json()).then(res=>{ fetchData(); }); } }
+
+// EXPORT
+function exportExcel() {
+    if(inventario.length === 0){ alert('No hay datos para exportar'); return; }
+    const headers = ["ID","Código","Serie","Equipo","Marca","Modelo","Categoría","Tienda"];
+    let csv = headers.join(",") + "\n";
+    inventario.forEach((item, idx) => {
+        const row = [idx+1,item.Codigo,item.Serie,item.Equipo,item.Marca,item.Modelo,item.Categoría,item.Tienda];
+        csv += row.map(v => `"${v}"`).join(",") + "\n";
+    });
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "inventario_equipos.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// INIT APP
+document.addEventListener('DOMContentLoaded',initApp);
+</script>
+
 </body>
 </html>
