@@ -1,243 +1,185 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventario Tiendas 3A</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f4f4f9;
-    }
-    header {
-      background: #ff6600;
-      color: #fff;
-      text-align: center;
-      padding: 1rem;
-    }
-    .dashboard {
-      display: flex;
-      justify-content: space-around;
-      margin: 20px;
-      gap: 20px;
-    }
-    .card {
-      flex: 1;
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      overflow-x: auto;
-    }
-    h2 {
-      margin-top: 0;
-      font-size: 18px;
-      color: #333;
-      text-align: center;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 6px;
-      font-size: 13px;
-      text-align: center;
-    }
-    th {
-      background: #f0f0f0;
-    }
-    button {
-      padding: 5px 10px;
-      margin: 3px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .btn-add { background: #28a745; color: white; }
-    .btn-del { background: #dc3545; color: white; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventario Tiendas 3A</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
+body,html{height:100%;width:100%;}
+#app{display:flex;height:100vh;width:100vw;}
+.sidebar{
+    width:260px;
+    background:#0f62fe;
+    color:white;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    padding:20px;
+}
+.brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    font-size:1.15rem;
+}
+.menu-section button{
+    background:transparent;
+    color:white;
+    border:none;
+    padding:10px;
+    width:100%;
+    cursor:pointer;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    border-radius:8px;
+    transition:0.2s;
+}
+.menu-section button:hover{background:rgba(255,255,255,0.1);}
+.main{
+    flex:1;
+    margin-left:260px;
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+}
+header.appbar{
+    height:64px;
+    background:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 22px;
+    box-shadow:0 2px 8px rgba(15,98,254,0.06);
+}
+.app-title{font-weight:700;color:#0f62fe;}
+.counter{
+    background:linear-gradient(90deg, rgba(15,98,254,0.08), rgba(255,77,0,0.06));
+    padding:8px 12px;
+    border-radius:999px;
+    font-weight:600;
+}
+.content{padding:20px;overflow:auto;flex:1;}
+.cards{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+    justify-content:flex-start; /* Tarjetas alineadas en fila */
+}
+.card{
+    flex:1;
+    min-width:180px;
+    background:white;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.08);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    cursor:pointer;
+    transition:0.2s;
+}
+.card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+.card i{font-size:28px;color:#0f62fe;}
+.card .card-title{font-weight:700;font-size:1.2rem;margin-top:5px;}
+.card .card-count{font-size:0.9rem;color:#555;}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Inventario Tiendas 3A</h1>
-  </header>
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <i class="fa-solid fa-boxes-stacked"></i>
+      <span>Inventario</span>
+    </div>
+    <div class="menu-section">
+      <button onclick="nav('dashboard')"><i class="fa-solid fa-house"></i> <span>Dashboard</span></button>
+      <button onclick="nav('list')"><i class="fa-solid fa-table-list"></i> <span>Ver Inventario</span></button>
+    </div>
+  </aside>
 
-  <section class="dashboard">
-    <!-- Inventario -->
-    <div class="card">
-      <h2>Inventario</h2>
-      <button class="btn-add" onclick="addInventario()">+ Agregar</button>
-      <table id="inventarioTable">
-        <thead>
+  <div class="main">
+    <header class="appbar">
+      <div class="app-title">Inventario Tiendas 3A</div>
+      <div class="counter" id="header-counter">Total: 0</div>
+    </header>
+    <main class="content" id="main-content"></main>
+  </div>
+</div>
+
+<script>
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
+
+let inventario = [], state = {view:'dashboard'};
+
+window.onload = async function(){
+  await loadInventario();
+  render();
+}
+
+async function loadInventario(){
+  const res = await fetch(`${GAS_WEB_APP_URL}?sheet=Inventario`);
+  inventario = await res.json();
+  document.getElementById("header-counter").innerText = `Total: ${inventario.length}`;
+}
+
+function nav(v){ state.view = v; render(); }
+
+function render(){
+  const mc = document.getElementById("main-content");
+  mc.innerHTML = "";
+
+  if(state.view === "dashboard"){
+    const cards = document.createElement("div");
+    cards.className = "cards";
+
+    const items = [
+      {title:"Inventario", icon:"fa-computer", count:inventario.length},
+      {title:"Categorias", icon:"fa-tags", count:0},
+      {title:"Tiendas", icon:"fa-store", count:0}
+    ];
+
+    items.forEach(it=>{
+      const c = document.createElement("div");
+      c.className = "card";
+      c.innerHTML = `<i class="fa-solid ${it.icon}"></i>
+                     <div class="card-title">${it.title}</div>
+                     <div class="card-count">${it.count} items</div>`;
+      cards.appendChild(c);
+    });
+
+    mc.appendChild(cards);
+  }
+
+  if(state.view === "list"){
+    const table = document.createElement("table");
+    table.innerHTML = `
+      <thead><tr>
+        <th>Codigo</th><th>Serie</th><th>Equipo</th>
+        <th>Marca</th><th>Modelo</th><th>Categoria</th><th>Tienda</th>
+      </tr></thead>
+      <tbody>
+        ${inventario.map(i=>`
           <tr>
-            <th>Codigo</th>
-            <th>Serie</th>
-            <th>Equipo</th>
-            <th>Marca</th>
-            <th>Modelo</th>
-            <th>Categoria</th>
-            <th>Tienda</th>
-            <th>Acciones</th>
+            <td>${i.Codigo}</td>
+            <td>${i.Serie}</td>
+            <td>${i.Equipo}</td>
+            <td>${i.Marca}</td>
+            <td>${i.Modelo}</td>
+            <td>${i.Categoría}</td>
+            <td>${i.Tienda}</td>
           </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <!-- Categorias -->
-    <div class="card">
-      <h2>Categorias</h2>
-      <button class="btn-add" onclick="addCategoria()">+ Agregar</button>
-      <table id="categoriasTable">
-        <thead>
-          <tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <!-- Tiendas -->
-    <div class="card">
-      <h2>Tiendas</h2>
-      <button class="btn-add" onclick="addTienda()">+ Agregar</button>
-      <table id="tiendasTable">
-        <thead>
-          <tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </section>
-
-  <script>
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
-
-    // --- Utilidades de conexión ---
-    async function fetchData(sheet) {
-      const res = await fetch(`${GAS_WEB_APP_URL}?sheet=${sheet}&action=get`);
-      return await res.json();
-    }
-
-    async function addData(sheet, item) {
-      const params = new URLSearchParams({ sheet, action: "add", ...item });
-      const res = await fetch(`${GAS_WEB_APP_URL}?${params}`);
-      return await res.json();
-    }
-
-    async function deleteData(sheet, idCol, idValue) {
-      const params = new URLSearchParams({ sheet, action: "delete", idCol, idValue });
-      const res = await fetch(`${GAS_WEB_APP_URL}?${params}`);
-      return await res.json();
-    }
-
-    // --- Render ---
-    async function loadAll() {
-      renderInventario(await fetchData("Inventario"));
-      renderCategorias(await fetchData("Categorias"));
-      renderTiendas(await fetchData("Tiendas"));
-    }
-
-    function renderInventario(data) {
-      const tbody = document.querySelector("#inventarioTable tbody");
-      tbody.innerHTML = "";
-      data.forEach(r => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${r.Codigo}</td>
-          <td>${r.Serie}</td>
-          <td>${r.Equipo}</td>
-          <td>${r.Marca}</td>
-          <td>${r.Modelo}</td>
-          <td>${r.Categoria}</td>
-          <td>${r.Tienda}</td>
-          <td><button class="btn-del" onclick="deleteInventario('${r.Codigo}')">Eliminar</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function renderCategorias(data) {
-      const tbody = document.querySelector("#categoriasTable tbody");
-      tbody.innerHTML = "";
-      data.forEach(r => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${r.ID}</td>
-          <td>${r.Nombre}</td>
-          <td><button class="btn-del" onclick="deleteCategoria('${r.ID}')">Eliminar</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function renderTiendas(data) {
-      const tbody = document.querySelector("#tiendasTable tbody");
-      tbody.innerHTML = "";
-      data.forEach(r => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${r.ID}</td>
-          <td>${r.Nombre}</td>
-          <td><button class="btn-del" onclick="deleteTienda('${r.ID}')">Eliminar</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    // --- Acciones ---
-    async function addInventario() {
-      const item = {
-        Codigo: prompt("Codigo:"),
-        Serie: prompt("Serie:"),
-        Equipo: prompt("Equipo:"),
-        Marca: prompt("Marca:"),
-        Modelo: prompt("Modelo:"),
-        Categoria: prompt("Categoria:"),
-        Tienda: prompt("Tienda:")
-      };
-      await addData("Inventario", item);
-      loadAll();
-    }
-
-    async function deleteInventario(codigo) {
-      await deleteData("Inventario", "Codigo", codigo);
-      loadAll();
-    }
-
-    async function addCategoria() {
-      const item = {
-        ID: prompt("ID:"),
-        Nombre: prompt("Nombre:")
-      };
-      await addData("Categorias", item);
-      loadAll();
-    }
-
-    async function deleteCategoria(id) {
-      await deleteData("Categorias", "ID", id);
-      loadAll();
-    }
-
-    async function addTienda() {
-      const item = {
-        ID: prompt("ID:"),
-        Nombre: prompt("Nombre:")
-      };
-      await addData("Tiendas", item);
-      loadAll();
-    }
-
-    async function deleteTienda(id) {
-      await deleteData("Tiendas", "ID", id);
-      loadAll();
-    }
-
-    // Inicializar
-    loadAll();
-  </script>
+        `).join("")}
+      </tbody>
+    `;
+    mc.appendChild(table);
+  }
+}
+</script>
 </body>
 </html>
