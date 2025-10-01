@@ -1,189 +1,398 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inventario Tiendas 3A</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
-body,html{height:100%;width:100%;background:#f4f6fa;}
-#app{display:flex;height:100vh;width:100vw;}
-/* Sidebar */
-.sidebar{width:260px;position:fixed;height:100%;background:#0f62fe;color:white;display:flex;flex-direction:column;gap:12px;padding:20px;transition:width 0.3s ease;}
-.sidebar.collapsed{width:60px;padding:20px 5px;}
-.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.15rem;position:relative;}
-#toggleSidebar{position:absolute;right:10px;top:10px;background:#0f62fe;color:white;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;}
-.menu-section .accordion,.menu-section > button{background:transparent;color:white;border:none;padding:10px;width:100%;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;border-radius:8px;transition:0.2s;}
-.menu-section .panel{display:flex;flex-direction:column;padding-left:10px;gap:6px;overflow:hidden;max-height:0;transition:max-height 0.3s ease;}
-.menu-section .accordion.active + .panel{max-height:500px;}
-.menu-section .panel button{padding:6px 10px;font-size:0.9rem;text-align:left;background:rgba(255,255,255,0.05);border:none;border-radius:6px;color:white;cursor:pointer;display:flex;align-items:center;gap:6px;}
-/* Ocultar texto al colapsar */
-.sidebar.collapsed .brand span,
-.sidebar.collapsed .panel button span,
-.sidebar.collapsed .accordion span,
-.sidebar.collapsed .menu-section > button span {display:none;}
-/* Main */
-.main{flex:1;margin-left:260px;transition:margin-left 0.3s;display:flex;flex-direction:column;height:100vh;}
-.sidebar.collapsed ~ .main{margin-left:60px;}
-header.appbar{height:64px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:0 2px 8px rgba(15,98,254,0.06);}
-.app-title{font-weight:700;color:#0f62fe;}
-.counter{background:rgba(15,98,254,0.1);padding:6px 10px;border-radius:999px;font-weight:600;}
-.content{padding:20px;height:calc(100vh - 64px);overflow:auto;display:flex;flex-direction:column;gap:18px;}
-.cards{display:flex;gap:20px;flex-wrap:nowrap;overflow-x:auto;}
-.card{min-width:150px;background:white;padding:15px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);display:flex;flex-direction:column;gap:8px;align-items:center;cursor:pointer;flex-shrink:0;}
-.card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.15);}
-.card i{font-size:24px;color:#0f62fe;}
-.card span{font-weight:700;font-size:1.2rem;}
-input,select{padding:6px;border-radius:6px;border:1px solid #ccc;width:100%;}
-button.btn-save{background:#0f62fe;color:white;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
-button.btn-cancel{background:#ccc;color:black;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
-table{width:100%;border-collapse:collapse;font-size:0.9rem;margin-top:10px;}
-thead th{background:#ff4d00;color:#fff;padding:8px;}
-tbody td{padding:6px;border-bottom:1px solid #edf0f5;text-align:center;}
-.actions button{margin:0 2px;padding:6px;border-radius:50%;border:none;cursor:pointer;width:28px;height:28px;}
-.btn-edit{background:#ffa500;color:white;}
-.btn-del{background:#ff3b3b;color:white;}
-.search-input{margin-bottom:10px;padding:6px;border-radius:6px;border:1px solid #ccc;width:100%;}
-/* Responsive */
-@media(max-width:768px){
-  .sidebar{position:fixed;z-index:1000;}
-  .main{margin-left:0;}
-  .cards{flex-wrap:wrap;}
-  table{font-size:0.8rem;}
-}
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:50;}
-.modal{background:white;padding:15px;border-radius:12px;width:95%;max-width:400px;}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario Tiendas 3A</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* Sidebar */
+    #sidebar {
+      width: 220px;
+      background: #ff6600;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s;
+    }
+    #sidebar.collapsed { width: 70px; }
+    #sidebar h2 {
+      text-align: center;
+      padding: 15px 10px;
+      margin: 0;
+      font-size: 1.2em;
+    }
+    #sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #sidebar li {
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #sidebar li:hover { background: #e65c00; }
+    #sidebar i {
+      margin-right: 10px;
+      min-width: 20px;
+      text-align: center;
+    }
+    #sidebar.collapsed i { margin-right: 0; }
+    #sidebar.collapsed span { display: none; }
+    /* Main */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 20px;
+      background: #f4f6f9;
+    }
+    /* Cards */
+    .cards {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .card {
+      flex: 1;
+      min-width: 150px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: scale(1.05); }
+    .card i {
+      font-size: 2em;
+      margin-bottom: 10px;
+      color: #ff6600;
+    }
+    .card span { font-weight: bold; display:block; }
+    .card small { color: gray; display:block; margin-top:5px; }
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th { background: #ff6600; color: white; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    /* Buttons */
+    button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 2px;
+    }
+    .btn-add { background: #28a745; color: white; }
+    .btn-edit { background: #007bff; color: white; }
+    .btn-del { background: #dc3545; color: white; }
+    /* Forms */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    input, select {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    @media(max-width:768px){
+      .cards { flex-direction: column; }
+      #sidebar { position: fixed; height: 100%; z-index: 100; }
+    }
+  </style>
 </head>
 <body>
-<div id="app">
-  <aside class="sidebar">
-    <div class="brand">
-      <i class="fa-solid fa-boxes-stacked"></i><span>Inventario</span>
-      <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
-    </div>
-    <div class="menu-section">
-      <button onclick="nav('dashboard')"><i class="fa-solid fa-house"></i><span>Dashboard</span></button>
-    </div>
-    <div class="menu-section">
-      <button class="accordion"><i class="fa-solid fa-computer"></i><span>Equipos</span><i class="fa-solid fa-chevron-down"></i></button>
-      <div class="panel">
-        <button onclick="openModal()"><i class="fa-solid fa-plus"></i><span>Agregar</span></button>
-        <button onclick="nav('list')"><i class="fa-solid fa-table-list"></i><span>Ver</span></button>
-      </div>
-    </div>
-    <div class="menu-section">
-      <button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorías</span><i class="fa-solid fa-chevron-down"></i></button>
-      <div class="panel">
-        <button onclick="nav('categories')"><i class="fa-solid fa-table-list"></i><span>Ver</span></button>
-        <button onclick="openCategoryModal()"><i class="fa-solid fa-plus"></i><span>Agregar</span></button>
-      </div>
-    </div>
-    <div class="menu-section">
-      <button class="accordion"><i class="fa-solid fa-store"></i><span>Tiendas</span><i class="fa-solid fa-chevron-down"></i></button>
-      <div class="panel">
-        <button onclick="nav('stores')"><i class="fa-solid fa-table-list"></i><span>Ver</span></button>
-        <button onclick="openStoreModal()"><i class="fa-solid fa-plus"></i><span>Agregar</span></button>
-      </div>
-    </div>
-  </aside>
-  <div class="main">
-    <header class="appbar">
-      <div class="app-title">Inventario Tiendas 3A</div>
-      <div class="counter" id="header-counter">Total: 0</div>
-    </header>
-    <main class="content" id="main-content"></main>
+  <div id="sidebar">
+    <h2>3A</h2>
+    <ul>
+      <li onclick="nav('dashboard')"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></li>
+      <li onclick="nav('inventario')"><i class="fa-solid fa-computer"></i><span>Inventario</span></li>
+      <li onclick="nav('categorias')"><i class="fa-solid fa-tags"></i><span>Categorías</span></li>
+      <li onclick="nav('tiendas')"><i class="fa-solid fa-store"></i><span>Tiendas</span></li>
+      <li onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i><span>Colapsar</span></li>
+    </ul>
   </div>
-  <!-- Modal Inventario -->
-  <div class="modal-backdrop" id="modal">
-    <div class="modal">
-      <h3 id="modalTitle">Agregar Equipo</h3>
-      <input id="f_codigo" placeholder="Código"/><input id="f_serie" placeholder="Serie"/>
-      <input id="f_equipo" placeholder="Equipo"/><input id="f_marca" placeholder="Marca"/>
-      <input id="f_modelo" placeholder="Modelo"/>
-      <select id="f_categoria"></select><select id="f_tienda"></select>
-      <div style="text-align:right;margin-top:10px">
-        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-        <button class="btn-save" onclick="saveFromModal()">Guardar</button>
-      </div>
-    </div>
+  <div id="main">
+    <div id="main-content"></div>
   </div>
-  <!-- Modal Categoría/Tienda -->
-  <div class="modal-backdrop" id="modal-category-store">
-    <div class="modal">
-      <h3 id="modalCategoryStoreTitle"></h3>
-      <input type="text" id="f_category_store_name" placeholder="Nombre"/>
-      <div style="text-align:right;margin-top:10px">
-        <button class="btn-cancel" onclick="closeCategoryStoreModal()">Cancelar</button>
-        <button class="btn-save" onclick="saveCategoryStore()">Guardar</button>
-      </div>
-    </div>
-  </div>
-</div>
+
 <script>
-const APP_URL="https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
-let inventario=[],categorias=[],tiendas=[];
-let editCodigo=null, categoryOrStore='', editName=null;
-function initApp(){
-  document.querySelectorAll('.accordion').forEach(a=>a.onclick=()=>a.classList.toggle('active'));
-  document.getElementById('toggleSidebar').onclick=()=>document.querySelector('.sidebar').classList.toggle('collapsed');
-  fetchData();
+const apiUrl = "https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
+let view="dashboard";
+let inventario=[], categorias=[], tiendas=[];
+
+/* Sidebar toggle */
+function toggleSidebar(){
+  document.getElementById("sidebar").classList.toggle("collapsed");
 }
-function fetchData(){
-  fetch(APP_URL+"?sheet=Inventario&action=get").then(r=>r.json()).then(d=>{inventario=d;updateCounter();render();});
-  fetch(APP_URL+"?sheet=Categorias&action=get").then(r=>r.json()).then(d=>{categorias=d.map(x=>x.Nombre);});
-  fetch(APP_URL+"?sheet=Tiendas&action=get").then(r=>r.json()).then(d=>{tiendas=d.map(x=>x.Nombre);});
+
+/* Navegación */
+function nav(v){ view=v; render(); }
+
+/* Fetch GET */
+async function fetchData(sheet){
+  let res=await fetch(`${apiUrl}?sheet=${sheet}&action=get`);
+  return await res.json();
 }
-function nav(v){view=v;render();}
-function updateCounter(){document.getElementById('header-counter').innerText="Total: "+inventario.length;}
-/* ---- Inventario ---- */
-function openModal(item){
-  const cat=document.getElementById('f_categoria'); cat.innerHTML='<option value="">Categoría</option>'+categorias.map(c=>`<option>${c}</option>`).join('');
-  const tie=document.getElementById('f_tienda'); tie.innerHTML='<option value="">Tienda</option>'+tiendas.map(c=>`<option>${c}</option>`).join('');
-  if(item){f_codigo.value=item.Codigo;f_serie.value=item.Serie;f_equipo.value=item.Equipo;f_marca.value=item.Marca;f_modelo.value=item.Modelo;f_categoria.value=item.Categoría;f_tienda.value=item.Tienda;editCodigo=item.Codigo;}
-  else{document.querySelectorAll('#modal input,#modal select').forEach(e=>e.value='');editCodigo=null;}
-  modal.style.display='flex';
+
+/* Fetch ADD/UPDATE/DELETE */
+async function sendData(params){
+  let url = apiUrl+"?"+new URLSearchParams(params).toString();
+  let res=await fetch(url);
+  return await res.json();
 }
-function closeModal(){modal.style.display='none';}
-function saveFromModal(){
-  let params={sheet:'Inventario',Codigo:f_codigo.value,Serie:f_serie.value,Equipo:f_equipo.value,Marca:f_marca.value,Modelo:f_modelo.value,Categoría:f_categoria.value,Tienda:f_tienda.value};
-  if(editCodigo){params.action='update';params.idCol='Codigo';params.idValue=editCodigo;}
-  else{params.action='add';}
-  fetch(APP_URL+"?"+new URLSearchParams(params)).then(()=>{fetchData();closeModal();});
+
+/* Cargar datos iniciales */
+async function loadAll(){
+  inventario = await fetchData("Inventario");
+  categorias = await fetchData("Categorias");
+  tiendas = await fetchData("Tiendas");
+  render();
 }
-function delItem(i){if(confirm("Eliminar equipo?")){let it=inventario[i];fetch(APP_URL+"?"+new URLSearchParams({sheet:'Inventario',action:'delete',idCol:'Codigo',idValue:it.Codigo})).then(()=>fetchData());}}
-/* ---- Categorías y Tiendas ---- */
-function openCategoryModal(item){categoryOrStore='Categorias';modalCategoryStoreTitle.innerText=item?"Editar Categoría":"Agregar Categoría";f_category_store_name.value=item?item.Nombre:'';editName=item?item.Nombre:null;modal-category-store.style.display='flex';}
-function openStoreModal(item){categoryOrStore='Tiendas';modalCategoryStoreTitle.innerText=item?"Editar Tienda":"Agregar Tienda";f_category_store_name.value=item?item.Nombre:'';editName=item?item.Nombre:null;modal-category-store.style.display='flex';}
-function closeCategoryStoreModal(){modal-category-store.style.display='none';}
-function saveCategoryStore(){
-  let n=f_category_store_name.value.trim();if(!n)return;
-  let params={sheet:categoryOrStore,Nombre:n};
-  if(editName){params.action='update';params.idCol='Nombre';params.idValue=editName;}
-  else{params.action='add';}
-  fetch(APP_URL+"?"+new URLSearchParams(params)).then(()=>{fetchData();closeCategoryStoreModal();});
-}
-function delCategoryStore(name,sheet){if(confirm("Eliminar?")){fetch(APP_URL+"?"+new URLSearchParams({sheet:sheet,action:'delete',idCol:'Nombre',idValue:name})).then(()=>fetchData());}}
-/* ---- Render ---- */
+
+/* Render principal */
 function render(){
-  let main=document.getElementById('main-content');main.innerHTML='';
-  if(view==='dashboard'){main.innerHTML=`<h3>Dashboard</h3><div class="cards"><div class="card" onclick="nav('list')"><i class="fa-solid fa-computer"></i><span>Equipos</span></div><div class="card" onclick="nav('categories')"><i class="fa-solid fa-tags"></i><span>Categorías</span></div><div class="card" onclick="nav('stores')"><i class="fa-solid fa-store"></i><span>Tiendas</span></div></div>`;}
-  else if(view==='list'){renderTable('Inventario',inventario);}
-  else if(view==='categories'){renderTable('Categorias',categorias.map(n=>({Nombre:n})));}
-  else if(view==='stores'){renderTable('Tiendas',tiendas.map(n=>({Nombre:n})));}
+  let main=document.getElementById('main-content');
+  main.innerHTML='';
+
+  if(view==='dashboard'){
+    main.innerHTML=`
+      <h3>Dashboard</h3>
+      <div class="cards">
+        <div class="card" onclick="nav('inventario')">
+          <i class="fa-solid fa-computer"></i>
+          <span>Inventario</span>
+          <small>${inventario.length} registros</small>
+        </div>
+        <div class="card" onclick="nav('categorias')">
+          <i class="fa-solid fa-tags"></i>
+          <span>Categorías</span>
+          <small>${categorias.length} registros</small>
+        </div>
+        <div class="card" onclick="nav('tiendas')">
+          <i class="fa-solid fa-store"></i>
+          <span>Tiendas</span>
+          <small>${tiendas.length} registros</small>
+        </div>
+      </div>`;
+  }
+  else if(view==='inventario'){ renderInventario(); }
+  else if(view==='categorias'){ renderCategorias(); }
+  else if(view==='tiendas'){ renderTiendas(); }
 }
-function renderTable(type,data){
-  let html=`<input class="search-input" placeholder="Buscar..." oninput="filterTable(this.value)"><table id="data-table"><thead><tr>`;
-  if(type==='Inventario'){html+='<th>#</th><th>Código</th><th>Serie</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Categoría</th><th>Tienda</th><th>Acciones</th>';}
-  else{html+='<th>#</th><th>Nombre</th><th>Acciones</th>';}
-  html+='</tr></thead><tbody>';
-  data.forEach((x,i)=>{if(type==='Inventario'){html+=`<tr><td>${i+1}</td><td>${x.Codigo}</td><td>${x.Serie}</td><td>${x.Equipo}</td><td>${x.Marca}</td><td>${x.Modelo}</td><td>${x.Categoría}</td><td>${x.Tienda}</td><td><button class="btn-edit" onclick="openModal(inventario[${i}])"><i class="fa fa-pen"></i></button><button class="btn-del" onclick="delItem(${i})"><i class="fa fa-trash"></i></button></td></tr>`;}else{let sheet=(type==='Categorias'?'Categorias':'Tiendas');let editFn=(type==='Categorias'?'openCategoryModal':'openStoreModal');html+=`<tr><td>${i+1}</td><td>${x.Nombre}</td><td><button class="btn-edit" onclick="${editFn}({Nombre:'${x.Nombre}'})"><i class="fa fa-pen"></i></button><button class="btn-del" onclick="delCategoryStore('${x.Nombre}','${sheet}')"><i class="fa fa-trash"></i></button></td></tr>`;}});
-  html+='</tbody></table>';document.getElementById('main-content').innerHTML=html;
+
+/* Render Inventario */
+function renderInventario(){
+  let main=document.getElementById('main-content');
+  main.innerHTML=`
+    <h3>Inventario</h3>
+    <form id="formInv">
+      <input name="Codigo" placeholder="Código" required>
+      <input name="Serie" placeholder="Serie" required>
+      <input name="Equipo" placeholder="Equipo" required>
+      <input name="Marca" placeholder="Marca" required>
+      <input name="Modelo" placeholder="Modelo" required>
+      <select name="Categoria">${categorias.map(c=>`<option>${c.Nombre||c}</option>`).join('')}</select>
+      <select name="Tienda">${tiendas.map(t=>`<option>${t.Nombre||t}</option>`).join('')}</select>
+      <button class="btn-add">Agregar</button>
+    </form>
+    <table>
+      <thead><tr><th>Código</th><th>Serie</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Categoría</th><th>Tienda</th><th>Acciones</th></tr></thead>
+      <tbody>
+        ${inventario.map(r=>`
+          <tr>
+            <td>${r.Codigo}</td>
+            <td>${r.Serie}</td>
+            <td>${r.Equipo}</td>
+            <td>${r.Marca}</td>
+            <td>${r.Modelo}</td>
+            <td>${r.Categoria}</td>
+            <td>${r.Tienda}</td>
+            <td>
+              <button class="btn-edit" onclick="editInv('${r.Codigo}')">Editar</button>
+              <button class="btn-del" onclick="delInv('${r.Codigo}')">Eliminar</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+  document.getElementById("formInv").onsubmit=addInv;
 }
-function filterTable(q){document.querySelectorAll('#data-table tbody tr').forEach(tr=>{tr.style.display=tr.innerText.toLowerCase().includes(q.toLowerCase())?'':'none';});}
-let view='dashboard';
-document.addEventListener('DOMContentLoaded',initApp);
+
+/* Inventario CRUD */
+async function addInv(e){
+  e.preventDefault();
+  let fd=new FormData(e.target);
+  let params={sheet:"Inventario",action:"add"};
+  fd.forEach((v,k)=>params[k]=v);
+  await sendData(params);
+  inventario=await fetchData("Inventario");
+  renderInventario();
+}
+async function delInv(codigo){
+  await sendData({sheet:"Inventario",action:"delete",idCol:"Codigo",idValue:codigo});
+  inventario=await fetchData("Inventario");
+  renderInventario();
+}
+function editInv(codigo){
+  let r=inventario.find(x=>x.Codigo===codigo);
+  if(!r) return;
+  let form=document.getElementById("formInv");
+  Object.keys(r).forEach(k=>{
+    if(form[k]) form[k].value=r[k];
+  });
+  form.onsubmit=async function(ev){
+    ev.preventDefault();
+    let fd=new FormData(form);
+    let params={sheet:"Inventario",action:"update",idCol:"Codigo",idValue:codigo};
+    fd.forEach((v,k)=>params[k]=v);
+    await sendData(params);
+    inventario=await fetchData("Inventario");
+    renderInventario();
+  }
+}
+
+/* Render Categorías */
+function renderCategorias(){
+  let main=document.getElementById('main-content');
+  main.innerHTML=`
+    <h3>Categorías</h3>
+    <form id="formCat">
+      <input name="Nombre" placeholder="Nombre de categoría" required>
+      <button class="btn-add">Agregar</button>
+    </form>
+    <table>
+      <thead><tr><th>Nombre</th><th>Acciones</th></tr></thead>
+      <tbody>
+        ${categorias.map(r=>`
+          <tr>
+            <td>${r.Nombre||r}</td>
+            <td>
+              <button class="btn-edit" onclick="editCat('${r.Nombre||r}')">Editar</button>
+              <button class="btn-del" onclick="delCat('${r.Nombre||r}')">Eliminar</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+  document.getElementById("formCat").onsubmit=addCat;
+}
+
+/* Categorías CRUD */
+async function addCat(e){
+  e.preventDefault();
+  let fd=new FormData(e.target);
+  let params={sheet:"Categorias",action:"add"};
+  fd.forEach((v,k)=>params[k]=v);
+  await sendData(params);
+  categorias=await fetchData("Categorias");
+  renderCategorias();
+}
+async function delCat(nombre){
+  await sendData({sheet:"Categorias",action:"delete",idCol:"Nombre",idValue:nombre});
+  categorias=await fetchData("Categorias");
+  renderCategorias();
+}
+function editCat(nombre){
+  let r=categorias.find(x=>(x.Nombre||x)===nombre);
+  let form=document.getElementById("formCat");
+  form.Nombre.value=r.Nombre||r;
+  form.onsubmit=async function(ev){
+    ev.preventDefault();
+    let fd=new FormData(form);
+    let params={sheet:"Categorias",action:"update",idCol:"Nombre",idValue:nombre};
+    fd.forEach((v,k)=>params[k]=v);
+    await sendData(params);
+    categorias=await fetchData("Categorias");
+    renderCategorias();
+  }
+}
+
+/* Render Tiendas */
+function renderTiendas(){
+  let main=document.getElementById('main-content');
+  main.innerHTML=`
+    <h3>Tiendas</h3>
+    <form id="formTda">
+      <input name="Nombre" placeholder="Nombre de tienda" required>
+      <button class="btn-add">Agregar</button>
+    </form>
+    <table>
+      <thead><tr><th>Nombre</th><th>Acciones</th></tr></thead>
+      <tbody>
+        ${tiendas.map(r=>`
+          <tr>
+            <td>${r.Nombre||r}</td>
+            <td>
+              <button class="btn-edit" onclick="editTda('${r.Nombre||r}')">Editar</button>
+              <button class="btn-del" onclick="delTda('${r.Nombre||r}')">Eliminar</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+  document.getElementById("formTda").onsubmit=addTda;
+}
+
+/* Tiendas CRUD */
+async function addTda(e){
+  e.preventDefault();
+  let fd=new FormData(e.target);
+  let params={sheet:"Tiendas",action:"add"};
+  fd.forEach((v,k)=>params[k]=v);
+  await sendData(params);
+  tiendas=await fetchData("Tiendas");
+  renderTiendas();
+}
+async function delTda(nombre){
+  await sendData({sheet:"Tiendas",action:"delete",idCol:"Nombre",idValue:nombre});
+  tiendas=await fetchData("Tiendas");
+  renderTiendas();
+}
+function editTda(nombre){
+  let r=tiendas.find(x=>(x.Nombre||x)===nombre);
+  let form=document.getElementById("formTda");
+  form.Nombre.value=r.Nombre||r;
+  form.onsubmit=async function(ev){
+    ev.preventDefault();
+    let fd=new FormData(form);
+    let params={sheet:"Tiendas",action:"update",idCol:"Nombre",idValue:nombre};
+    fd.forEach((v,k)=>params[k]=v);
+    await sendData(params);
+    tiendas=await fetchData("Tiendas");
+    renderTiendas();
+  }
+}
+
+/* Iniciar */
+loadAll();
 </script>
 </body>
 </html>
