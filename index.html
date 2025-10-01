@@ -1,261 +1,243 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inventario Tiendas 3A</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
-body,html{height:100%;width:100%;}
-.hidden{display:none;}
-#app{display:flex;height:100vh;width:100vw;}
-.sidebar{width:260px;transition: width 0.3s ease, padding 0.3s ease, left 0.3s ease;position:fixed;height:100%;overflow-y:auto;background:#0f62fe;color:white;display:flex;flex-direction:column;gap:12px;padding:20px;left: 0;}
-.sidebar.collapsed{width:60px;padding:20px 5px;}
-.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.15rem;position:relative;}
-#toggleSidebar{position:absolute;right:10px;top:10px;background:#0f62fe;color:white;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;z-index:1000;}
-.menu-section button{background:transparent;color:white;border:none;padding:10px;width:100%;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;border-radius:8px;transition:0.2s;position:relative;gap: 10px;}
-.menu-section button:hover{background: rgba(255,255,255,0.1);}
-.menu-section button i:first-child {margin-right: auto;}
-.menu-section button i:last-child {margin-left: auto;}
-.menu-section .panel{display:flex;flex-direction:column;padding-left:10px;gap:6px;overflow:hidden;max-height:0;transition:max-height 0.3s ease;}
-.menu-section .accordion.active + .panel{max-height:500px;}
-.menu-section .panel button{padding:6px 10px;font-size:0.9rem;text-align:left;background:rgba(255,255,255,0.05);border:none;border-radius:6px;color:white;cursor:pointer;display:flex;align-items:center;gap:6px;position:relative;}
-.menu-section .panel button:hover{background: rgba(255,255,255,0.15);}
-.sidebar.collapsed .brand span,.sidebar.collapsed .menu-section button span,.sidebar.collapsed .panel button span {display: none;}
-.sidebar.collapsed .accordion i:last-child {display: none;}
-.sidebar.collapsed .menu-section button::after,.sidebar.collapsed .panel button::after,.sidebar.collapsed .accordion::after {content: attr(title);position: absolute;left: 70px;background: #0f62fe;color: white;padding: 3px 6px;border-radius: 4px;display: none;white-space: nowrap;font-size: 0.8rem;z-index:1000;}
-.sidebar.collapsed .menu-section button:hover::after,.sidebar.collapsed .panel button:hover::after,.sidebar.collapsed .accordion:hover::after {display: block;}
-.main{flex:1;margin-left:260px;transition:margin-left 0.3s, transform 0.3s;display:flex;flex-direction:column;height:100vh;}
-.sidebar.collapsed ~ .main{margin-left:60px;}
-header.appbar{height:64px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:0 2px 8px rgba(15,98,254,0.06);position:sticky;top:0;z-index:10;}
-.app-title{font-weight:700;color:#0f62fe;}
-.counter{background:linear-gradient(90deg, rgba(15,98,254,0.08), rgba(255,77,0,0.06));padding:8px 12px;border-radius:999px;font-weight:600;display:flex;gap:10px;align-items:center;font-size:0.95rem;}
-.content{padding:20px;height:calc(100vh - 64px);overflow:auto;display:flex;flex-direction:column;gap:18px;}
-.cards{display:flex;gap:20px;flex-wrap:wrap;}
-.card{flex:1;min-width:150px;background:white;padding:15px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center;cursor:pointer;transition:0.2s;}
-.card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.15);}
-.card i{font-size:24px;color:#0f62fe;}
-.card .card-title{font-weight:700;font-size:1.2rem;}
-.card .card-count{font-size:0.9rem;color:#555;}
-input, select{padding:6px;border-radius:6px;border:1px solid #ccc;width:100%;}
-button.btn-save{background:#0f62fe;color:white;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
-button.btn-cancel{background:#ccc;color:black;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
-table{width:100%;border-collapse:collapse;font-size:0.95rem;margin-top:10px;}
-thead th{background:#ff4d00;color:#fff;padding:12px;text-align:center;}
-tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical-align:middle;}
-.actions button{margin:0 2px;padding:6px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:32px;height:32px;transition:0.2s;}
-.btn-edit{background:#ffb86b;color:white;}
-.btn-edit:hover{background:#ffa500;}
-.btn-del{background:#ff6b6b;color:white;}
-.btn-del:hover{background:#ff3b3b;}
-.btn-export{background:#42b72a;color:white;}
-.btn-export:hover{background:#2d8c1a;}
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:50;}
-.modal{background:white;padding:20px;border-radius:12px;width:400px;max-width:95%;}
-.search-input{margin-bottom:10px;padding:6px;border-radius:6px;border:1px solid #ccc;width:300px;}
-@media (max-width: 768px) {
-    .sidebar {width: 260px; left: -260px; padding: 15px; box-shadow: 2px 0 5px rgba(0,0,0,0.2);}
-    .sidebar.collapsed {left: 0; width: 260px; padding: 20px;}
-    .main {margin-left: 0; transform: translateX(0);}
-    .sidebar.collapsed ~ .main {transform: translateX(260px); margin-left: 0;}
-    #toggleSidebar {left: 10px; right: auto;}
-    .brand {justify-content: flex-start;}
-    .brand span {display: inline !important;}
-    .sidebar.collapsed .brand span {display: inline;}
-    .sidebar.collapsed #toggleSidebar {right: 10px; left: auto;}
-    .sidebar:not(.collapsed) .menu-section button span, .sidebar:not(.collapsed) .brand span {display: none;}
-    .sidebar:not(.collapsed) .menu-section button i:first-child {margin-right: 0;}
-    .cards {flex-direction: column; gap: 10px;}
-    .card {width: 100%; min-width: unset;}
-    table, thead, tbody, th, td, tr {display: block;}
-    thead tr {position: absolute; top: -9999px; left: -9999px;}
-    tr { border: 1px solid #edf0f5; margin-bottom: 5px; }
-    td {border: none; border-bottom: 1px solid #eee; position: relative; padding-left: 50%; text-align: right;}
-    td:before {position: absolute; left: 6px; content: attr(data-label); font-weight: bold; text-align: left;}
-    .actions {display: flex; justify-content: flex-end; align-items: center; padding-top: 10px;}
-    .search-input {width: 100%;}
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario Tiendas 3A</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f4f9;
+    }
+    header {
+      background: #ff6600;
+      color: #fff;
+      text-align: center;
+      padding: 1rem;
+    }
+    .dashboard {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px;
+      gap: 20px;
+    }
+    .card {
+      flex: 1;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      overflow-x: auto;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #333;
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px;
+      font-size: 13px;
+      text-align: center;
+    }
+    th {
+      background: #f0f0f0;
+    }
+    button {
+      padding: 5px 10px;
+      margin: 3px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .btn-add { background: #28a745; color: white; }
+    .btn-del { background: #dc3545; color: white; }
+  </style>
 </head>
 <body>
-<div id="app">
-  <aside class="sidebar">
-    <div class="brand">
-      <i class="fa-solid fa-boxes-stacked"></i>
-      <span>Inventario</span>
-      <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
+  <header>
+    <h1>Inventario Tiendas 3A</h1>
+  </header>
+
+  <section class="dashboard">
+    <!-- Inventario -->
+    <div class="card">
+      <h2>Inventario</h2>
+      <button class="btn-add" onclick="addInventario()">+ Agregar</button>
+      <table id="inventarioTable">
+        <thead>
+          <tr>
+            <th>Codigo</th>
+            <th>Serie</th>
+            <th>Equipo</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Categoria</th>
+            <th>Tienda</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
 
-    <div class="menu-section">
-      <button title="Dashboard" onclick="nav('dashboard')">
-        <i class="fa-solid fa-house"></i>
-        <span>Dashboard</span>
-      </button>
+    <!-- Categorias -->
+    <div class="card">
+      <h2>Categorias</h2>
+      <button class="btn-add" onclick="addCategoria()">+ Agregar</button>
+      <table id="categoriasTable">
+        <thead>
+          <tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
 
-    <div class="menu-section">
-      <button class="accordion" title="Equipos"><i class="fa-solid fa-computer"></i> <span>Equipos</span> <i class="fa-solid fa-chevron-down"></i></button>
-      <div class="panel">
-        <button title="Agregar equipo" onclick="openModal()"><i class="fa-solid fa-plus"></i> <span>Agregar equipo</span></button>
-        <button title="Ver inventario" onclick="nav('list')"><i class="fa-solid fa-table-list"></i> <span>Ver inventario</span></button>
-        <button title="Exportar Inventario" onclick="exportExcel('Inventario')"><i class="fa-solid fa-file-excel"></i> <span>Exportar</span></button>
-      </div>
+    <!-- Tiendas -->
+    <div class="card">
+      <h2>Tiendas</h2>
+      <button class="btn-add" onclick="addTienda()">+ Agregar</button>
+      <table id="tiendasTable">
+        <thead>
+          <tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
+  </section>
 
-    <div class="menu-section">
-      <button class="accordion" title="Categorias"><i class="fa-solid fa-tags"></i> <span>Categorias</span> <i class="fa-solid fa-chevron-down"></i></button>
-      <div class="panel">
-        <button title="Ver categorias" onclick="showCategories()"><i class="fa-solid fa-table-list"></i> <span>Ver categorias</span></button>
-        <button title="Agregar categoria" onclick="openCategoryModal()"><i class="fa-solid fa-plus"></i> <span>Agregar categoria</span></button>
-        <button title="Exportar categorias" onclick="exportExcel('Categorias')"><i class="fa-solid fa-file-excel"></i> <span>Exportar</span></button>
-      </div>
-    </div>
+  <script>
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
 
-    <div class="menu-section">
-      <button class="accordion" title="Tiendas"><i class="fa-solid fa-store"></i> <span>Tiendas</span> <i class="fa-solid fa-chevron-down"></i></button>
-      <div class="panel">
-        <button title="Ver tiendas" onclick="showStores()"><i class="fa-solid fa-table-list"></i> <span>Ver tiendas</span></button>
-        <button title="Agregar tienda" onclick="openStoreModal()"><i class="fa-solid fa-plus"></i> <span>Agregar tienda</span></button>
-        <button title="Exportar tiendas" onclick="exportExcel('Tiendas')"><i class="fa-solid fa-file-excel"></i> <span>Exportar</span></button>
-      </div>
-    </div>
-  </aside>
-
-  <div class="main">
-    <header class="appbar">
-      <div class="app-title">Inventario Tiendas 3A</div>
-      <div class="counter" id="header-counter">Total: 0</div>
-    </header>
-    <main class="content" id="main-content"></main>
-  </div>
-
-  <div class="modal-backdrop" id="modal">
-    <div class="modal">
-      <h3 id="modalTitle">Agregar Equipo</h3>
-      <div class="form-grid" style="display:flex;flex-direction:column;gap:10px;">
-        <input id="f_codigo" placeholder="Codigo de Inventario *"/>
-        <input id="f_serie" placeholder="Serie *"/>
-        <input id="f_equipo" placeholder="Nombre Equipo *"/>
-        <input id="f_marca" placeholder="Marca"/>
-        <input id="f_modelo" placeholder="Modelo"/>
-        <select id="f_categoria"></select>
-        <select id="f_tienda"></select>
-      </div>
-      <div style="text-align:right;margin-top:12px">
-        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-        <button class="btn-save" onclick="saveFromModal()">Guardar</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-backdrop" id="modal-category-store">
-    <div class="modal">
-      <h3 id="modalCategoryStoreTitle"></h3>
-      <input type="text" id="f_category_store_name" placeholder="Nombre *"/>
-      <div style="text-align:right;margin-top:12px">
-        <button class="btn-cancel" onclick="closeCategoryStoreModal()">Cancelar</button>
-        <button class="btn-save" onclick="saveCategoryStore()">Guardar</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec';
-
-let inventario=[], categorias=[], tiendas=[], state={view:'dashboard'}, editIdx=null, categoryOrStore='';
-
-window.onload = initApp;
-
-async function initApp(){
-    await loadAllData();
-    document.querySelectorAll('.accordion').forEach(a=>{a.addEventListener('click',function(){this.classList.toggle('active');let p=this.nextElementSibling;if(p){p.style.maxHeight=p.style.maxHeight?null:p.scrollHeight+'px';}});});
-    document.getElementById('toggleSidebar').addEventListener('click',()=>document.querySelector('.sidebar').classList.toggle('collapsed'));
-    render();
-}
-
-async function fetchData(sheet){
-    try{const r=await fetch(`${GAS_WEB_APP_URL}?sheet=${sheet}`); return await r.json();}
-    catch(e){return [];}
-}
-async function postData(sheet,item){
-    try{const r=await fetch(`${GAS_WEB_APP_URL}?sheet=${sheet}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(item)}); return await r.json();}
-    catch(e){return null;}
-}
-async function putData(sheet,idCol,idValue,fields){
-    try{const r=await fetch(`${GAS_WEB_APP_URL}?sheet=${sheet}&idCol=${idCol}&idValue=${idValue}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields)}); const res=await r.json(); return res.updated?true:false;}
-    catch(e){return false;}
-}
-async function deleteData(sheet,idCol,idValue){
-    try{const r=await fetch(`${GAS_WEB_APP_URL}?sheet=${sheet}&idCol=${idCol}&idValue=${idValue}`,{method:'DELETE'}); const res=await r.json(); return res.success?true:false;}
-    catch(e){return false;}
-}
-
-async function loadAllData(){
-    inventario=await fetchData('Inventario');
-    categorias=(await fetchData('Categorias')).map(i=>i.Nombre).filter(n=>n);
-    tiendas=(await fetchData('Tiendas')).map(i=>i.Nombre).filter(n=>n);
-    updateCounter();
-}
-
-function nav(v){state.view=v; render();}
-
-async function openModal(item=null){
-    const cat=document.getElementById('f_categoria'); cat.innerHTML='<option value="">Seleccione Categoria</option>'; categorias.forEach(c=>{const o=document.createElement('option');o.value=c;o.innerText=c;cat.appendChild(o);});
-    const t=document.getElementById('f_tienda'); t.innerHTML='<option value="">Seleccione Tienda</option>'; tiendas.forEach(s=>{const o=document.createElement('option');o.value=s;o.innerText=s;t.appendChild(o);});
-    if(item){editIdx=item.Codigo; document.getElementById('modalTitle').innerText='Editar Equipo'; document.getElementById('f_codigo').value=item.Codigo; document.getElementById('f_codigo').disabled=true; document.getElementById('f_serie').value=item.Serie; document.getElementById('f_equipo').value=item.Equipo; document.getElementById('f_marca').value=item.Marca; document.getElementById('f_modelo').value=item.Modelo; document.getElementById('f_categoria').value=item.Categoria; document.getElementById('f_tienda').value=item.Tienda;}
-    else{editIdx=null; document.getElementById('modalTitle').innerText='Agregar Equipo'; document.querySelectorAll('#modal input, #modal select').forEach(i=>i.value='');}
-    document.getElementById('modal').style.display='flex';
-}
-function closeModal(){document.getElementById('modal').style.display='none';}
-
-async function saveFromModal(){
-    const item={Codigo:document.getElementById('f_codigo').value, Serie:document.getElementById('f_serie').value, Equipo:document.getElementById('f_equipo').value, Marca:document.getElementById('f_marca').value, Modelo:document.getElementById('f_modelo').value, Categoria:document.getElementById('f_categoria').value, Tienda:document.getElementById('f_tienda').value};
-    if(!item.Codigo||!item.Serie||!item.Equipo){alert('Codigo, Serie y Equipo son obligatorios'); return;}
-    if(editIdx){await putData('Inventario','Codigo',editIdx,item);} else{await postData('Inventario',item);}
-    await loadAllData(); closeModal(); render();
-}
-
-function updateCounter(){document.getElementById('header-counter').innerText=`Total: ${inventario.length}`;}
-
-function render(){
-    const mc=document.getElementById('main-content'); mc.innerHTML='';
-    if(state.view==='dashboard'){
-        ['Inventario','Categorias','Tiendas'].forEach(name=>{
-            const icon=name==='Inventario'?'fa-computer':name==='Categorias'?'fa-tags':'fa-store';
-            const count=name==='Inventario'?inventario.length:name==='Categorias'?categorias.length:tiendas.length;
-            const c=document.createElement('div'); c.className='card'; c.innerHTML=`<i class="fa-solid ${icon}"></i><div class="card-title">${name}</div><div class="card-count">${count} items</div>`; mc.appendChild(c);
-        });
-    } else if(state.view==='list'){
-        const search=`<input class="search-input" placeholder="Buscar..." oninput="filterTable(this.value)"/>`;
-        const t=document.createElement('table'); t.id='inventory-table';
-        const th=`<thead><tr>${Object.keys(inventario[0]||{}).map(k=>`<th>${k}</th>`).join('')}<th>Acciones</th></tr></thead>`;
-        const tbody=`<tbody>${inventario.map(i=>`<tr>${Object.keys(i).map(k=>`<td data-label="${k}">${i[k]}</td>`).join('')}<td class="actions"><button class="btn-edit" onclick='openModal(${JSON.stringify(i)})'><i class="fa-solid fa-pen"></i></button><button class="btn-del" onclick='delItem("${i.Codigo||i.Nombre}")'><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')}</tbody>`;
-        t.innerHTML=th+tbody; mc.innerHTML=search; mc.appendChild(t);
+    // --- Utilidades de conexión ---
+    async function fetchData(sheet) {
+      const res = await fetch(`${GAS_WEB_APP_URL}?sheet=${sheet}&action=get`);
+      return await res.json();
     }
-}
 
-function filterTable(q){
-    const rows=document.querySelectorAll('#inventory-table tbody tr'); rows.forEach(r=>{r.style.display=Array.from(r.querySelectorAll('td')).some(td=>td.innerText.toLowerCase().includes(q.toLowerCase()))?'':'none';});
-}
+    async function addData(sheet, item) {
+      const params = new URLSearchParams({ sheet, action: "add", ...item });
+      const res = await fetch(`${GAS_WEB_APP_URL}?${params}`);
+      return await res.json();
+    }
 
-async function delItem(id){if(confirm('¿Eliminar?')){await deleteData(state.view==='list'?state.view:'Inventario','Codigo',id); await loadAllData(); render();}}
+    async function deleteData(sheet, idCol, idValue) {
+      const params = new URLSearchParams({ sheet, action: "delete", idCol, idValue });
+      const res = await fetch(`${GAS_WEB_APP_URL}?${params}`);
+      return await res.json();
+    }
 
-function exportExcel(sheet){
-    let data=[];
-    if(sheet==='Inventario'){data=inventario.map(i=>Object.values(i).join('\t')).join('\n'); data=Object.keys(inventario[0]||{}).join('\t')+'\n'+data;}
-    else if(sheet==='Categorias'){data=categorias.map(c=>c).join('\n'); data='Nombre\n'+data;}
-    else if(sheet==='Tiendas'){data=tiendas.map(t=>t).join('\n'); data='Nombre\n'+data;}
-    const blob=new Blob([data],{type:'text/tab-separated-values'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=sheet+'.tsv'; a.click(); URL.revokeObjectURL(url);
-}
+    // --- Render ---
+    async function loadAll() {
+      renderInventario(await fetchData("Inventario"));
+      renderCategorias(await fetchData("Categorias"));
+      renderTiendas(await fetchData("Tiendas"));
+    }
 
-function openCategoryModal(){categoryOrStore='category';document.getElementById('modalCategoryStoreTitle').innerText='Agregar Categoria';document.getElementById('f_category_store_name').value='';document.getElementById('modal-category-store').style.display='flex';}
-function openStoreModal(){categoryOrStore='store';document.getElementById('modalCategoryStoreTitle').innerText='Agregar Tienda';document.getElementById('f_category_store_name').value='';document.getElementById('modal-category-store').style.display='flex';}
-function closeCategoryStoreModal(){document.getElementById('modal-category-store').style.display='none';}
-async function saveCategoryStore(){const name=document.getElementById('f_category_store_name').value.trim(); if(!name){alert('Nombre requerido'); return;} if(categoryOrStore==='category'){await postData('Categorias',{Nombre:name});}else{await postData('Tiendas',{Nombre:name});} await loadAllData(); closeCategoryStoreModal(); render();}
-async function showCategories(){state.view='list';inventario=categorias.map(c=>({Nombre:c})); render();}
-async function showStores(){state.view='list';inventario=tiendas.map(t=>({Nombre:t})); render();}
-</script>
+    function renderInventario(data) {
+      const tbody = document.querySelector("#inventarioTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.Codigo}</td>
+          <td>${r.Serie}</td>
+          <td>${r.Equipo}</td>
+          <td>${r.Marca}</td>
+          <td>${r.Modelo}</td>
+          <td>${r.Categoria}</td>
+          <td>${r.Tienda}</td>
+          <td><button class="btn-del" onclick="deleteInventario('${r.Codigo}')">Eliminar</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderCategorias(data) {
+      const tbody = document.querySelector("#categoriasTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.ID}</td>
+          <td>${r.Nombre}</td>
+          <td><button class="btn-del" onclick="deleteCategoria('${r.ID}')">Eliminar</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderTiendas(data) {
+      const tbody = document.querySelector("#tiendasTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.ID}</td>
+          <td>${r.Nombre}</td>
+          <td><button class="btn-del" onclick="deleteTienda('${r.ID}')">Eliminar</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // --- Acciones ---
+    async function addInventario() {
+      const item = {
+        Codigo: prompt("Codigo:"),
+        Serie: prompt("Serie:"),
+        Equipo: prompt("Equipo:"),
+        Marca: prompt("Marca:"),
+        Modelo: prompt("Modelo:"),
+        Categoria: prompt("Categoria:"),
+        Tienda: prompt("Tienda:")
+      };
+      await addData("Inventario", item);
+      loadAll();
+    }
+
+    async function deleteInventario(codigo) {
+      await deleteData("Inventario", "Codigo", codigo);
+      loadAll();
+    }
+
+    async function addCategoria() {
+      const item = {
+        ID: prompt("ID:"),
+        Nombre: prompt("Nombre:")
+      };
+      await addData("Categorias", item);
+      loadAll();
+    }
+
+    async function deleteCategoria(id) {
+      await deleteData("Categorias", "ID", id);
+      loadAll();
+    }
+
+    async function addTienda() {
+      const item = {
+        ID: prompt("ID:"),
+        Nombre: prompt("Nombre:")
+      };
+      await addData("Tiendas", item);
+      loadAll();
+    }
+
+    async function deleteTienda(id) {
+      await deleteData("Tiendas", "ID", id);
+      loadAll();
+    }
+
+    // Inicializar
+    loadAll();
+  </script>
 </body>
 </html>
