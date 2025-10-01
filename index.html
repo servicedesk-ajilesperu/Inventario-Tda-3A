@@ -8,154 +8,86 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
 body,html{height:100%;width:100%;background:#f4f6fa;}
-
-/* Sidebar */
 #app{display:flex;height:100vh;width:100vw;}
-.sidebar{
-    width:260px;
-    position:fixed;
-    height:100%;
-    overflow:hidden;
-    background:#0f62fe;
-    color:white;
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    padding:20px;
-    transition: width 0.3s ease, padding 0.3s ease;
-}
+/* Sidebar */
+.sidebar{width:260px;position:fixed;height:100%;background:#0f62fe;color:white;display:flex;flex-direction:column;gap:12px;padding:20px;transition:width 0.3s ease;}
 .sidebar.collapsed{width:60px;padding:20px 5px;}
-.brand{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-weight:700;
-    font-size:1.15rem;
-    position:relative;
-}
-#toggleSidebar{
-    position:absolute; 
-    right:10px;
-    top:10px;
-    background:#0f62fe;
-    color:white;
-    border:none;
-    border-radius:6px;
-    padding:4px 8px;
-    cursor:pointer;
-    z-index:1000;
-}
-.menu-section .accordion, .menu-section > button{background:transparent;color:white;border:none;padding:10px;width:100%;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;border-radius:8px;transition:0.2s;position:relative;}
-.menu-section .accordion:hover, .menu-section > button:hover{background: rgba(255,255,255,0.1);}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.15rem;position:relative;}
+#toggleSidebar{position:absolute;right:10px;top:10px;background:#0f62fe;color:white;border:none;border-radius:6px;padding:4px 8px;cursor:pointer;}
+.menu-section .accordion,.menu-section > button{background:transparent;color:white;border:none;padding:10px;width:100%;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;border-radius:8px;transition:0.2s;}
 .menu-section .panel{display:flex;flex-direction:column;padding-left:10px;gap:6px;overflow:hidden;max-height:0;transition:max-height 0.3s ease;}
 .menu-section .accordion.active + .panel{max-height:500px;}
-.menu-section .panel button{padding:6px 10px;font-size:0.9rem;text-align:left;background:rgba(255,255,255,0.05);border:none;border-radius:6px;color:white;cursor:pointer;display:flex;align-items:center;gap:6px;position:relative;}
-.menu-section .panel button:hover{background: rgba(255,255,255,0.15);}
-
+.menu-section .panel button{padding:6px 10px;font-size:0.9rem;text-align:left;background:rgba(255,255,255,0.05);border:none;border-radius:6px;color:white;cursor:pointer;display:flex;align-items:center;gap:6px;}
 /* Ocultar texto al colapsar */
 .sidebar.collapsed .brand span,
 .sidebar.collapsed .panel button span,
 .sidebar.collapsed .accordion span,
-.sidebar.collapsed .menu-section > button span {
-  display: none;
-}
-/* Tooltips al colapsar */
-.sidebar.collapsed .panel button::after,
-.sidebar.collapsed .accordion::after,
-.sidebar.collapsed .menu-section > button::after{
-  content: attr(title);
-  position: absolute;
-  left: 70px;
-  background: #0f62fe;
-  color: white;
-  padding: 3px 6px;
-  border-radius: 4px;
-  display: none;
-  white-space: nowrap;
-  font-size: 0.8rem;
-  z-index:1000;
-}
-.sidebar.collapsed .panel button:hover::after,
-.sidebar.collapsed .accordion:hover::after,
-.sidebar.collapsed .menu-section > button:hover::after{
-  display: block;
-}
-
+.sidebar.collapsed .menu-section > button span {display:none;}
 /* Main */
 .main{flex:1;margin-left:260px;transition:margin-left 0.3s;display:flex;flex-direction:column;height:100vh;}
 .sidebar.collapsed ~ .main{margin-left:60px;}
-header.appbar{height:64px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:0 2px 8px rgba(15,98,254,0.06);position:sticky;top:0;z-index:10;}
+header.appbar{height:64px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:0 2px 8px rgba(15,98,254,0.06);}
 .app-title{font-weight:700;color:#0f62fe;}
-.counter{background:linear-gradient(90deg, rgba(15,98,254,0.08), rgba(255,77,0,0.06));padding:8px 12px;border-radius:999px;font-weight:600;display:flex;gap:10px;align-items:center;font-size:0.95rem;}
+.counter{background:rgba(15,98,254,0.1);padding:6px 10px;border-radius:999px;font-weight:600;}
 .content{padding:20px;height:calc(100vh - 64px);overflow:auto;display:flex;flex-direction:column;gap:18px;}
 .cards{display:flex;gap:20px;flex-wrap:nowrap;overflow-x:auto;}
-.card{min-width:150px;background:white;padding:15px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center;cursor:pointer;transition:0.2s;flex-shrink:0;}
+.card{min-width:150px;background:white;padding:15px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);display:flex;flex-direction:column;gap:8px;align-items:center;cursor:pointer;flex-shrink:0;}
 .card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.15);}
 .card i{font-size:24px;color:#0f62fe;}
 .card span{font-weight:700;font-size:1.2rem;}
-input, select{padding:6px;border-radius:6px;border:1px solid #ccc;width:100%;}
+input,select{padding:6px;border-radius:6px;border:1px solid #ccc;width:100%;}
 button.btn-save{background:#0f62fe;color:white;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
 button.btn-cancel{background:#ccc;color:black;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
-table{width:100%;border-collapse:collapse;font-size:0.95rem;margin-top:10px;}
-thead th{background:#ff4d00;color:#fff;padding:12px;text-align:center;}
-tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical-align:middle;}
-.actions button{margin:0 2px;padding:6px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:32px;height:32px;transition:0.2s;}
-.btn-edit{background:#ffb86b;color:white;}
-.btn-edit:hover{background:#ffa500;}
-.btn-del{background:#ff6b6b;color:white;}
-.btn-del:hover{background:#ff3b3b;}
-.btn-export{background:#42b72a;color:white;}
-.btn-export:hover{background:#2d8c1a;}
+table{width:100%;border-collapse:collapse;font-size:0.9rem;margin-top:10px;}
+thead th{background:#ff4d00;color:#fff;padding:8px;}
+tbody td{padding:6px;border-bottom:1px solid #edf0f5;text-align:center;}
+.actions button{margin:0 2px;padding:6px;border-radius:50%;border:none;cursor:pointer;width:28px;height:28px;}
+.btn-edit{background:#ffa500;color:white;}
+.btn-del{background:#ff3b3b;color:white;}
+.search-input{margin-bottom:10px;padding:6px;border-radius:6px;border:1px solid #ccc;width:100%;}
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{position:fixed;z-index:1000;}
+  .main{margin-left:0;}
+  .cards{flex-wrap:wrap;}
+  table{font-size:0.8rem;}
+}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:50;}
-.modal{background:white;padding:20px;border-radius:12px;width:400px;max-width:95%;}
-.search-input{margin-bottom:10px;padding:6px;border-radius:6px;border:1px solid #ccc;width:300px;}
-@media(max-width:768px){.sidebar{left:-260px;position:fixed}.sidebar.collapsed{left:0}.main{margin-left:0}}
+.modal{background:white;padding:15px;border-radius:12px;width:95%;max-width:400px;}
 </style>
 </head>
 <body>
-
-<!-- APP -->
 <div id="app">
   <aside class="sidebar">
     <div class="brand">
-      <i class="fa-solid fa-boxes-stacked"></i>
-      <span>Inventario</span>
+      <i class="fa-solid fa-boxes-stacked"></i><span>Inventario</span>
       <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
     </div>
-
     <div class="menu-section">
-      <button title="Dashboard" onclick="nav('dashboard')">
-        <i class="fa-solid fa-house"></i>
-        <span>Dashboard</span>
-      </button>
+      <button onclick="nav('dashboard')"><i class="fa-solid fa-house"></i><span>Dashboard</span></button>
     </div>
-
     <div class="menu-section">
-      <button class="accordion" title="Equipos"><i class="fa-solid fa-computer"></i> <span>Equipos</span> <i class="fa-solid fa-chevron-down"></i></button>
+      <button class="accordion"><i class="fa-solid fa-computer"></i><span>Equipos</span><i class="fa-solid fa-chevron-down"></i></button>
       <div class="panel">
-        <button title="Agregar equipo" onclick="openModal()"><i class="fa-solid fa-plus"></i> <span>Agregar equipo</span></button>
-        <button title="Ver inventario" onclick="nav('list')"><i class="fa-solid fa-table-list"></i> <span>Ver inventario</span></button>
-        <button title="Exportar Inventario" onclick="exportExcel()"><i class="fa-solid fa-file-excel"></i> <span>Exportar</span></button>
+        <button onclick="openModal()"><i class="fa-solid fa-plus"></i><span>Agregar</span></button>
+        <button onclick="nav('list')"><i class="fa-solid fa-table-list"></i><span>Ver</span></button>
       </div>
     </div>
-
     <div class="menu-section">
-      <button class="accordion" title="Categorías"><i class="fa-solid fa-tags"></i> <span>Categorías</span> <i class="fa-solid fa-chevron-down"></i></button>
+      <button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorías</span><i class="fa-solid fa-chevron-down"></i></button>
       <div class="panel">
-        <button title="Ver categorías" onclick="nav('categories')"><i class="fa-solid fa-table-list"></i> <span>Ver categorías</span></button>
-        <button title="Agregar categoría" onclick="openCategoryModal()"><i class="fa-solid fa-plus"></i> <span>Agregar categoría</span></button>
+        <button onclick="nav('categories')"><i class="fa-solid fa-table-list"></i><span>Ver</span></button>
+        <button onclick="openCategoryModal()"><i class="fa-solid fa-plus"></i><span>Agregar</span></button>
       </div>
     </div>
-
     <div class="menu-section">
-      <button class="accordion" title="Tiendas"><i class="fa-solid fa-store"></i> <span>Tiendas</span> <i class="fa-solid fa-chevron-down"></i></button>
+      <button class="accordion"><i class="fa-solid fa-store"></i><span>Tiendas</span><i class="fa-solid fa-chevron-down"></i></button>
       <div class="panel">
-        <button title="Ver tiendas" onclick="nav('stores')"><i class="fa-solid fa-table-list"></i> <span>Ver tiendas</span></button>
-        <button title="Agregar tienda" onclick="openStoreModal()"><i class="fa-solid fa-plus"></i> <span>Agregar tienda</span></button>
+        <button onclick="nav('stores')"><i class="fa-solid fa-table-list"></i><span>Ver</span></button>
+        <button onclick="openStoreModal()"><i class="fa-solid fa-plus"></i><span>Agregar</span></button>
       </div>
     </div>
   </aside>
-
   <div class="main">
     <header class="appbar">
       <div class="app-title">Inventario Tiendas 3A</div>
@@ -163,173 +95,95 @@ tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical
     </header>
     <main class="content" id="main-content"></main>
   </div>
-
-  <!-- Modales -->
+  <!-- Modal Inventario -->
   <div class="modal-backdrop" id="modal">
     <div class="modal">
       <h3 id="modalTitle">Agregar Equipo</h3>
-      <div class="form-grid" style="display:flex;flex-direction:column;gap:10px;">
-        <input id="f_codigo" placeholder="Código de Inventario *"/>
-        <input id="f_serie" placeholder="Serie *"/>
-        <input id="f_equipo" placeholder="Nombre Equipo *"/>
-        <input id="f_marca" placeholder="Marca"/>
-        <input id="f_modelo" placeholder="Modelo"/>
-        <select id="f_categoria"></select>
-        <select id="f_tienda"></select>
-      </div>
-      <div style="text-align:right;margin-top:12px">
+      <input id="f_codigo" placeholder="Código"/><input id="f_serie" placeholder="Serie"/>
+      <input id="f_equipo" placeholder="Equipo"/><input id="f_marca" placeholder="Marca"/>
+      <input id="f_modelo" placeholder="Modelo"/>
+      <select id="f_categoria"></select><select id="f_tienda"></select>
+      <div style="text-align:right;margin-top:10px">
         <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
         <button class="btn-save" onclick="saveFromModal()">Guardar</button>
       </div>
     </div>
   </div>
-
+  <!-- Modal Categoría/Tienda -->
   <div class="modal-backdrop" id="modal-category-store">
     <div class="modal">
       <h3 id="modalCategoryStoreTitle"></h3>
-      <input type="text" id="f_category_store_name" placeholder="Nombre *"/>
-      <div style="text-align:right;margin-top:12px">
+      <input type="text" id="f_category_store_name" placeholder="Nombre"/>
+      <div style="text-align:right;margin-top:10px">
         <button class="btn-cancel" onclick="closeCategoryStoreModal()">Cancelar</button>
         <button class="btn-save" onclick="saveCategoryStore()">Guardar</button>
       </div>
     </div>
   </div>
 </div>
-
 <script>
-const APP_URL = "https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
-
-let inventario=[], categorias=[], tiendas=[], state={view:'dashboard'}, editIdx=null;
-let categoryOrStore='';
-
-// INIT
+const APP_URL="https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
+let inventario=[],categorias=[],tiendas=[];
+let editCodigo=null, categoryOrStore='', editName=null;
 function initApp(){
-    document.querySelectorAll('.accordion').forEach(a=>a.addEventListener('click',function(){
-        this.classList.toggle('active'); 
-        let p=this.nextElementSibling; 
-        p.style.display=p.style.display==='flex'?'none':'flex';
-    }));
-    const sidebar=document.querySelector('.sidebar');
-    document.getElementById('toggleSidebar').addEventListener('click',()=>sidebar.classList.toggle('collapsed'));
-    fetchData();
+  document.querySelectorAll('.accordion').forEach(a=>a.onclick=()=>a.classList.toggle('active'));
+  document.getElementById('toggleSidebar').onclick=()=>document.querySelector('.sidebar').classList.toggle('collapsed');
+  fetchData();
 }
-
 function fetchData(){
-    fetch(`${APP_URL}?sheet=Inventario&action=get`).then(r=>r.json()).then(data=>{
-        inventario = data;
-        updateCounter();
-        render();
-    });
-    fetch(`${APP_URL}?sheet=Categorias&action=get`).then(r=>r.json()).then(data=>{
-        categorias = data.map(c=>c.Nombre || c.categoria || c.Categoria || c.name || c);
-    });
-    fetch(`${APP_URL}?sheet=Tiendas&action=get`).then(r=>r.json()).then(data=>{
-        tiendas = data.map(s=>s.Nombre || s.tienda || s.name || s);
-    });
+  fetch(APP_URL+"?sheet=Inventario&action=get").then(r=>r.json()).then(d=>{inventario=d;updateCounter();render();});
+  fetch(APP_URL+"?sheet=Categorias&action=get").then(r=>r.json()).then(d=>{categorias=d.map(x=>x.Nombre);});
+  fetch(APP_URL+"?sheet=Tiendas&action=get").then(r=>r.json()).then(d=>{tiendas=d.map(x=>x.Nombre);});
 }
-
-function nav(v){ state.view=v; render(); }
-function updateCounter(){ document.getElementById('header-counter').innerText='Total: '+inventario.length; }
-
-// MODALES
-function openModal(){
-    const cat=document.getElementById('f_categoria'); cat.innerHTML='<option value="">Seleccione Categoría</option>'; categorias.forEach(c=>{const o=document.createElement('option');o.value=c;o.innerText=c;cat.appendChild(o);});
-    const t=document.getElementById('f_tienda'); t.innerHTML='<option value="">Seleccione Tienda</option>'; tiendas.forEach(s=>{const o=document.createElement('option');o.value=s;o.innerText=s;t.appendChild(o);});
-    document.getElementById('f_codigo').value='';document.getElementById('f_serie').value='';document.getElementById('f_equipo').value='';document.getElementById('f_marca').value='';document.getElementById('f_modelo').value='';
-    document.getElementById('modal').style.display='flex';
+function nav(v){view=v;render();}
+function updateCounter(){document.getElementById('header-counter').innerText="Total: "+inventario.length;}
+/* ---- Inventario ---- */
+function openModal(item){
+  const cat=document.getElementById('f_categoria'); cat.innerHTML='<option value="">Categoría</option>'+categorias.map(c=>`<option>${c}</option>`).join('');
+  const tie=document.getElementById('f_tienda'); tie.innerHTML='<option value="">Tienda</option>'+tiendas.map(c=>`<option>${c}</option>`).join('');
+  if(item){f_codigo.value=item.Codigo;f_serie.value=item.Serie;f_equipo.value=item.Equipo;f_marca.value=item.Marca;f_modelo.value=item.Modelo;f_categoria.value=item.Categoría;f_tienda.value=item.Tienda;editCodigo=item.Codigo;}
+  else{document.querySelectorAll('#modal input,#modal select').forEach(e=>e.value='');editCodigo=null;}
+  modal.style.display='flex';
 }
-function closeModal(){document.getElementById('modal').style.display='none';}
-
+function closeModal(){modal.style.display='none';}
 function saveFromModal(){
-    const codigo=document.getElementById('f_codigo').value.trim();
-    const serie=document.getElementById('f_serie').value.trim();
-    const equipo=document.getElementById('f_equipo').value.trim();
-    const marca=document.getElementById('f_marca').value.trim();
-    const modelo=document.getElementById('f_modelo').value.trim();
-    const categoria=document.getElementById('f_categoria').value;
-    const tienda=document.getElementById('f_tienda').value;
-    if(!codigo||!serie||!equipo||!categoria||!tienda){alert('Completa todos los campos obligatorios'); return;}
-    let params = {sheet:'Inventario',action:'add',Codigo:codigo,Serie:serie,Equipo:equipo,Marca:marca,Modelo:modelo,Categoría:categoria,Tienda:tienda};
-    fetch(APP_URL + "?" + new URLSearchParams(params)).then(r=>r.json()).then(res=>{
-        if(res.success){ fetchData(); closeModal(); } else { alert('Error al guardar'); }
-    });
+  let params={sheet:'Inventario',Codigo:f_codigo.value,Serie:f_serie.value,Equipo:f_equipo.value,Marca:f_marca.value,Modelo:f_modelo.value,Categoría:f_categoria.value,Tienda:f_tienda.value};
+  if(editCodigo){params.action='update';params.idCol='Codigo';params.idValue=editCodigo;}
+  else{params.action='add';}
+  fetch(APP_URL+"?"+new URLSearchParams(params)).then(()=>{fetchData();closeModal();});
 }
-
-// Categorías y Tiendas
-function openCategoryModal(){categoryOrStore='category'; document.getElementById('modalCategoryStoreTitle').innerText='Agregar Categoría'; document.getElementById('f_category_store_name').value=''; document.getElementById('modal-category-store').style.display='flex';}
-function openStoreModal(){categoryOrStore='store'; document.getElementById('modalCategoryStoreTitle').innerText='Agregar Tienda'; document.getElementById('f_category_store_name').value=''; document.getElementById('modal-category-store').style.display='flex';}
-function closeCategoryStoreModal(){document.getElementById('modal-category-store').style.display='none';}
-function saveCategoryStore(){ 
-    const name=document.getElementById('f_category_store_name').value.trim(); 
-    if(!name){alert('Ingresa un nombre'); return;} 
-    let sheet = categoryOrStore==='category'?'Categorias':'Tiendas';
-    fetch(APP_URL + "?" + new URLSearchParams({sheet,action:'add',Nombre:name})).then(r=>r.json()).then(res=>{
-        if(res.success){ fetchData(); closeCategoryStoreModal(); } else { alert('Error al guardar'); }
-    });
+function delItem(i){if(confirm("Eliminar equipo?")){let it=inventario[i];fetch(APP_URL+"?"+new URLSearchParams({sheet:'Inventario',action:'delete',idCol:'Codigo',idValue:it.Codigo})).then(()=>fetchData());}}
+/* ---- Categorías y Tiendas ---- */
+function openCategoryModal(item){categoryOrStore='Categorias';modalCategoryStoreTitle.innerText=item?"Editar Categoría":"Agregar Categoría";f_category_store_name.value=item?item.Nombre:'';editName=item?item.Nombre:null;modal-category-store.style.display='flex';}
+function openStoreModal(item){categoryOrStore='Tiendas';modalCategoryStoreTitle.innerText=item?"Editar Tienda":"Agregar Tienda";f_category_store_name.value=item?item.Nombre:'';editName=item?item.Nombre:null;modal-category-store.style.display='flex';}
+function closeCategoryStoreModal(){modal-category-store.style.display='none';}
+function saveCategoryStore(){
+  let n=f_category_store_name.value.trim();if(!n)return;
+  let params={sheet:categoryOrStore,Nombre:n};
+  if(editName){params.action='update';params.idCol='Nombre';params.idValue=editName;}
+  else{params.action='add';}
+  fetch(APP_URL+"?"+new URLSearchParams(params)).then(()=>{fetchData();closeCategoryStoreModal();});
 }
-
-// RENDER
+function delCategoryStore(name,sheet){if(confirm("Eliminar?")){fetch(APP_URL+"?"+new URLSearchParams({sheet:sheet,action:'delete',idCol:'Nombre',idValue:name})).then(()=>fetchData());}}
+/* ---- Render ---- */
 function render(){
-    const main=document.getElementById('main-content');
-    main.innerHTML='';
-    if(state.view==='dashboard'){
-        main.innerHTML='<h3>Dashboard</h3><div class="cards"><div class="card" onclick="nav(\'list\')"><i class="fa-solid fa-computer"></i><span>Equipos</span></div><div class="card" onclick="nav(\'categories\')"><i class="fa-solid fa-tags"></i><span>Categorías</span></div><div class="card" onclick="nav(\'stores\')"><i class="fa-solid fa-store"></i><span>Tiendas</span></div></div>';
-    }
-    else if(state.view==='list'){ renderTable('Inventario',inventario); }
-    else if(state.view==='categories'){ renderTable('Categorias',categorias); }
-    else if(state.view==='stores'){ renderTable('Tiendas',tiendas); }
+  let main=document.getElementById('main-content');main.innerHTML='';
+  if(view==='dashboard'){main.innerHTML=`<h3>Dashboard</h3><div class="cards"><div class="card" onclick="nav('list')"><i class="fa-solid fa-computer"></i><span>Equipos</span></div><div class="card" onclick="nav('categories')"><i class="fa-solid fa-tags"></i><span>Categorías</span></div><div class="card" onclick="nav('stores')"><i class="fa-solid fa-store"></i><span>Tiendas</span></div></div>`;}
+  else if(view==='list'){renderTable('Inventario',inventario);}
+  else if(view==='categories'){renderTable('Categorias',categorias.map(n=>({Nombre:n})));}
+  else if(view==='stores'){renderTable('Tiendas',tiendas.map(n=>({Nombre:n})));}
 }
-
 function renderTable(type,data){
-    const main=document.getElementById('main-content');
-    main.innerHTML='';
-    main.innerHTML=`<input class="search-input" placeholder="Buscar..." oninput="filterTable(this.value)"/>`;
-    let table='<table id="data-table"><thead><tr>';
-    if(type==='Inventario'){ table+='<th>ID</th><th>Código</th><th>Serie</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Categoria</th><th>Tienda</th><th>Acciones</th>'; }
-    else{ table+='<th>ID</th><th>Nombre</th><th>Acciones</th>'; }
-    table+='</tr></thead><tbody>';
-    data.forEach((i,idx)=>{
-        if(type==='Inventario'){
-            table+=`<tr><td>${idx+1}</td><td>${i.Codigo}</td><td>${i.Serie}</td><td>${i.Equipo}</td><td>${i.Marca}</td><td>${i.Modelo}</td><td>${i.Categoría}</td><td>${i.Tienda}</td><td class="actions"><button class="btn-edit" onclick="editItem(${idx})"><i class="fa-solid fa-pen"></i></button><button class="btn-del" onclick="delItem(${idx})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-        } else{
-            table+=`<tr><td>${idx+1}</td><td>${i.Nombre || i.name || i.Categoria || i.Tienda}</td><td class="actions"><button class="btn-edit" onclick="editCategoryStore(${idx},'${type}')"><i class="fa-solid fa-pen"></i></button><button class="btn-del" onclick="delCategoryStore(${idx},'${type}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-        }
-    });
-    table+='</tbody></table>';
-    main.innerHTML+=table;
+  let html=`<input class="search-input" placeholder="Buscar..." oninput="filterTable(this.value)"><table id="data-table"><thead><tr>`;
+  if(type==='Inventario'){html+='<th>#</th><th>Código</th><th>Serie</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Categoría</th><th>Tienda</th><th>Acciones</th>';}
+  else{html+='<th>#</th><th>Nombre</th><th>Acciones</th>';}
+  html+='</tr></thead><tbody>';
+  data.forEach((x,i)=>{if(type==='Inventario'){html+=`<tr><td>${i+1}</td><td>${x.Codigo}</td><td>${x.Serie}</td><td>${x.Equipo}</td><td>${x.Marca}</td><td>${x.Modelo}</td><td>${x.Categoría}</td><td>${x.Tienda}</td><td><button class="btn-edit" onclick="openModal(inventario[${i}])"><i class="fa fa-pen"></i></button><button class="btn-del" onclick="delItem(${i})"><i class="fa fa-trash"></i></button></td></tr>`;}else{let sheet=(type==='Categorias'?'Categorias':'Tiendas');let editFn=(type==='Categorias'?'openCategoryModal':'openStoreModal');html+=`<tr><td>${i+1}</td><td>${x.Nombre}</td><td><button class="btn-edit" onclick="${editFn}({Nombre:'${x.Nombre}'})"><i class="fa fa-pen"></i></button><button class="btn-del" onclick="delCategoryStore('${x.Nombre}','${sheet}')"><i class="fa fa-trash"></i></button></td></tr>`;}});
+  html+='</tbody></table>';document.getElementById('main-content').innerHTML=html;
 }
-
-// BUSCAR
-function filterTable(q){ const table=document.getElementById('data-table'); if(!table) return; table.querySelectorAll('tbody tr').forEach(tr=>{tr.style.display=tr.innerText.toLowerCase().includes(q.toLowerCase())?'':'none';});}
-
-// ACCIONES TABLAS
-function editItem(idx){ const i=inventario[idx]; openModal(); document.getElementById('f_codigo').value=i.Codigo; document.getElementById('f_serie').value=i.Serie; document.getElementById('f_equipo').value=i.Equipo; document.getElementById('f_marca').value=i.Marca; document.getElementById('f_modelo').value=i.Modelo; document.getElementById('f_categoria').value=i.Categoría; document.getElementById('f_tienda').value=i.Tienda; editIdx=idx; }
-function delItem(idx){ if(confirm('Eliminar equipo?')){ let i=inventario[idx]; fetch(APP_URL + "?" + new URLSearchParams({sheet:'Inventario',action:'delete',idCol:'Codigo',idValue:i.Codigo})).then(r=>r.json()).then(res=>{ if(res.deleted){ fetchData(); } else alert('Error al eliminar'); }); } }
-
-function editCategoryStore(idx,type){ const item=type==='Categorias'?categorias[idx]:tiendas[idx]; const name=prompt('Editar', item); if(name){ let sheet=type; fetch(APP_URL + "?" + new URLSearchParams({sheet,action:'update',idCol:'Nombre',idValue:item,Nombre:name})).then(r=>r.json()).then(res=>{ fetchData(); }); } }
-function delCategoryStore(idx,type){ if(confirm('Eliminar?')){ let item=type==='Categorias'?categorias[idx]:tiendas[idx]; let sheet=type; fetch(APP_URL + "?" + new URLSearchParams({sheet,action:'delete',idCol:'Nombre',idValue:item})).then(r=>r.json()).then(res=>{ fetchData(); }); } }
-
-// EXPORT
-function exportExcel() {
-    if(inventario.length === 0){ alert('No hay datos para exportar'); return; }
-    const headers = ["ID","Código","Serie","Equipo","Marca","Modelo","Categoría","Tienda"];
-    let csv = headers.join(",") + "\n";
-    inventario.forEach((item, idx) => {
-        const row = [idx+1,item.Codigo,item.Serie,item.Equipo,item.Marca,item.Modelo,item.Categoría,item.Tienda];
-        csv += row.map(v => `"${v}"`).join(",") + "\n";
-    });
-    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "inventario_equipos.csv";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-// INIT APP
+function filterTable(q){document.querySelectorAll('#data-table tbody tr').forEach(tr=>{tr.style.display=tr.innerText.toLowerCase().includes(q.toLowerCase())?'':'none';});}
+let view='dashboard';
 document.addEventListener('DOMContentLoaded',initApp);
 </script>
-
 </body>
 </html>
