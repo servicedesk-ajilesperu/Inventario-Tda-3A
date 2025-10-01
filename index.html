@@ -85,7 +85,7 @@ let editItemIndex=null;
 let currentView='dashboard';
 const STORAGE_KEY='inventario3a';
 
-// Cargar datos locales
+// Cargar desde localStorage
 function loadData(){
   const data=localStorage.getItem(STORAGE_KEY);
   if(data){
@@ -95,7 +95,26 @@ function loadData(){
     tiendas=parsed.tiendas||[];
   }
 }
+
+// Guardar en localStorage
 function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify({inventario,categorias,tiendas}));}
+
+// Cargar desde Google Sheet al iniciar
+async function fetchSheet(sheet){
+  try{
+    const res=await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get`);
+    return await res.json();
+  }catch(e){console.warn("Error fetching sheet",e); return [];}
+}
+
+async function loadInitialData(){
+  const [inv,cat,td]=await Promise.all([fetchSheet('Inventario'),fetchSheet('Categorias'),fetchSheet('Tiendas')]);
+  inventario=inv.map((i,idx)=>({...i,id:idx+1}));
+  categorias=cat.map((c,idx)=>({...c,id:idx+1}));
+  tiendas=td.map((t,idx)=>({...t,id:idx+1}));
+  saveData();
+  render();
+}
 
 // Sincronización con app web
 async function syncItem(tipo,item,action){
@@ -204,7 +223,7 @@ function saveItem(){
     const modelo=document.getElementById('modelo').value.trim();
     const categoria=document.getElementById('categoria').value;
     const tienda=document.getElementById('tienda').value;
-    if(!codigo||!equipo||!categoria||!tienda){alert('Complete todos los campos'); return;}
+    if(!codigo||!equipo||!categoria||!tienda){alert('Complete todos los campos');return;}
     if(editItemIndex!==null){
       inventario[editItemIndex]={...inventario[editItemIndex],codigo,equipo,marca,modelo,categoria,tienda};
       syncItem('inventario',inventario[editItemIndex],'update');
@@ -278,7 +297,7 @@ function deleteItem(idx,tipo='inventario'){
 
 // Inicializar
 loadData();
-render();
+loadInitialData();
 </script>
 
 </body>
