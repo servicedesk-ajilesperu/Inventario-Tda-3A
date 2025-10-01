@@ -6,157 +6,241 @@
 <title>Inventario Tiendas 3A</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
-:root { --primary:#ff6600; --bg:#f8f9fa; --text:#333; }
-body { margin:0; font-family:Arial; display:flex; background:var(--bg); color:var(--text); height:100vh; }
-.sidebar { width:250px; background:var(--primary); color:white; display:flex; flex-direction:column; transition:width 0.3s; }
-.sidebar.collapsed { width:60px; }
-.sidebar button { background:none; border:none; color:white; margin:10px 0; cursor:pointer; font-size:18px; display:flex; align-items:center; gap:10px; padding:8px; }
-.sidebar.collapsed button span { display:none; }
-.main { flex:1; padding:20px; overflow:auto; }
-.cards { display:flex; gap:20px; margin-bottom:20px; flex-wrap:wrap; }
-.card { flex:1; min-width:200px; background:white; padding:20px; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; }
-.card h2 { margin:10px 0; }
-table { width:100%; border-collapse:collapse; background:white; }
-th, td { padding:8px; border:1px solid #ddd; text-align:left; }
-th { background:var(--primary); color:white; }
-.actions button { background:none; border:none; cursor:pointer; font-size:14px; margin:0 4px; }
-.modal { position:fixed; top:0; left:0; width:100%; height:100%; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.5); }
-.modal-content { background:white; padding:20px; border-radius:10px; width:90%; max-width:500px; }
-.modal-content input, .modal-content select { width:100%; padding:8px; margin:5px 0; border:1px solid #ccc; border-radius:5px; }
-.btn-add-sidebar { background:white; color:var(--primary); border:none; padding:6px 10px; border-radius:5px; margin:5px 0; cursor:pointer; width:90%; font-weight:bold; }
-@media(max-width:768px){ .cards{flex-direction:column;} .sidebar{position:absolute; z-index:100; height:100%;} }
+*{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
+body,html{height:100%;width:100%;}
+.hidden{display:none;}
+
+/* Sidebar */
+.sidebar{
+    width:260px;
+    transition: width 0.3s ease, padding 0.3s ease;
+    position:fixed;height:100%;overflow:hidden;background:#ff4d00;color:white;display:flex;flex-direction:column;gap:12px;padding:20px;
+}
+.sidebar.collapsed{width:60px;padding:20px 5px;}
+.brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    font-size:1.15rem;
+    position:relative;
+}
+#toggleSidebar{
+    position:absolute; 
+    right:10px;
+    top:10px;
+    background:#ff4d00;
+    color:white;
+    border:none;
+    border-radius:6px;
+    padding:4px 8px;
+    cursor:pointer;
+    z-index:1000;
+}
+.menu-section button{
+    background:transparent;color:white;border:none;padding:10px;width:100%;cursor:pointer;font-weight:600;display:flex;justify-content:space-between;align-items:center;border-radius:8px;transition:0.2s;position:relative;
+}
+.menu-section button:hover{background: rgba(255,255,255,0.1);}
+.menu-section .panel{display:flex;flex-direction:column;padding-left:10px;gap:6px;overflow:hidden;max-height:0;transition:max-height 0.3s ease;}
+.menu-section .accordion.active + .panel{max-height:500px;}
+.sidebar.collapsed .brand span,
+.sidebar.collapsed .panel button span,
+.sidebar.collapsed .accordion span{display:none;}
+
+/* Main */
+.main{flex:1;margin-left:260px;transition:margin-left 0.3s;display:flex;flex-direction:column;height:100vh;}
+.sidebar.collapsed ~ .main{margin-left:60px;}
+header.appbar{height:64px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;box-shadow:0 2px 8px rgba(0,0,0,0.06);position:sticky;top:0;z-index:10;}
+.app-title{font-weight:700;color:#ff4d00;}
+.counter{background:linear-gradient(90deg, rgba(255,77,0,0.08), rgba(15,98,254,0.06));padding:8px 12px;border-radius:999px;font-weight:600;display:flex;gap:10px;align-items:center;font-size:0.95rem;}
+.content{padding:20px;height:calc(100vh - 64px);overflow:auto;display:flex;flex-direction:column;gap:18px;}
+.cards{display:flex;gap:20px;flex-wrap:wrap;}
+.card{flex:1;min-width:150px;background:white;padding:15px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.08);display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center;cursor:pointer;transition:0.2s;}
+.card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+.card i{font-size:24px;color:#ff4d00;}
+.card span{font-weight:700;font-size:1.2rem;}
+input, select{padding:6px;border-radius:6px;border:1px solid #ccc;width:100%;}
+button.btn-save{background:#ff4d00;color:white;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
+button.btn-cancel{background:#ccc;color:black;padding:8px 12px;border-radius:6px;border:none;cursor:pointer;}
+table{width:100%;border-collapse:collapse;font-size:0.95rem;margin-top:10px;}
+thead th{background:#ff4d00;color:#fff;padding:12px;text-align:center;}
+tbody td{padding:10px;border-bottom:1px solid #edf0f5;text-align:center;vertical-align:middle;}
+.actions button{margin:0 2px;padding:6px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:32px;height:32px;transition:0.2s;}
+.btn-edit{background:#ffb86b;color:white;}
+.btn-edit:hover{background:#ffa500;}
+.btn-del{background:#ff6b6b;color:white;}
+.btn-del:hover{background:#ff3b3b;}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:50;}
+.modal{background:white;padding:20px;border-radius:12px;width:400px;max-width:95%;}
+@media(max-width:768px){.sidebar{left:-260px;position:fixed}.sidebar.collapsed{left:0}.main{margin-left:0}}
 </style>
 </head>
 <body>
 
-<div class="sidebar" id="sidebar">
-  <button onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i><span>Menu</span></button>
-  <button onclick="showView('dashboard')"><i class="fa-solid fa-chart-pie"></i><span>Dashboard</span></button>
-  <hr style="width:90%;border-color:white;">
-  <button onclick="showView('inventario')"><i class="fa-solid fa-box"></i><span>Inventario</span></button>
-  <button class="btn-add-sidebar" onclick="openModal('Inventario')">+ Agregar</button>
-  <button onclick="showView('categorias')"><i class="fa-solid fa-tags"></i><span>Categorias</span></button>
-  <button class="btn-add-sidebar" onclick="openModal('Categorias')">+ Agregar</button>
-  <button onclick="showView('tiendas')"><i class="fa-solid fa-store"></i><span>Tiendas</span></button>
-  <button class="btn-add-sidebar" onclick="openModal('Tiendas')">+ Agregar</button>
-</div>
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <i class="fa-solid fa-boxes-stacked"></i>
+      <span>3A</span>
+      <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
+    </div>
 
-<div class="main">
-  <div id="content"></div>
-</div>
+    <div class="menu-section">
+      <button title="Dashboard" onclick="nav('dashboard')">
+        <i class="fa-solid fa-house"></i>
+        <span>Dashboard</span>
+      </button>
+    </div>
 
-<div id="modal" class="modal">
-  <div class="modal-content">
-    <h2 id="modalTitle"></h2>
-    <form id="modalForm"></form>
-    <button type="button" class="btn-add-sidebar" onclick="saveForm()">Guardar</button>
-    <button type="button" onclick="closeModal()">Cancelar</button>
+    <div class="menu-section">
+      <button class="accordion" title="Inventario"><i class="fa-solid fa-computer"></i> <span>Inventario</span> <i class="fa-solid fa-chevron-down"></i></button>
+      <div class="panel">
+        <button title="Ver inventario" onclick="nav('inventario')"><i class="fa-solid fa-table-list"></i> <span>Ver inventario</span></button>
+        <button title="Agregar inventario" onclick="openModal('inventario')"><i class="fa-solid fa-plus"></i> <span>Agregar inventario</span></button>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <button class="accordion" title="Categorías"><i class="fa-solid fa-tags"></i> <span>Categorías</span> <i class="fa-solid fa-chevron-down"></i></button>
+      <div class="panel">
+        <button title="Ver categorías" onclick="nav('categorias')"><i class="fa-solid fa-table-list"></i> <span>Ver categorías</span></button>
+        <button title="Agregar categoría" onclick="openModal('categorias')"><i class="fa-solid fa-plus"></i> <span>Agregar categoría</span></button>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <button class="accordion" title="Tiendas"><i class="fa-solid fa-store"></i> <span>Tiendas</span> <i class="fa-solid fa-chevron-down"></i></button>
+      <div class="panel">
+        <button title="Ver tiendas" onclick="nav('tiendas')"><i class="fa-solid fa-table-list"></i> <span>Ver tiendas</span></button>
+        <button title="Agregar tienda" onclick="openModal('tiendas')"><i class="fa-solid fa-plus"></i> <span>Agregar tienda</span></button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="appbar">
+      <div class="app-title">Inventario de Tienda</div>
+      <div class="counter" id="header-counter">Total: 0</div>
+    </header>
+    <main class="content" id="main-content"></main>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal">
+      <h3 id="modalTitle"></h3>
+      <form id="modalForm" style="display:flex;flex-direction:column;gap:10px"></form>
+      <div style="text-align:right;margin-top:12px">
+        <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+        <button type="button" class="btn-save" onclick="saveItem()">Guardar</button>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-const api="https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
-let data={inventario:[],categorias:[],tiendas:[]},currentSheet="",editIndex=null;
+const API_URL="https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
+let data={inventario:[],categorias:[],tiendas:[]};
+let currentSheet=null;
+let editIndex=null;
 
-function toggleSidebar(){ document.getElementById("sidebar").classList.toggle("collapsed"); }
-
-/* ---------- Cache ---------- */
-function saveCache(){ localStorage.setItem("inventarioData",JSON.stringify(data)); }
-function loadCache(){ const c=localStorage.getItem("inventarioData"); if(c)data=JSON.parse(c); }
-
-/* ---------- Fetch ---------- */
-async function fetchData(sheet){
-  try{ const res=await fetch(`${api}?sheet=${sheet}&action=get`); return await res.json(); }catch{return[];}
-}
-async function syncData(){
-  data.inventario=await fetchData("Inventario");
-  data.categorias=await fetchData("Categorias");
-  data.tiendas=await fetchData("Tiendas");
-  saveCache();
-  showView("dashboard");
-}
-async function loadAll(){ loadCache(); showView("dashboard"); syncData(); }
-
-/* ---------- Views ---------- */
-function showView(view){
-  const c=document.getElementById("content");
-  if(view==="dashboard"){
-    c.innerHTML=`<div class="cards">
-      <div class="card"><h3>Inventario</h3><h2>${data.inventario.length}</h2></div>
-      <div class="card"><h3>Categorias</h3><h2>${data.categorias.length}</h2></div>
-      <div class="card"><h3>Tiendas</h3><h2>${data.tiendas.length}</h2></div>
-    </div>`;
-  } else {
-    let arr=data[view];
-    let headers=view==="inventario"?["#","Codigo","Serie","Equipo","Marca","Modelo","Categoria","Tienda","Acciones"]:["#","Nombre","Acciones"];
-    let html=`<table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>`;
-    arr.forEach((r,i)=>{
-      html+=`<tr><td>${i+1}</td>`;
-      if(view==="inventario"){
-        html+=`<td>${r.Codigo}</td><td>${r.Serie}</td><td>${r.Equipo}</td><td>${r.Marca}</td><td>${r.Modelo}</td>`;
-        html+=`<td>${r.Categoria}</td><td>${r.Tienda}</td>`;
-      }else{ html+=`<td>${r.Nombre||""}</td>`;}
-      html+=`<td class="actions">
-        <button onclick="editItem('${view}',${i})"><i class="fa-solid fa-pen"></i></button>
-        <button onclick="deleteItem('${view}','${view==="inventario"?"Codigo":"Nombre"}','${view==="inventario"?r.Codigo:r.Nombre}')"><i class="fa-solid fa-trash"></i></button>
-      </td></tr>`;
-    });
-    html+="</tbody></table>";
-    c.innerHTML=html;
-  }
+function initApp(){
+  document.querySelectorAll('.accordion').forEach(a=>a.addEventListener('click',function(){this.classList.toggle('active'); this.nextElementSibling.style.display=this.nextElementSibling.style.display==='flex'?'none':'flex';}));
+  document.getElementById('toggleSidebar').addEventListener('click',()=>document.querySelector('.sidebar').classList.toggle('collapsed'));
+  loadData().then(()=>nav('dashboard'));
 }
 
-/* ---------- Modal ---------- */
-function openModal(sheet,i=null){
-  currentSheet=sheet; editIndex=i;
-  document.getElementById("modal").style.display="flex";
-  let fields=[];
-  if(sheet==="inventario") fields=["Codigo","Serie","Equipo","Marca","Modelo","Categoria","Tienda"];
-  else fields=["Nombre"];
-  const values=i!==null?data[sheet][i]:{};
-  document.getElementById("modalTitle").innerText=(i!==null?"Editar ":"Agregar ")+sheet;
-  document.getElementById("modalForm").innerHTML=fields.map(f=>{
-    if(f==="Categoria") return `<label>${f}</label><select name="${f}">${data.categorias.map(c=>`<option value="${c.Nombre}">${c.Nombre}</option>`).join("")}</select>`;
-    if(f==="Tienda") return `<label>${f}</label><select name="${f}">${data.tiendas.map(s=>`<option value="${s.Nombre}">${s.Nombre}</option>`).join("")}</select>`;
-    return `<label>${f}</label><input name="${f}" value="${values[f]||""}" required />`;
-  }).join("");
+async function loadData(){
+  data.categorias = await fetch(`${API_URL}?sheet=Categorias&action=get`).then(r=>r.json());
+  data.tiendas = await fetch(`${API_URL}?sheet=Tiendas&action=get`).then(r=>r.json());
+  data.inventario = await fetch(`${API_URL}?sheet=Inventario&action=get`).then(r=>r.json());
+  updateCounter();
 }
-function closeModal(){document.getElementById("modal").style.display="none";}
 
-/* ---------- Guardar ---------- */
-function saveForm(){
-  const form=document.getElementById("modalForm");
-  const fd=new FormData(form);
-  const newItem={};
-  fd.forEach((v,k)=>newItem[k]=v);
-  const idCol=currentSheet==="inventario"?"Codigo":"Nombre";
-  
+function updateCounter(){document.getElementById('header-counter').innerText='Total: '+data.inventario.length;}
+
+function nav(view){
+  const main=document.getElementById('main-content');
+  main.innerHTML="";
+  if(view==='dashboard'){
+    let html='<h3>Dashboard</h3><div class="cards">';
+    html+=`<div class="card" onclick="nav('inventario')"><i class="fa-solid fa-computer"></i><span>Inventario (${data.inventario.length})</span></div>`;
+    html+=`<div class="card" onclick="nav('categorias')"><i class="fa-solid fa-tags"></i><span>Categorías (${data.categorias.length})</span></div>`;
+    html+=`<div class="card" onclick="nav('tiendas')"><i class="fa-solid fa-store"></i><span>Tiendas (${data.tiendas.length})</span></div>`;
+    html+='</div>';
+    main.innerHTML=html;
+  } else showTable(view);
+}
+
+function showTable(sheet){
+  const main=document.getElementById('main-content');
+  const items=data[sheet];
+  let html=`<h3>${sheet.charAt(0).toUpperCase()+sheet.slice(1)}</h3>`;
+  html+='<table><thead><tr><th>#</th>';
+  const keys=Object.keys(items[0]||{Nombre:""});
+  keys.forEach(k=>html+=`<th>${k}</th>`);
+  html+='<th>Acciones</th></tr></thead><tbody>';
+  items.forEach((i,idx)=>{
+    html+=`<tr><td>${idx+1}</td>`;
+    keys.forEach(k=>html+=`<td>${i[k]||""}</td>`);
+    html+=`<td class="actions"><button class="btn-edit" onclick="openModal('${sheet}',${idx})"><i class="fa-solid fa-pen"></i></button>
+           <button class="btn-del" onclick="deleteItem('${sheet}',${idx})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+  });
+  html+='</tbody></table>';
+  main.innerHTML=html;
+}
+
+function openModal(sheet,idx=null){
+  currentSheet=sheet; editIndex=idx;
+  document.getElementById('modal').style.display='flex';
+  const form=document.getElementById('modalForm'); form.innerHTML="";
+  const isInventory=sheet==="inventario";
+  const fields=isInventory?["Codigo","Serie","Equipo","Marca","Modelo","Categoria","Tienda"]:["Nombre"];
+  const values=idx!==null?data[sheet][idx]:{};
+  fields.forEach(f=>{
+    if(f==="Categoria"){
+      let sel=document.createElement('select'); sel.name=f; sel.required=true;
+      sel.innerHTML=`<option value="">Seleccione</option>`+data.categorias.map(c=>`<option value="${c.Nombre}" ${values[f]===c.Nombre?'selected':''}>${c.Nombre}</option>`).join("");
+      form.appendChild(sel);
+    } else if(f==="Tienda"){
+      let sel=document.createElement('select'); sel.name=f; sel.required=true;
+      sel.innerHTML=`<option value="">Seleccione</option>`+data.tiendas.map(s=>`<option value="${s.Nombre}" ${values[f]===s.Nombre?'selected':''}>${s.Nombre}</option>`).join("");
+      form.appendChild(sel);
+    } else {
+      let inp=document.createElement('input'); inp.name=f; inp.value=values[f]||""; inp.required=true; form.appendChild(inp);
+    }
+  });
+  document.getElementById('modalTitle').innerText=(idx!==null?"Editar ":"Agregar ")+sheet;
+}
+
+function closeModal(){document.getElementById('modal').style.display='none';}
+
+async function saveItem(){
+  const form=document.getElementById('modalForm');
+  const obj={};
+  Array.from(form.elements).forEach(e=>obj[e.name]=e.value.trim());
   if(editIndex!==null){
-    data[currentSheet][editIndex]=newItem;
-    const idValue=newItem[idCol];
-    let params=[...fd.entries()].map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join("&");
-    fetch(`${api}?sheet=${currentSheet}&action=update&idCol=${idCol}&idValue=${idValue}&${params}`);
+    // update local
+    Object.keys(obj).forEach(k=>data[currentSheet][editIndex][k]=obj[k]);
+    await fetch(`${API_URL}?sheet=${capitalize(currentSheet)}&action=update&idCol=ID&idValue=${editIndex+1}&${new URLSearchParams(obj)}`);
   } else {
-    data[currentSheet].push(newItem);
-    let params=[...fd.entries()].map(([k,v])=>`${k}=${encodeURIComponent(v)}`).join("&");
-    fetch(`${api}?sheet=${currentSheet}&action=add&${params}`);
+    // add
+    data[currentSheet].push(obj);
+    await fetch(`${API_URL}?sheet=${capitalize(currentSheet)}&action=add&${new URLSearchParams(obj)}`);
   }
-  saveCache();
-  closeModal();
-  showView(currentSheet);
+  closeModal(); showTable(currentSheet); updateCounter();
 }
 
-/* ---------- Editar / Eliminar ---------- */
-function editItem(sheet,i){ openModal(sheet,i); }
-function deleteItem(sheet,idCol,idValue){
-  data[sheet]=data[sheet].filter(r=>r[idCol]!==idValue);
-  saveCache();
-  showView(sheet);
-  fetch(`${api}?sheet=${sheet}&action=delete&idCol=${idCol}&idValue=${idValue}`);
+async function deleteItem(sheet,idx){
+  if(!confirm('Eliminar item?')) return;
+  await fetch(`${API_URL}?sheet=${capitalize(sheet)}&action=delete&idCol=ID&idValue=${idx+1}`);
+  data[sheet].splice(idx,1);
+  showTable(sheet); updateCounter();
 }
 
-/* ---------- Init ---------- */
-loadAll();
+function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+initApp();
 </script>
 </body>
 </html>
