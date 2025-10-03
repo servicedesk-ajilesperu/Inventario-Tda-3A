@@ -133,7 +133,7 @@
 </div>
 
 <script>
-    // URL de tu Google Apps Script (¡REEMPLAZA ESTA URL CON LA TUYA!)
+    // URL del Google Apps Script (¡URL CONFIRMADA!)
     const APPWEB_URL = "https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
     
     // Variables de Estado
@@ -227,7 +227,7 @@
 
     // ————— Sincronización (VERSIÓN FINAL Y ROBUSTA CON VERIFICACIÓN) —————
     async function syncItem(tipo, item, action){
-        // 1. Verificación de Seguridad CRÍTICA
+        // 1. Verificación de Seguridad
         if (!item || (action !== 'add' && action !== 'delete' && action !== 'update')) {
             console.error("syncItem: Item o Acción inválidos.", { tipo, item, action });
             return false; 
@@ -254,16 +254,17 @@
         // 4. Lógica de acción
         if(action === 'add' || action === 'update'){
             if (action === 'update') {
+                 // **El ID se pasa solo como identificador (idValue), NO como campo a modificar.**
                  params.append('idCol', 'id').append('idValue', item.idSheet); 
             }
             
-            // Agregar los campos de valor al body (params)
+            // Agregar solo los campos de valor al body (params)
             fields.forEach(k => {
-                // Esta es la línea donde ocurría el error. Se verifica que 'params' es un objeto URLSearchParams válido y 'k' es una clave de 'fields'.
                 params.append(k, item[k] || '');
             });
             
         } else if(action === 'delete'){
+            // Para DELETE, solo necesitamos el idSheet
             params.append('idCol', 'id').append('idValue', item.idSheet); 
         }
         
@@ -300,9 +301,6 @@
             const success = await syncItem(op.tipo, op.item, op.action);
             if(success){
                 successfulOps.push(op);
-            } else {
-                // Si falla la sincronización de un ítem, lo dejamos en pendingOps
-                console.warn(`Falló la sincronización de ${op.action} para tipo ${op.tipo}.`);
             }
         }
         
@@ -386,10 +384,12 @@
         else if(tipo === 'categoria') arr = categorias;
         else arr = tiendas;
 
+        // Si es edición, tomamos los IDs existentes del item original.
         const itemBase = isEditing ? arr[editItemIndex] : {};
             
         if(tipo === 'inventario'){
             obj = {
+                // Mantenemos los IDs del itemBase para la edición
                 idSheet: itemBase.idSheet || null, 
                 idLocal: itemBase.idLocal || null,
                 Codigo: document.getElementById('f_Codigo').value,
@@ -402,6 +402,7 @@
             };
         } else {
             obj = {
+                // Mantenemos los IDs del itemBase para la edición
                 idSheet: itemBase.idSheet || null,
                 idLocal: itemBase.idLocal || null,
                 nombre: document.getElementById('f_nombre').value
@@ -433,11 +434,14 @@
         const arr = (tipo === 'inventario' ? inventario : (tipo === 'categoria' ? categorias : tiendas));
         const item = arr[index];
         
-        // Solo agrega a pendingOps si el registro tiene potencial de existir en Sheets (tiene ID o ID temporal)
-        if(item.idSheet || item.idLocal){
+        // **LÓGICA CLAVE REFORZADA:** Solo agregamos a pendingOps si el ítem tiene un idSheet.
+        if(item.idSheet){
             pendingOps.push({ tipo, action: 'delete', item: item });
-        }
+        } 
+        // Si no tiene idSheet, simplemente lo eliminamos del array local, 
+        // ya que nunca existió en Sheets (o era una operación ADD pendiente).
         
+        // Quitar de la matriz local
         arr.splice(index, 1); 
         
         saveData();
@@ -533,7 +537,7 @@
                 const tr = document.createElement('tr');
                 
                 let cells = [];
-                // Muestra el estado de sincronización
+                // Muestra el estado de sincronización (ID de Sheets o PENDIENTE/ERROR)
                 let idDisplay = item.idSheet || (item.idLocal ? `<span style="color:red; font-weight:700;">PENDIENTE</span>` : '<span style="color:red;">ERROR ID</span>');
 
                 if(currentView === 'inventario'){
