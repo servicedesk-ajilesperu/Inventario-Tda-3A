@@ -225,15 +225,25 @@
         render(); 
     }
 
-    // ————— Sincronización (VERSIÓN FINAL Y ROBUSTA) —————
+    // ————— Sincronización (VERSIÓN FINAL Y ROBUSTA CON VERIFICACIÓN) —————
     async function syncItem(tipo, item, action){
-        // 1. Configuración de parámetros iniciales
+        // 1. Verificación de Seguridad CRÍTICA
+        if (!item || (action !== 'add' && action !== 'delete' && action !== 'update')) {
+            console.error("syncItem: Item o Acción inválidos.", { tipo, item, action });
+            return false; 
+        }
+        if ((action === 'update' || action === 'delete') && !item.idSheet) {
+            console.warn("syncItem: Falta idSheet para la operación de actualización/eliminación. Saltando...", { item });
+            return false; 
+        }
+
+        // 2. Configuración de parámetros iniciales
         const sheet = (tipo === 'inventario') ? 'inventario' : (tipo === 'categoria' ? 'categoria' : 'tienda');
         const params = new URLSearchParams();
         params.append('sheet', sheet);
         params.append('action', action);
 
-        // 2. Definición de campos a enviar
+        // 3. Definición de campos a enviar
         let fields = [];
         if (tipo === 'inventario') {
             fields = ['Codigo', 'Serie', 'Equipo', 'Marca', 'Modelo', 'Categoria', 'Tienda'];
@@ -241,26 +251,24 @@
             fields = ['nombre']; 
         }
 
-        // 3. Lógica de acción
+        // 4. Lógica de acción
         if(action === 'add' || action === 'update'){
-            // Si es update, necesitamos el idSheet para que el Apps Script sepa qué fila actualizar
             if (action === 'update') {
                  params.append('idCol', 'id').append('idValue', item.idSheet); 
             }
             
-            // Agregar los campos de valor al body (params) de forma segura
+            // Agregar los campos de valor al body (params)
             fields.forEach(k => {
+                // Esta es la línea donde ocurría el error. Se verifica que 'params' es un objeto URLSearchParams válido y 'k' es una clave de 'fields'.
                 params.append(k, item[k] || '');
             });
             
         } else if(action === 'delete'){
-            // Para la acción delete, solo necesitamos el idSheet
             params.append('idCol', 'id').append('idValue', item.idSheet); 
         }
         
-        // 4. Ejecución del Fetch
+        // 5. Ejecución del Fetch
         try {
-            // Usamos POST para todas las operaciones de escritura (ADD, UPDATE, DELETE)
             const res = await fetch(`${APPWEB_URL}?${params.toString()}`, {method: 'POST'});
             const data = await res.json();
             
@@ -292,6 +300,9 @@
             const success = await syncItem(op.tipo, op.item, op.action);
             if(success){
                 successfulOps.push(op);
+            } else {
+                // Si falla la sincronización de un ítem, lo dejamos en pendingOps
+                console.warn(`Falló la sincronización de ${op.action} para tipo ${op.tipo}.`);
             }
         }
         
@@ -422,7 +433,8 @@
         const arr = (tipo === 'inventario' ? inventario : (tipo === 'categoria' ? categorias : tiendas));
         const item = arr[index];
         
-        if(item.idSheet){
+        // Solo agrega a pendingOps si el registro tiene potencial de existir en Sheets (tiene ID o ID temporal)
+        if(item.idSheet || item.idLocal){
             pendingOps.push({ tipo, action: 'delete', item: item });
         }
         
@@ -521,7 +533,8 @@
                 const tr = document.createElement('tr');
                 
                 let cells = [];
-                const idDisplay = item.idSheet || (item.idLocal ? `<span style="color:red;">PENDIENTE</span>` : 'ERROR');
+                // Muestra el estado de sincronización
+                let idDisplay = item.idSheet || (item.idLocal ? `<span style="color:red; font-weight:700;">PENDIENTE</span>` : '<span style="color:red;">ERROR ID</span>');
 
                 if(currentView === 'inventario'){
                     cells = [
