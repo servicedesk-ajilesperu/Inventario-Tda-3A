@@ -149,7 +149,6 @@
     };
 
     function toggleAccordion(button) {
-        // Cierra todos los paneles activos, excepto el que ya está activo
         document.querySelectorAll('.accordion').forEach(acc => {
             if (acc !== button && acc.classList.contains('active')) {
                 acc.classList.remove('active');
@@ -157,7 +156,6 @@
             }
         });
 
-        // Toggle del panel actual
         button.classList.toggle('active');
         const panel = button.nextElementSibling;
         if (panel.style.maxHeight) {
@@ -167,10 +165,8 @@
         }
     }
 
-    // Adjuntar la lógica de acordeón a todos los botones
     document.querySelectorAll('.accordion').forEach(button => {
         button.addEventListener('click', () => {
-             // Si el botón es el dashboard, solo navegamos, si no, lo manejamos con el toggle
             if (button.innerText.includes('Dashboard')) {
                 nav('dashboard');
             }
@@ -196,13 +192,11 @@
     // ————— Fetch inicial desde Sheets —————
     async function fetchSheet(sheet){
         try {
-            // Usa 'sheet' en minúscula para el parámetro
             const res = await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get&t=${Date.now()}`); 
             const json = await res.json();
             
-            // Mapeo adaptado a la respuesta del Apps Script
             return json.map(row => ({
-                idSheet: row.id, // Usamos 'id' de la respuesta del Apps Script
+                idSheet: row.id, 
                 nombre: row.nombre || row.Nombre || row.Categoria || row.Tienda || '',
                 Codigo: row.Codigo || '',
                 Serie: row.Serie || '',
@@ -220,46 +214,51 @@
 
     async function loadInitialData(){
         const [inv, cat, td] = await Promise.all([
-            fetchSheet('inventario'), // Usa minúsculas para el parámetro
+            fetchSheet('inventario'), 
             fetchSheet('categoria'),
             fetchSheet('tienda')
         ]);
         inventario = inv;
         categorias = cat;
         tiendas = td;
-        // No limpiamos pendingOps aquí, ya que pueden ser operaciones no sincronizadas antes del reinicio
         saveData();
-        render(); // Render con la data fresca
+        render(); 
     }
 
-    // ————— Sincronización (CORRECCIÓN DE ERROR "append") —————
+    // ————— Sincronización (VERSIÓN FINAL Y ROBUSTA) —————
     async function syncItem(tipo, item, action){
-        // Usa el parámetro 'tipo' en minúsculas para el sheet
+        // 1. Configuración de parámetros iniciales
         const sheet = (tipo === 'inventario') ? 'inventario' : (tipo === 'categoria' ? 'categoria' : 'tienda');
-        
-        // CORRECCIÓN: Creamos el objeto params paso a paso para evitar el error de append
         const params = new URLSearchParams();
         params.append('sheet', sheet);
         params.append('action', action);
 
-        if(action === 'add'){
-            Object.keys(item).forEach(k => {
-                // Excluimos idLocal (temporal) e idSheet (aún nulo)
-                if(k !== 'idLocal' && k !== 'idSheet') params.append(k, item[k] || '');
-            });
-        } else if(action === 'update' || action === 'delete'){
-            // Usamos idSheet para identificar la fila en Google Sheets
-            params.append('idCol', 'id').append('idValue', item.idSheet); 
-            if(action === 'update'){
-                Object.keys(item).forEach(k => {
-                    // Solo enviamos los campos de valor para actualizar
-                    if(k !== 'idLocal' && k !== 'idSheet'){
-                        params.append(k, item[k] || '');
-                    }
-                });
+        // 2. Definición de campos a enviar
+        let fields = [];
+        if (tipo === 'inventario') {
+            fields = ['Codigo', 'Serie', 'Equipo', 'Marca', 'Modelo', 'Categoria', 'Tienda'];
+        } else {
+            fields = ['nombre']; 
+        }
+
+        // 3. Lógica de acción
+        if(action === 'add' || action === 'update'){
+            // Si es update, necesitamos el idSheet para que el Apps Script sepa qué fila actualizar
+            if (action === 'update') {
+                 params.append('idCol', 'id').append('idValue', item.idSheet); 
             }
+            
+            // Agregar los campos de valor al body (params) de forma segura
+            fields.forEach(k => {
+                params.append(k, item[k] || '');
+            });
+            
+        } else if(action === 'delete'){
+            // Para la acción delete, solo necesitamos el idSheet
+            params.append('idCol', 'id').append('idValue', item.idSheet); 
         }
         
+        // 4. Ejecución del Fetch
         try {
             // Usamos POST para todas las operaciones de escritura (ADD, UPDATE, DELETE)
             const res = await fetch(`${APPWEB_URL}?${params.toString()}`, {method: 'POST'});
@@ -269,7 +268,7 @@
                 item.idSheet = data.id;
                 replaceLocalId(item); 
             }
-            return data.success; // Devuelve el estado de éxito del servidor
+            return data.success; 
         } catch (e) {
             console.warn("syncItem error:", e);
             return false;
@@ -290,17 +289,15 @@
         
         let successfulOps = [];
         for(let op of pendingOps){
-            // El item en pendingOps ya tiene el idSheet/idLocal, lo pasamos para la sync
             const success = await syncItem(op.tipo, op.item, op.action);
             if(success){
                 successfulOps.push(op);
             }
         }
         
-        // Eliminar solo las operaciones exitosas
         pendingOps = pendingOps.filter(p => !successfulOps.includes(p));
         saveData();
-        render(); // Actualiza el dashboard para reflejar el cambio en pendingOps
+        render(); 
     }
 
     // ————— Modal / Formulario —————
@@ -340,7 +337,6 @@
             });
             form.appendChild(tSel);
             
-            // Llenar data si es edición
             if(index !== null){
                 const item = inventario[index];
                 fields.forEach(k => document.getElementById('f_' + k).value = item[k] || '');
@@ -356,7 +352,6 @@
             inp.id = 'f_nombre';
             form.appendChild(inp);
             
-            // Llenar data si es edición
             if(index !== null){
                 const item = tipo === 'categoria' ? categorias[index] : tiendas[index];
                 document.getElementById('f_nombre').value = item.nombre || '';
@@ -404,11 +399,10 @@
             
         if(isEditing) arr[editItemIndex] = obj;
         else {
-            obj.idLocal = crypto.randomUUID(); // ID temporal para el local storage
+            obj.idLocal = crypto.randomUUID(); 
             arr.push(obj);
         }
 
-        // Agregar a operaciones pendientes
         const action = isEditing ? 'update' : 'add';
         pendingOps.push({ tipo, action, item: obj });
         
@@ -429,11 +423,9 @@
         const item = arr[index];
         
         if(item.idSheet){
-            // Solo se intenta sincronizar si el ítem ya existe en Sheets
             pendingOps.push({ tipo, action: 'delete', item: item });
         }
         
-        // Quitar de la matriz local
         arr.splice(index, 1); 
         
         saveData();
@@ -449,7 +441,6 @@
     function filterData(arr){
         if (!currentSearch) return arr;
         
-        // Filtra buscando la cadena en cualquier valor de la propiedad del objeto
         return arr.filter(item => {
             return Object.values(item).some(value => 
                 (value || '').toString().toLowerCase().includes(currentSearch)
@@ -496,7 +487,6 @@
             
             c.appendChild(cards);
         } else {
-            // Configurar Barra de Búsqueda
             const searchBar = document.createElement('div');
             searchBar.className = 'search-bar';
             searchBar.innerHTML = `<input type="text" id="search-input" placeholder="Buscar en tabla..." onkeyup="applySearch(this.value)" value="${currentSearch}">`;
@@ -527,12 +517,11 @@
             tbl.innerHTML = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>`;
             
             const tb = document.createElement('tbody');
-            arr.forEach((item, idx) => {
+            arr.forEach((item) => {
                 const tr = document.createElement('tr');
                 
                 let cells = [];
-                // Determina si el registro está sincronizado (tiene idSheet) o pendiente (idLocal)
-                const idDisplay = item.idSheet || (item.idLocal ? `PENDIENTE (${item.idLocal.slice(0, 4)}...)` : 'ERROR');
+                const idDisplay = item.idSheet || (item.idLocal ? `<span style="color:red;">PENDIENTE</span>` : 'ERROR');
 
                 if(currentView === 'inventario'){
                     cells = [
@@ -545,9 +534,9 @@
                 
                 const dataCells = cells.map(cell => `<td>${cell}</td>`).join('');
                 
-                // Necesitamos el índice original en la matriz global (inventario, categorias, tiendas)
-                // Usamos findIndex para obtener el índice real del elemento filtrado, ya que idx es solo el índice en el array filtrado.
-                const realIndex = (tipoTitle === 'inventario' ? inventario : (tipoTitle === 'categoria' ? categorias : tiendas)).findIndex(i => i.idSheet === item.idSheet || i.idLocal === item.idLocal);
+                // Encontrar el índice original para las funciones de edición/eliminación
+                const globalArray = (tipoTitle === 'inventario' ? inventario : (tipoTitle === 'categoria' ? categorias : tiendas));
+                const realIndex = globalArray.findIndex(i => i.idSheet === item.idSheet || i.idLocal === item.idLocal);
 
                 tr.innerHTML = `${dataCells}
                     <td class="actions">
@@ -565,9 +554,8 @@
     // ————— Navegación —————
     function nav(view){
         currentView = view;
-        currentSearch = ''; // Limpia la búsqueda al cambiar de vista
+        currentSearch = ''; 
         
-        // Activa el acordeón correspondiente al navegar
         const viewToButtonMap = {
             'dashboard': document.querySelector('.menu-section .accordion i.fa-house').closest('button'),
             'inventario': document.querySelector('.menu-section .accordion i.fa-computer').closest('button'),
@@ -577,7 +565,6 @@
 
         const targetButton = viewToButtonMap[view];
         if (targetButton) {
-            // Asegura que el botón esté activo y el panel abierto
             toggleAccordion(targetButton); 
         }
 
@@ -585,13 +572,10 @@
     }
 
     // ————— Inicialización —————
-    loadData();          // 1. Carga la data local (para un inicio rápido)
-    nav(currentView);    // 2. Renderiza la vista inicial (Dashboard por defecto)
-
-    // 3. Carga la data real desde la webapp, guarda y re-renderiza
+    loadData();          
+    nav(currentView);    
     loadInitialData(); 
 
-    // 4. Inicia el proceso de sincronización automática cada 10 segundos
     setInterval(syncPending, 10000); 
 </script>
 
