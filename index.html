@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Inventario Tiendas 3A</title>
+    <!-- Font Awesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <style>
         /* Estilos Generales */
@@ -84,6 +85,7 @@
         <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
     </div>
 
+    <!-- Menú Dinámico con Acordeón -->
     <div class="menu-section">
         <button class="accordion active" onclick="nav('dashboard')"><i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i></button>
         <div class="panel" style="max-height: 500px;">
@@ -121,6 +123,7 @@
     <div id="content"></div>
 </div>
 
+<!-- Modal para Formularios (Agregar/Editar) -->
 <div class="modal-backdrop" id="modal">
     <div class="modal">
         <h3 id="modal-title"></h3>
@@ -228,13 +231,16 @@
     // ————— Sincronización (VERSIÓN FINAL Y ROBUSTA CON VERIFICACIÓN) —————
     async function syncItem(tipo, item, action){
         // 1. Verificación de Seguridad
-        if (!item || (action !== 'add' && action !== 'delete' && action !== 'update')) {
-            console.error("syncItem: Item o Acción inválidos.", { tipo, item, action });
+        if (!item) {
+            console.error("syncItem: Item inválido.", { tipo, action });
             return false; 
         }
+
+        // Para UPDATE y DELETE, el ID de Sheets es OBLIGATORIO
         if ((action === 'update' || action === 'delete') && !item.idSheet) {
-            console.warn("syncItem: Falta idSheet para la operación de actualización/eliminación. Saltando...", { item });
-            return false; 
+            console.warn(`syncItem: Falta idSheet para la operación ${action}.`, { item });
+            // Devolvemos TRUE para que syncPending lo remueva de la cola (es un ítem defectuoso)
+            return true; 
         }
 
         // 2. Configuración de parámetros iniciales
@@ -254,7 +260,7 @@
         // 4. Lógica de acción
         if(action === 'add' || action === 'update'){
             if (action === 'update') {
-                 // **El ID se pasa solo como identificador (idValue), NO como campo a modificar.**
+                 // El ID se pasa solo como identificador (idValue).
                  params.append('idCol', 'id').append('idValue', item.idSheet); 
             }
             
@@ -277,6 +283,7 @@
                 item.idSheet = data.id;
                 replaceLocalId(item); 
             }
+            // Retorna si fue exitoso o no (incluye fallos de Apps Script)
             return data.success; 
         } catch (e) {
             console.warn("syncItem error:", e);
@@ -297,14 +304,33 @@
         if(pendingOps.length === 0) return;
         
         let successfulOps = [];
+        let newPendingOps = [];
+
         for(let op of pendingOps){
+            const isDeleteOrUpdate = op.action === 'delete' || op.action === 'update';
+            
+            // ************ LÓGICA DE LIMPIEZA ADICIONAL ************
+            // Si es DELETE/UPDATE y le falta idSheet, lo eliminamos de la cola
+            if (isDeleteOrUpdate && !op.item.idSheet) {
+                 // Marcamos como exitoso para que sea removido de la cola.
+                 console.warn("PENDING_CLEANUP: Ítem de UPDATE/DELETE sin ID de hoja. Removido de la cola.", op);
+                 successfulOps.push(op); 
+                 continue; // Salta el intento de sincronización
+            }
+            // *******************************************************
+            
+            // Intentar sincronizar
             const success = await syncItem(op.tipo, op.item, op.action);
+            
             if(success){
                 successfulOps.push(op);
+            } else {
+                newPendingOps.push(op); // Mantiene el ítem para reintento
             }
         }
         
-        pendingOps = pendingOps.filter(p => !successfulOps.includes(p));
+        // Filtra los que tuvieron éxito o fueron limpiados
+        pendingOps = newPendingOps;
         saveData();
         render(); 
     }
@@ -435,11 +461,11 @@
         const item = arr[index];
         
         // **LÓGICA CLAVE REFORZADA:** Solo agregamos a pendingOps si el ítem tiene un idSheet.
+        // Si no tiene idSheet, simplemente lo eliminamos del array local, 
+        // ya que era una operación ADD pendiente y no hace falta avisar al servidor.
         if(item.idSheet){
             pendingOps.push({ tipo, action: 'delete', item: item });
         } 
-        // Si no tiene idSheet, simplemente lo eliminamos del array local, 
-        // ya que nunca existió en Sheets (o era una operación ADD pendiente).
         
         // Quitar de la matriz local
         arr.splice(index, 1); 
@@ -536,9 +562,16 @@
             arr.forEach((item) => {
                 const tr = document.createElement('tr');
                 
-                let cells = [];
-                // Muestra el estado de sincronización (ID de Sheets o PENDIENTE/ERROR)
-                let idDisplay = item.idSheet || (item.idLocal ? `<span style="color:red; font-weight:700;">PENDIENTE</span>` : '<span style="color:red;">ERROR ID</span>');
+                let idDisplay = '';
+                if (item.idSheet) {
+                    idDisplay = item.idSheet;
+                } else if (item.idLocal) {
+                    // Si tiene ID local pero no de Sheet, es PENDIENTE
+                    const isPending = pendingOps.some(op => op.item.idLocal === item.idLocal);
+                    idDisplay = isPending ? `<span style="color:red; font-weight:700;">PENDIENTE</span>` : `<span style="color:orange;">NUEVO</span>`;
+                } else {
+                    idDisplay = '<span style="color:red;">ERROR ID</span>';
+                }
 
                 if(currentView === 'inventario'){
                     cells = [
@@ -593,6 +626,7 @@
     nav(currentView);    
     loadInitialData(); 
 
+    // Intentar sincronizar cada 10 segundos
     setInterval(syncPending, 10000); 
 </script>
 
