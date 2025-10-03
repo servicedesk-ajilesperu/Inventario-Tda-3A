@@ -98,7 +98,58 @@ let editItemIndex=null;
 let currentView='dashboard';
 const STORAGE_KEY='inventario3a';
 
-// Cargar y guardar datos
+// ====== Sidebar ======
+document.getElementById('toggleSidebar').onclick=function(){
+  const sidebar=document.getElementById('sidebar');
+  sidebar.classList.toggle('collapsed');
+  if(sidebar.classList.contains('collapsed')){
+    document.querySelectorAll('.accordion').forEach(a=>a.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.style.display='none');
+  }
+};
+
+// ====== Fetch con idSheet ======
+async function fetchSheet(sheet){
+  try{
+    const res=await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get`);
+    const json=await res.json();
+    return json.map((row,i)=>({
+      idSheet: row.id || i+1, // ID real de la hoja
+      id: i+1,                // ID local
+      nombre: row.nombre || row.Nombre || row.Categoria || row.Tienda || '',
+      Codigo: row.Codigo||'',
+      Serie: row.Serie||'',
+      Equipo: row.Equipo||'',
+      Marca: row.Marca||'',
+      Modelo: row.Modelo||'',
+      Categoria: row.Categoria||'',
+      Tienda: row.Tienda||''
+    }));
+  }catch(e){console.warn("Error fetching sheet",e); return [];}
+}
+
+// ====== Sincronización ======
+async function syncItem(tipo,item,action){
+  let sheet = tipo==="inventario"?"Inventario": tipo==="categoria"?"Categorias":"Tiendas";
+  const params = new URLSearchParams({sheet,action});
+
+  if(action==="add"){
+    Object.keys(item).forEach(k=>{if(k!=="id" && k!=="idSheet") params.append(k,item[k]||"");});
+  }else if(action==="update" || action==="delete"){
+    params.append("idCol","id").append("idValue",item.idSheet);
+    if(action==="update"){
+      Object.keys(item).forEach(k=>{if(k!=="id" && k!=="idSheet") params.append(k,item[k]||"");});
+    }
+  }
+
+  try{
+    const res=await fetch(`${APPWEB_URL}?${params.toString()}`);
+    const data=await res.json();
+    if(action==="add" && data.idSheet){ item.idSheet=data.idSheet; }
+  }catch(e){console.warn("Error sincronizando:",e);}
+}
+
+// ====== Local storage ======
 function loadData(){
   const data=localStorage.getItem(STORAGE_KEY);
   if(data){
@@ -110,75 +161,20 @@ function loadData(){
 }
 function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify({inventario,categorias,tiendas}));}
 
-// Fetch normalizado
-async function fetchSheet(sheet){
-  try{
-    const res=await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get`);
-    const json=await res.json();
-    return json.map((row,i)=>{
-      return {
-        id:i+1,
-        nombre:row.nombre || row.Nombre || row.Categoria || row.Tienda || `Item ${i+1}`,
-        Codigo:row.Codigo||'',
-        Serie:row.Serie||'',
-        Equipo:row.Equipo||'',
-        Marca:row.Marca||'',
-        Modelo:row.Modelo||'',
-        Categoria:row.Categoria||'',
-        Tienda:row.Tienda||''
-      };
-    });
-  }catch(e){console.warn("Error fetching sheet",e); return [];}
-}
-
+// ====== Inicialización ======
 async function loadInitialData(){
   const [inv,cat,td]=await Promise.all([fetchSheet('Inventario'),fetchSheet('Categorias'),fetchSheet('Tiendas')]);
   inventario=inv; categorias=cat; tiendas=td;
   saveData(); render();
 }
 
-// Sync AppWeb
-async function syncItem(tipo,item,action){
-  let sheet = tipo==="inventario"?"Inventario": tipo==="categoria"?"Categorias":"Tiendas";
-  const params = new URLSearchParams({sheet, action});
-  if(action==="add" || action==="update"){
-    Object.keys(item).forEach(k=>params.append(k, item[k]||""));
-    if(action==="update") params.append("idCol","id").append("idValue",item.id);
-  } else if(action==="delete"){
-    params.append("idCol","id").append("idValue",item.id);
-  }
-  try{await fetch(`${APPWEB_URL}?${params.toString()}`).then(r=>r.json());}catch(e){console.warn("Error sincronizando:",e);}
-}
-
-// Sidebar toggle y colapso
-document.getElementById('toggleSidebar').onclick = function(){
-  const sidebar = document.getElementById('sidebar');
-  sidebar.classList.toggle('collapsed');
-  if(sidebar.classList.contains('collapsed')){
-    document.querySelectorAll('.accordion').forEach(a=>a.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p=>p.style.display='none');
-  }
-};
-
-// Accordion
-document.querySelectorAll('.accordion').forEach(acc=>{
-  acc.onclick=function(){
-    const isActive=this.classList.contains('active');
-    document.querySelectorAll('.accordion').forEach(a=>a.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p=>p.style.display='none');
-    if(!isActive){this.classList.add('active'); this.nextElementSibling.style.display='flex';}
-  };
-});
-
-// Navigation
-function nav(view){currentView=view; render();}
-
-// Modal open
+// ====== Modal ======
 function openAddForm(tipo){
   editItemIndex=null;
   document.getElementById('modal').style.display='flex';
   const title=document.getElementById('modal-title');
-  const form=document.getElementById('modal-form'); form.innerHTML='';
+  const form=document.getElementById('modal-form');
+  form.innerHTML='';
   if(tipo==='inventario'){
     title.innerText='Agregar Inventario';
     ['Codigo','Serie','Equipo','Marca','Modelo'].forEach(k=>{
@@ -186,10 +182,12 @@ function openAddForm(tipo){
     });
     const catSel=document.createElement('select'); catSel.id='f_Categoria';
     catSel.innerHTML='<option value="">Seleccione Categoría</option>';
-    categorias.forEach(c=>{const o=document.createElement('option'); o.value=c.nombre; o.innerText=c.nombre; catSel.appendChild(o);}); form.appendChild(catSel);
+    categorias.forEach(c=>{const o=document.createElement('option'); o.value=c.nombre; o.innerText=c.nombre; catSel.appendChild(o);});
+    form.appendChild(catSel);
     const tSel=document.createElement('select'); tSel.id='f_Tienda';
     tSel.innerHTML='<option value="">Seleccione Tienda</option>';
-    tiendas.forEach(t=>{const o=document.createElement('option'); o.value=t.nombre; o.innerText=t.nombre; tSel.appendChild(o);}); form.appendChild(tSel);
+    tiendas.forEach(t=>{const o=document.createElement('option'); o.value=t.nombre; o.innerText=t.nombre; tSel.appendChild(o);});
+    form.appendChild(tSel);
   } else {
     title.innerText='Agregar '+tipo.charAt(0).toUpperCase()+tipo.slice(1);
     const inp=document.createElement('input'); inp.placeholder='Nombre'; inp.id='f_nombre'; form.appendChild(inp);
@@ -198,40 +196,54 @@ function openAddForm(tipo){
 }
 function closeModal(){document.getElementById('modal').style.display='none';}
 
-// Save item y recalc IDs
-function saveItem(){
-  const form=document.getElementById('modal-form'); const tipo=form.dataset.tipo;
+// ====== Save Item ======
+async function saveItem(){
+  const form=document.getElementById('modal-form');
+  const tipo=form.dataset.tipo;
+  let obj={};
+
   if(tipo==='inventario'){
-    const obj={id:editItemIndex!==null?inventario[editItemIndex].id:inventario.length+1,
+    obj={
+      id: editItemIndex!==null?inventario[editItemIndex].id:inventario.length+1,
+      idSheet: editItemIndex!==null?inventario[editItemIndex].idSheet:null,
       Codigo:document.getElementById('f_Codigo').value,
       Serie:document.getElementById('f_Serie').value,
       Equipo:document.getElementById('f_Equipo').value,
       Marca:document.getElementById('f_Marca').value,
       Modelo:document.getElementById('f_Modelo').value,
       Categoria:document.getElementById('f_Categoria').value,
-      Tienda:document.getElementById('f_Tienda').value};
+      Tienda:document.getElementById('f_Tienda').value
+    };
     if(editItemIndex!==null) inventario[editItemIndex]=obj;
     else inventario.push(obj);
-    syncItem('inventario',obj,editItemIndex!==null?'update':'add');
+    await syncItem('inventario',obj,editItemIndex!==null?'update':'add');
   } else if(tipo==='categoria'){
-    const name=document.getElementById('f_nombre').value;
-    const obj={id:editItemIndex!==null?categorias[editItemIndex].id:categorias.length+1,nombre:name};
+    obj={
+      id: editItemIndex!==null?categorias[editItemIndex].id:categorias.length+1,
+      idSheet: editItemIndex!==null?categorias[editItemIndex].idSheet:null,
+      nombre:document.getElementById('f_nombre').value
+    };
     if(editItemIndex!==null) categorias[editItemIndex]=obj;
     else categorias.push(obj);
-    syncItem('categoria',obj,editItemIndex!==null?'update':'add');
+    await syncItem('categoria',obj,editItemIndex!==null?'update':'add');
   } else if(tipo==='tienda'){
-    const name=document.getElementById('f_nombre').value;
-    const obj={id:editItemIndex!==null?tiendas[editItemIndex].id:tiendas.length+1,nombre:name};
+    obj={
+      id: editItemIndex!==null?tiendas[editItemIndex].id:tiendas.length+1,
+      idSheet: editItemIndex!==null?tiendas[editItemIndex].idSheet:null,
+      nombre:document.getElementById('f_nombre').value
+    };
     if(editItemIndex!==null) tiendas[editItemIndex]=obj;
     else tiendas.push(obj);
-    syncItem('tienda',obj,editItemIndex!==null?'update':'add');
+    await syncItem('tienda',obj,editItemIndex!==null?'update':'add');
   }
-  recalcIDs(); saveData(); render(); closeModal();
+
+  saveData(); render(); closeModal();
 }
 
-// Edit
+// ====== Edit/Delete ======
 function editItemFunc(tipo,index){
-  editItemIndex=index; openAddForm(tipo);
+  editItemIndex=index;
+  openAddForm(tipo);
   if(tipo==='inventario'){
     document.getElementById('f_Codigo').value=inventario[index].Codigo;
     document.getElementById('f_Serie').value=inventario[index].Serie;
@@ -245,22 +257,16 @@ function editItemFunc(tipo,index){
   }
 }
 
-// Delete y recalc IDs
-function deleteItem(tipo,index){
+async function deleteItem(tipo,index){
   if(!confirm('¿Eliminar este registro?')) return;
-  if(tipo==='inventario'){syncItem('inventario',{id:inventario[index].id},'delete'); inventario.splice(index,1);}
-  else if(tipo==='categoria'){syncItem('categoria',{id:categorias[index].id},'delete'); categorias.splice(index,1);}
-  else if(tipo==='tienda'){syncItem('tienda',{id:tiendas[index].id},'delete'); tiendas.splice(index,1);}
-  recalcIDs(); saveData(); render();
+  let arr=(tipo==='inventario')?inventario:(tipo==='categoria')?categorias:tiendas;
+  const item=arr[index];
+  await syncItem(tipo,item,'delete');
+  arr.splice(index,1);
+  saveData(); render();
 }
 
-function recalcIDs(){
-  inventario.forEach((i,idx)=>i.id=idx+1);
-  categorias.forEach((c,idx)=>c.id=idx+1);
-  tiendas.forEach((t,idx)=>t.id=idx+1);
-}
-
-// Render
+// ====== Render ======
 function render(){
   const c=document.getElementById('content'); c.innerHTML='';
   if(currentView==='dashboard'){
@@ -274,16 +280,17 @@ function render(){
     const tb=document.createElement('tbody');
     inventario.forEach((i,idx)=>{
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${i.id}</td><td>${i.Codigo}</td><td>${i.Serie}</td><td>${i.Equipo}</td><td>${i.Marca}</td><td>${i.Modelo}</td><td>${i.Categoria||''}</td><td>${i.Tienda||''}</td>
+      tr.innerHTML=`<td>${i.id}</td><td>${i.Codigo}</td><td>${i.Serie}</td><td>${i.Equipo}</td><td>${i.Marca}</td><td>${i.Modelo}</td><td>${i.Categoria}</td><td>${i.Tienda}</td>
       <td class="actions"><button class="btn-edit" onclick="editItemFunc('inventario',${idx})"><i class="fa-solid fa-pen"></i></button>
-      <button class="btn-del" onclick="deleteItem('inventario',${idx})"><i class="fa-solid fa-trash"></i></button></td>`; tb.appendChild(tr);
+      <button class="btn-del" onclick="deleteItem('inventario',${idx})"><i class="fa-solid fa-trash"></i></button></td>`;
+      tb.appendChild(tr);
     });
     tbl.appendChild(tb); c.appendChild(tbl);
   } else if(currentView==='categoria'){
     const tbl=document.createElement('table'); tbl.innerHTML='<thead><tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr></thead>';
     const tb=document.createElement('tbody');
     categorias.forEach((i,idx)=>{
-      const tr=document.createElement('tr'); tr.innerHTML=`<td>${i.id}</td><td>${i.nombre||''}</td><td class="actions">
+      const tr=document.createElement('tr'); tr.innerHTML=`<td>${i.id}</td><td>${i.nombre}</td><td class="actions">
       <button class="btn-edit" onclick="editItemFunc('categoria',${idx})"><i class="fa-solid fa-pen"></i></button>
       <button class="btn-del" onclick="deleteItem('categoria',${idx})"><i class="fa-solid fa-trash"></i></button></td>`; tb.appendChild(tr);
     });
@@ -292,7 +299,7 @@ function render(){
     const tbl=document.createElement('table'); tbl.innerHTML='<thead><tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr></thead>';
     const tb=document.createElement('tbody');
     tiendas.forEach((i,idx)=>{
-      const tr=document.createElement('tr'); tr.innerHTML=`<td>${i.id}</td><td>${i.nombre||''}</td><td class="actions">
+      const tr=document.createElement('tr'); tr.innerHTML=`<td>${i.id}</td><td>${i.nombre}</td><td class="actions">
       <button class="btn-edit" onclick="editItemFunc('tienda',${idx})"><i class="fa-solid fa-pen"></i></button>
       <button class="btn-del" onclick="deleteItem('tienda',${idx})"><i class="fa-solid fa-trash"></i></button></td>`; tb.appendChild(tr);
     });
@@ -300,7 +307,10 @@ function render(){
   }
 }
 
-// Inicialización
+// ====== Navegación ======
+function nav(view){currentView=view;render();}
+
+// ====== Start ======
 loadData(); render(); loadInitialData();
 </script>
 
