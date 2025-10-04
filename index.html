@@ -1,92 +1,136 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Inventario Tiendas 3A</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
-:root {
-  --primary: #ff4d00;
-  --dark: #222;
-  --light: #f9f9f9;
-}
-body {
-  margin:0; font-family: Arial, sans-serif;
-  background: var(--light); color: var(--dark);
-  display:flex;
-}
-.sidebar {
-  width:220px; background: var(--primary); color:#fff;
-  min-height:100vh; padding:15px; position:fixed;
-}
-.sidebar h2 { text-align:center; margin:0 0 15px; }
-.sidebar ul { list-style:none; padding:0; }
-.sidebar ul li {
-  padding:10px; cursor:pointer; border-radius:8px;
-}
-.sidebar ul li:hover { background:rgba(255,255,255,0.2); }
-.content {
-  margin-left:220px; padding:20px; flex:1;
-}
-h1 { margin-top:0; }
-.cards {
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:15px;
-}
-.card {
-  background:#fff; padding:20px; border-radius:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center;
-  cursor:pointer; transition:.2s;
-}
-.card:hover { transform:translateY(-3px); }
-.table-container { overflow-x:auto; }
-table { width:100%; border-collapse:collapse; background:#fff; }
-th, td { padding:10px; border:1px solid #ddd; text-align:left; }
-button {
-  background:var(--primary); color:#fff; border:none;
-  padding:6px 12px; border-radius:6px; cursor:pointer;
-}
-button:hover { opacity:.8; }
-.modal {
-  display:none; position:fixed; top:0; left:0; right:0; bottom:0;
-  background:rgba(0,0,0,0.5); justify-content:center; align-items:center;
-}
-.modal-content {
-  background:#fff; padding:20px; border-radius:12px; width:90%; max-width:500px;
-}
-.modal-content input, .modal-content select {
-  display:block; width:100%; padding:8px; margin-bottom:10px;
-  border:1px solid #ccc; border-radius:6px;
+/* ------------------ DISEÑO ORIGINAL (conservado) ------------------ */
+body, html { margin:0; padding:0; font-family: sans-serif; background: #f7f7f7; }
+* { box-sizing: border-box; }
+
+/* Sidebar (Menú Lateral) */
+.sidebar { width:260px; position:fixed; height:100%; background:#ff4d00; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
+.sidebar.collapsed { width:60px; padding:20px 5px; }
+.brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.2rem; position:relative; margin-bottom:10px; }
+#toggleSidebar { position:absolute; right:0; top:0; background:#cc3c00; color:white; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; }
+
+/* Acordeón */
+.menu-section { width:100%; }
+.menu-section .accordion { background:transparent; color:white; border:none; padding:10px; width:100%; display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600; justify-content:space-between; transition:0.2s; border-radius:4px; }
+.menu-section .accordion.active, .menu-section .accordion:hover { background-color:#e64500; }
+.menu-section .panel { padding:0 10px; max-height:0; overflow:hidden; transition:max-height 0.28s ease-in-out; background-color:#e64500; display:flex; flex-direction:column; gap:4px; }
+.menu-section .panel button { background:transparent; color:white; border:none; padding:8px; text-align:left; display:flex; align-items:center; gap:6px; cursor:pointer; width:100%; border-radius:4px; }
+.menu-section .panel button:hover { background-color:#cc4000; }
+.sidebar.collapsed .brand span, .sidebar.collapsed .menu-section .accordion span, .sidebar.collapsed .panel button span { display:none; }
+.sidebar.collapsed .accordion { justify-content:center; }
+.sidebar.collapsed .accordion i.fa-chevron-down { display:none; }
+
+/* Contenido */
+.main { margin-left:260px; padding:20px; transition:0.3s; }
+.sidebar.collapsed ~ .main { margin-left:60px; }
+
+/* Cards */
+.cards { display:flex; gap:20px; margin-top:20px; flex-wrap:wrap; }
+.card { flex:1; min-width:150px; background:white; color:#ff4d00; padding:20px; border-radius:12px; text-align:center; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.1); transition:0.2s; }
+.card:hover { transform:translateY(-3px); box-shadow:0 6px 12px rgba(0,0,0,0.15); }
+.card span { font-weight:700; font-size:1.3rem; display:block; margin-top:5px;}
+.card i { font-size:2rem; }
+
+/* Búsqueda */
+.search-bar { margin-bottom:15px; display:flex; gap:10px; }
+.search-bar input { flex-grow:1; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
+
+/* Tabla */
+table { width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.05); display:block; overflow-x:auto; white-space:nowrap; }
+th, td { border:1px solid #eee; padding:10px; text-align:center; font-size:0.9rem; }
+th { background:#ff4d00; color:white; font-weight:600; }
+tr:nth-child(even) { background-color:#f9f9f9; }
+.actions button { margin:0 2px; padding:6px; border-radius:50%; border:none; cursor:pointer; width:32px; height:32px; transition:0.1s; }
+.actions button:hover { opacity:0.8; }
+.btn-edit { background:#ffb86b; color:white; }
+.btn-del { background:#d9534f; color:white; }
+
+/* Modal */
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:50; }
+.modal { background:white; padding:25px; border-radius:12px; width:520px; max-width:95%; box-shadow:0 10px 20px rgba(0,0,0,0.2); }
+input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:100%; margin-bottom:12px; font-size:1rem; }
+.modal button { padding:8px 15px; border-radius:6px; cursor:pointer; border:none; font-weight:600; transition:0.1s; }
+.modal button:last-child { background:#ff4d00; color:white; }
+.modal button:last-child:hover { background:#cc3c00; }
+.modal button:first-child { background:#eee; color:#333; margin-right:10px; }
+.modal button:first-child:hover { background:#ddd; }
+
+/* Responsive */
+@media(max-width:768px){
+  .sidebar { left:-260px; position:fixed; }
+  .sidebar.collapsed { left:0; }
+  .main { margin-left:0; padding:10px; }
+  .cards { flex-direction:column; }
+  .card { min-width:100%; }
+  table { display:block; }
+  th, td { display:table-cell; }
 }
 </style>
 </head>
 <body>
-<div class="sidebar">
-  <h2>Inventario 3A</h2>
-  <ul>
-    <li onclick="nav('dashboard')"><i class="fa-solid fa-chart-line"></i> Dashboard</li>
-    <li onclick="nav('inventario')"><i class="fa-solid fa-computer"></i> Inventario</li>
-    <li onclick="nav('categoria')"><i class="fa-solid fa-tags"></i> Categorías</li>
-    <li onclick="nav('tienda')"><i class="fa-solid fa-store"></i> Tiendas</li>
-  </ul>
-</div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <i class="fa-solid fa-boxes-stacked"></i><span>Inventario 3A</span>
+      <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
+    </div>
 
-<div class="content">
-  <h1 id="main-title">Dashboard de Inventario</h1>
-  <div id="content"></div>
-</div>
+    <div class="menu-section">
+      <button class="accordion active"><i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i></button>
+      <div class="panel" style="max-height:500px;">
+        <button onclick="nav('dashboard')"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
+      </div>
+    </div>
 
-<div class="modal" id="modal">
-  <div class="modal-content">
-    <h2 id="modal-title"></h2>
-    <form id="modal-form"></form>
-    <div style="text-align:right">
-      <button type="button" onclick="closeModal()">Cancelar</button>
-      <button type="button" onclick="saveForm()">Guardar</button>
+    <div class="menu-section">
+      <button class="accordion"><i class="fa-solid fa-computer"></i><span>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
+      <div class="panel">
+        <button onclick="openAddForm('inventario')"><i class="fa-solid fa-plus"></i><span>Agregar Inventario</span></button>
+        <button onclick="nav('inventario')"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorías</span><i class="fa-solid fa-chevron-down"></i></button>
+      <div class="panel">
+        <button onclick="openAddForm('categoria')"><i class="fa-solid fa-plus"></i><span>Agregar Categoría</span></button>
+        <button onclick="nav('categoria')"><i class="fa-solid fa-table"></i><span>Ver Categorías</span></button>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <button class="accordion"><i class="fa-solid fa-store"></i><span>Tiendas</span><i class="fa-solid fa-chevron-down"></i></button>
+      <div class="panel">
+        <button onclick="openAddForm('tienda')"><i class="fa-solid fa-plus"></i><span>Agregar Tienda</span></button>
+        <button onclick="nav('tienda')"><i class="fa-solid fa-table"></i><span>Ver Tiendas</span></button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <h2 id="main-title">Inventario de Tienda</h2>
+    <div id="content"></div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal">
+      <h3 id="modal-title"></h3>
+      <div id="modal-form"></div>
+      <div style="text-align:right; margin-top:10px;">
+        <button onclick="closeModal()">Cancelar</button>
+        <button onclick="saveItem()">Guardar</button>
+      </div>
     </div>
   </div>
-</div>
 
 <script>
 /* ================= CONFIG ================= */
@@ -98,166 +142,478 @@ let currentSearch = '';
 const STORAGE_KEY = 'inventario3a';
 /* ========================================== */
 
-function nav(view){ currentView=view; render(); }
+/* Sidebar toggle & accordion */
+document.getElementById('toggleSidebar').onclick = () => document.getElementById('sidebar').classList.toggle('collapsed');
+document.querySelectorAll('.accordion').forEach(btn => btn.addEventListener('click', () => {
+  // toggle solo visual
+  document.querySelectorAll('.accordion').forEach(acc => {
+    if(acc !== btn && acc.classList.contains('active')) {
+      acc.classList.remove('active');
+      if(acc.nextElementSibling) acc.nextElementSibling.style.maxHeight = null;
+    }
+  });
+  btn.classList.toggle('active');
+  const panel = btn.nextElementSibling;
+  if(panel) panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight + 'px';
+}));
 
-/* Guardar/leer localStorage */
-function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify({inventario,categorias,tiendas})); }
+/* --- Storage helpers --- */
+function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify({ inventario, categorias, tiendas, pendingOps })); }
 function loadData(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return;
   try{
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if(data){ inventario=data.inventario||[]; categorias=data.categorias||[]; tiendas=data.tiendas||[]; }
-  }catch(e){ console.warn("loadData error", e); }
+    const parsed = JSON.parse(raw);
+    inventario = parsed.inventario || [];
+    categorias = parsed.categorias || [];
+    tiendas = parsed.tiendas || [];
+    pendingOps = parsed.pendingOps || [];
+  }catch(e){
+    console.warn('parse storage error', e);
+  }
 }
 
-/* Render principal */
-function render(){
-  const container=document.getElementById('content');
-  container.innerHTML='';
-  const titleEl=document.getElementById('main-title');
+/* --- Fetch remote sheets (GET) --- */
+async function fetchSheet(sheet){
+  try{
+    const res = await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get&t=${Date.now()}`);
+    const json = await res.json();
+    if(!Array.isArray(json)) return [];
+    return json.map(row => ({
+      idSheet: row.id || '',
+      nombre: row.nombre || row.Categoria || row.Tienda || '',
+      Codigo: row.Codigo || '',
+      Serie: row.Serie || '',
+      Equipo: row.Equipo || '',
+      Marca: row.Marca || '',
+      Modelo: row.Modelo || '',
+      Categoria: row.Categoria || '',
+      Tienda: row.Tienda || ''
+    }));
+  }catch(e){
+    console.warn('fetchSheet error', e);
+    return [];
+  }
+}
 
-  if(currentView==='dashboard'){
-    titleEl.innerText='Dashboard de Inventario';
-    const cards=document.createElement('div'); cards.className='cards';
-    const createCard=(label,count,view,icon)=>{
-      const c=document.createElement('div');
-      c.className='card';
-      c.innerHTML=`<i class="fa-solid ${icon}"></i><span>${label}: ${count}</span>`;
-      c.onclick=()=>nav(view);
-      return c;
+/* --- Inicial carga: si local vacío se carga remoto, si no preserva locales --- */
+async function loadInitialData(){
+  const [inv, cat, td] = await Promise.all([
+    fetchSheet('inventario'),
+    fetchSheet('categoria'),
+    fetchSheet('tienda')
+  ]);
+
+  // Si no hay datos locales, usar remotos. Si hay locales, preservarlos y solo añadir lo que venga del server sin duplicar por idSheet.
+  if(inventario.length === 0){
+    inventario = inv;
+  } else {
+    // agregar items del servidor que no estén localmente (por idSheet)
+    const serverMap = new Map(inv.filter(i => i.idSheet).map(i => [i.idSheet, i]));
+    const merged = [];
+    // primero los server items en orden server (mantiene correlativo)
+    for(const s of inv){
+      merged.push(s);
+    }
+    // luego mantener los locales que no tengan idSheet (local-only)
+    for(const local of inventario){
+      if(!local.idSheet){
+        merged.push(local);
+      } else {
+        // si local tiene idSheet pero no está en server, también conservarlo (edge-case)
+        if(!serverMap.has(local.idSheet)) merged.push(local);
+      }
+    }
+    inventario = merged;
+  }
+
+  if(categorias.length === 0) categorias = cat;
+  else {
+    const serverMap = new Map(cat.filter(i => i.idSheet).map(i => [i.idSheet, i]));
+    const merged = [];
+    for(const s of cat) merged.push(s);
+    for(const l of categorias) if(!l.idSheet) merged.push(l);
+    categorias = merged;
+  }
+
+  if(tiendas.length === 0) tiendas = td;
+  else {
+    const serverMap = new Map(td.filter(i => i.idSheet).map(i => [i.idSheet, i]));
+    const merged = [];
+    for(const s of td) merged.push(s);
+    for(const l of tiendas) if(!l.idSheet) merged.push(l);
+    tiendas = merged;
+  }
+
+  saveData();
+  render();
+}
+
+/* --- Sync (POST) --- */
+async function syncItem(tipo, item, action){
+  if(!item) return false;
+  const sheet = (tipo === 'inventario') ? 'inventario' : (tipo === 'categoria' ? 'categoria' : 'tienda');
+  const params = new URLSearchParams();
+  params.append('sheet', sheet);
+  params.append('action', action);
+
+  const fields = (tipo === 'inventario') ? ['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda'] : ['nombre'];
+
+  if(action === 'update' || action === 'delete'){
+    if(!item.idSheet){
+      // nada que hacer si no existe idSheet (local-only), considerar como ok
+      return true;
+    }
+    params.append('idCol','id');
+    params.append('idValue', item.idSheet);
+  }
+
+  if(action === 'add' || action === 'update'){
+    fields.forEach(k => params.append(k, item[k] || ''));
+  }
+
+  try{
+    const res = await fetch(`${APPWEB_URL}?${params.toString()}`, { method: 'POST' });
+    const data = await res.json();
+    if(data && data.success){
+      // si fue add y server devolvio id -> asignar
+      if(action === 'add' && data.id){
+        item.idSheet = data.id;
+        // si llego por idLocal, reemplazar
+        replaceLocalId(item);
+      }
+      return true;
+    } else {
+      console.warn('syncItem server returned failure', data);
+      return false;
+    }
+  }catch(e){
+    console.warn('syncItem error', e);
+    return false;
+  }
+}
+
+/* Reemplaza item que tenia idLocal por item con idSheet */
+function replaceLocalId(item){
+  const arr = (item.Equipo !== undefined) ? inventario : (item.Tienda !== undefined ? tiendas : categorias);
+  const idx = arr.findIndex(r => r.idLocal && item.idLocal && r.idLocal === item.idLocal);
+  if(idx >= 0){
+    arr[idx].idSheet = item.idSheet;
+    delete arr[idx].idLocal;
+    saveData();
+  }
+}
+
+/* syncPending: procesa cola y luego refresca datos del server para reestructurar IDs en la vista */
+let syncing = false;
+async function syncPending(){
+  if(syncing) return;
+  if(pendingOps.length === 0) return;
+  syncing = true;
+  try{
+    const newPending = [];
+    for(const op of pendingOps){
+      // si es update/delete y no tiene idSheet => saltar (no se puede)
+      if((op.action === 'update' || op.action === 'delete') && !op.item.idSheet){
+        // omitimos
+        continue;
+      }
+      const ok = await syncItem(op.tipo, op.item, op.action);
+      if(!ok) newPending.push(op);
+    }
+    pendingOps = newPending;
+    saveData();
+
+    // REFRESH desde server para aplicar reestructuración de IDs y mantener correlativos
+    // Hacemos fetch y fusionamos: tomamos SERVER arrays y añadimos locales sin idSheet al final
+    const [invServer, catServer, tdServer] = await Promise.all([fetchSheet('inventario'), fetchSheet('categoria'), fetchSheet('tienda')]);
+
+    // merge inventario
+    const invMerged = [];
+    // agregar todo server
+    for(const s of invServer) invMerged.push(s);
+    // agregar locales que no tengan idSheet (nuevos locales)
+    for(const local of inventario){
+      if(!local.idSheet) invMerged.push(local);
+    }
+    inventario = invMerged;
+
+    // merge categorias
+    const catMerged = [];
+    for(const s of catServer) catMerged.push(s);
+    for(const local of categorias){ if(!local.idSheet) catMerged.push(local); }
+    categorias = catMerged;
+
+    // merge tiendas
+    const tdMerged = [];
+    for(const s of tdServer) tdMerged.push(s);
+    for(const local of tiendas){ if(!local.idSheet) tdMerged.push(local); }
+    tiendas = tdMerged;
+
+    saveData();
+    render();
+  } finally {
+    syncing = false;
+  }
+}
+
+/* --- Render (optimizado con DocumentFragment) --- */
+function filterData(arr){
+  if(!currentSearch) return arr;
+  const q = currentSearch.toLowerCase();
+  return arr.filter(it => Object.values(it).some(v => (v||'').toString().toLowerCase().includes(q)));
+}
+
+function render(){
+  const c = document.getElementById('content');
+  c.innerHTML = '';
+  const titleEl = document.getElementById('main-title');
+
+  if(currentView === 'dashboard'){
+    titleEl.innerText = 'Dashboard de Inventario';
+    const frag = document.createDocumentFragment();
+    const cards = document.createElement('div'); cards.className = 'cards';
+
+    const createCard = (label, count, view, icon) => {
+      const card = document.createElement('div'); card.className = 'card';
+      card.innerHTML = `<i class="fa-solid ${icon}"></i><span>${label}: ${count}</span>`;
+      card.onclick = () => nav(view);
+      return card;
     };
-    cards.appendChild(createCard('Equipos',inventario.length,'inventario','fa-computer'));
-    cards.appendChild(createCard('Categorías',categorias.length,'categoria','fa-tags'));
-    cards.appendChild(createCard('Tiendas',tiendas.length,'tienda','fa-store'));
-    container.appendChild(cards);
+
+    cards.appendChild(createCard('Equipos', inventario.length, 'inventario', 'fa-computer'));
+    cards.appendChild(createCard('Categorías', categorias.length, 'categoria', 'fa-tags'));
+    cards.appendChild(createCard('Tiendas', tiendas.length, 'tienda', 'fa-store'));
+    frag.appendChild(cards);
+    c.appendChild(frag);
     return;
   }
 
-  titleEl.innerText=currentView.charAt(0).toUpperCase()+currentView.slice(1);
-  const btnAdd=document.createElement('button');
-  btnAdd.innerText="Agregar "+titleEl.innerText;
-  btnAdd.onclick=()=>openAddForm(currentView);
-  container.appendChild(btnAdd);
+  // Table view
+  const frag = document.createDocumentFragment();
 
-  const div=document.createElement('div'); div.className='table-container';
-  const table=document.createElement('table');
-  const thead=document.createElement('thead');
-  const tbody=document.createElement('tbody');
+  const searchBar = document.createElement('div'); searchBar.className = 'search-bar';
+  searchBar.innerHTML = `<input type="text" placeholder="Buscar en tabla..." value="${currentSearch}" onkeyup="applySearch(this.value)">`;
+  frag.appendChild(searchBar);
 
-  if(currentView==='inventario'){
-    thead.innerHTML=`<tr><th>Código</th><th>Serie</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Categoría</th><th>Tienda</th><th>Acciones</th></tr>`;
-    inventario.forEach((it,i)=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${it.Codigo||''}</td><td>${it.Serie||''}</td><td>${it.Equipo||''}</td><td>${it.Marca||''}</td><td>${it.Modelo||''}</td><td>${it.Categoria||''}</td><td>${it.Tienda||''}</td>
-      <td><button onclick="openAddForm('inventario',${i})">Editar</button>
-      <button onclick="deleteItem('inventario',${i})">Eliminar</button></td>`;
-      tbody.appendChild(tr);
-    });
-  } else if(currentView==='categoria'){
-    thead.innerHTML='<tr><th>Nombre</th><th>Acciones</th></tr>';
-    categorias.forEach((it,i)=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${it.nombre||''}</td>
-      <td><button onclick="openAddForm('categoria',${i})">Editar</button>
-      <button onclick="deleteItem('categoria',${i})">Eliminar</button></td>`;
-      tbody.appendChild(tr);
-    });
-  } else {
-    thead.innerHTML='<tr><th>Nombre</th><th>Acciones</th></tr>';
-    tiendas.forEach((it,i)=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${it.nombre||''}</td>
-      <td><button onclick="openAddForm('tienda',${i})">Editar</button>
-      <button onclick="deleteItem('tienda',${i})">Eliminar</button></td>`;
-      tbody.appendChild(tr);
-    });
+  let arr = [], headers = [], tipoTitle = '';
+  if(currentView === 'inventario'){ titleEl.innerText = 'Ver Inventario'; arr = filterData(inventario); headers = ['ID','Código','Serie','Equipo','Marca','Modelo','Categoría','Tienda','Acciones']; tipoTitle = 'inventario'; }
+  else if(currentView === 'categoria'){ titleEl.innerText = 'Ver Categorías'; arr = filterData(categorias); headers = ['ID','Nombre','Acciones']; tipoTitle = 'categoria'; }
+  else { titleEl.innerText = 'Ver Tiendas'; arr = filterData(tiendas); headers = ['ID','Nombre','Acciones']; tipoTitle = 'tienda'; }
+
+  const tbl = document.createElement('table');
+  tbl.innerHTML = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>`;
+  const tb = document.createElement('tbody');
+
+  for(const item of arr){
+    const tr = document.createElement('tr');
+
+    // ID display
+    let idDisplay = '';
+    if(item.idSheet) idDisplay = item.idSheet;
+    else if(item.idLocal) idDisplay = `<span style="color:red; font-weight:700;">PENDIENTE</span>`;
+    else idDisplay = `<span style="color:orange;">NUEVO</span>`;
+
+    if(currentView === 'inventario'){
+      const cells = [idDisplay, item.Codigo || '', item.Serie || '', item.Equipo || '', item.Marca || '', item.Modelo || '', item.Categoria || '', item.Tienda || ''];
+      for(const cell of cells){
+        const td = document.createElement('td'); td.innerHTML = cell; tr.appendChild(td);
+      }
+    } else {
+      const tdId = document.createElement('td'); tdId.innerHTML = idDisplay; tr.appendChild(tdId);
+      const tdName = document.createElement('td'); tdName.textContent = item.nombre || ''; tr.appendChild(tdName);
+    }
+
+    // acciones
+    const globalArr = (tipoTitle === 'inventario') ? inventario : (tipoTitle === 'categoria' ? categorias : tiendas);
+    const realIndex = globalArr.findIndex(i => (i.idSheet && item.idSheet && i.idSheet === item.idSheet) || (i.idLocal && item.idLocal && i.idLocal === item.idLocal));
+    const tdActions = document.createElement('td'); tdActions.className = 'actions';
+    const bEdit = document.createElement('button'); bEdit.className = 'btn-edit'; bEdit.innerHTML = '<i class="fa-solid fa-pen"></i>'; bEdit.onclick = () => editItemFunc(tipoTitle, realIndex);
+    const bDel = document.createElement('button'); bDel.className = 'btn-del'; bDel.innerHTML = '<i class="fa-solid fa-trash"></i>'; bDel.onclick = () => deleteItem(tipoTitle, realIndex);
+    tdActions.appendChild(bEdit); tdActions.appendChild(bDel);
+    tr.appendChild(tdActions);
+
+    tb.appendChild(tr);
   }
 
-  table.appendChild(thead); table.appendChild(tbody); div.appendChild(table); container.appendChild(div);
+  tbl.appendChild(tb);
+  frag.appendChild(tbl);
+  c.appendChild(frag);
 }
 
-/* Modal */
-function openAddForm(tipo,index=null){
-  editItemIndex=(index!==null)?index:null;
-  document.getElementById('modal').style.display='flex';
-  const titleEl=document.getElementById('modal-title');
-  const form=document.getElementById('modal-form');
-  form.innerHTML=''; form.dataset.tipo=tipo;
+/* --- Navegación y acordeón auto-open --- */
+function nav(view){
+  currentView = view;
+  currentSearch = '';
 
-  if(tipo==='inventario'){
-    titleEl.innerText=(index!==null?'Editar':'Agregar')+' Inventario';
-    const fields=['Codigo','Serie','Equipo','Marca','Modelo'];
-    fields.forEach(k=>{
-      const inp=document.createElement('input'); inp.placeholder=k; inp.id='f_'+k;
+  // abrir acordeón correspondiente
+  document.querySelectorAll('.accordion').forEach(acc => {
+    const text = (acc.querySelector('span') && acc.querySelector('span').innerText) ? acc.querySelector('span').innerText.toLowerCase() : '';
+    const matches = (view === 'dashboard' && text.includes('dashboard')) ||
+                    (view === 'inventario' && text.includes('inventario')) ||
+                    (view === 'categoria' && text.includes('categor')) ||
+                    (view === 'tienda' && text.includes('tienda'));
+    if(matches){
+      if(!acc.classList.contains('active')) {
+        acc.classList.add('active');
+        if(acc.nextElementSibling) acc.nextElementSibling.style.maxHeight = acc.nextElementSibling.scrollHeight + 'px';
+      }
+    } else {
+      acc.classList.remove('active');
+      if(acc.nextElementSibling) acc.nextElementSibling.style.maxHeight = null;
+    }
+  });
+
+  render();
+}
+
+function applySearch(q){ currentSearch = q.toLowerCase().trim(); render(); }
+
+/* --- Modal: openAddForm / editItemFunc / closeModal / saveItem --- */
+function openAddForm(tipo, index = null){
+  editItemIndex = (index !== null) ? index : null;
+  document.getElementById('modal').style.display = 'flex';
+  const titleEl = document.getElementById('modal-title');
+  const form = document.getElementById('modal-form');
+  form.innerHTML = ''; form.dataset.tipo = tipo;
+
+  if(tipo === 'inventario'){
+    titleEl.innerText = (index !== null ? 'Editar' : 'Agregar') + ' Inventario';
+    const fields = ['Codigo','Serie','Equipo','Marca','Modelo'];
+    fields.forEach(k => {
+      const inp = document.createElement('input');
+      inp.placeholder = k;
+      inp.id = 'f_' + k;
       form.appendChild(inp);
     });
 
-    // Select Categoria
-    const selCat=document.createElement('select'); selCat.id='f_Categoria';
-    selCat.innerHTML='<option value="">-- Seleccionar Categoría --</option>';
-    categorias.forEach(c=> selCat.innerHTML+=`<option value="${c.nombre}">${c.nombre}</option>`);
+    // SELECT categoria
+    const selCat = document.createElement('select'); selCat.id = 'f_Categoria';
+    selCat.innerHTML = `<option value="">-- Seleccionar Categoría --</option>`;
+    categorias.forEach(c => selCat.innerHTML += `<option value="${c.nombre}">${c.nombre}</option>`);
     form.appendChild(selCat);
 
-    // Select Tienda
-    const selT=document.createElement('select'); selT.id='f_Tienda';
-    selT.innerHTML='<option value="">-- Seleccionar Tienda --</option>';
-    tiendas.forEach(t=> selT.innerHTML+=`<option value="${t.nombre}">${t.nombre}</option>`);
+    // SELECT tienda
+    const selT = document.createElement('select'); selT.id = 'f_Tienda';
+    selT.innerHTML = `<option value="">-- Seleccionar Tienda --</option>`;
+    tiendas.forEach(t => selT.innerHTML += `<option value="${t.nombre}">${t.nombre}</option>`);
     form.appendChild(selT);
 
-    if(index!==null){
-      const it=inventario[index]||{};
-      fields.forEach(k=> document.getElementById('f_'+k).value=it[k]||'');
-      selCat.value=it.Categoria||''; selT.value=it.Tienda||'';
+    if(index !== null){
+      const item = inventario[index] || {};
+      fields.forEach(k => { const el = document.getElementById('f_' + k); if(el) el.value = item[k] || ''; });
+      selCat.value = item.Categoria || '';
+      selT.value = item.Tienda || '';
     }
   } else {
-    const name=tipo.charAt(0).toUpperCase()+tipo.slice(1);
-    titleEl.innerText=(index!==null?'Editar ':'Agregar ')+name;
-    const inp=document.createElement('input'); inp.placeholder='Nombre'; inp.id='f_nombre';
+    const name = tipo.charAt(0).toUpperCase() + tipo.slice(1);
+    titleEl.innerText = (index !== null ? 'Editar ' : 'Agregar ') + name;
+    const inp = document.createElement('input'); inp.placeholder = 'Nombre'; inp.id = 'f_nombre';
     form.appendChild(inp);
-    if(index!==null){
-      const item=(tipo==='categoria')?categorias[index]:tiendas[index];
-      if(item) inp.value=item.nombre||'';
+    if(index !== null){
+      const item = (tipo === 'categoria') ? categorias[index] : tiendas[index];
+      if(item) inp.value = item.nombre || '';
     }
   }
 }
-function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-function saveForm(){
-  const tipo=document.getElementById('modal-form').dataset.tipo;
-  if(tipo==='inventario'){
-    const obj={
-      Codigo:document.getElementById('f_Codigo').value,
-      Serie:document.getElementById('f_Serie').value,
-      Equipo:document.getElementById('f_Equipo').value,
-      Marca:document.getElementById('f_Marca').value,
-      Modelo:document.getElementById('f_Modelo').value,
-      Categoria:document.getElementById('f_Categoria').value,
-      Tienda:document.getElementById('f_Tienda').value
+function editItemFunc(tipo, index){
+  if(index === -1 || index === undefined || index === null){
+    console.warn('editItemFunc index invalid', tipo, index);
+    return;
+  }
+  openAddForm(tipo, index);
+}
+
+function closeModal(){
+  document.getElementById('modal').style.display = 'none';
+  editItemIndex = null;
+}
+
+function saveItem(){
+  const form = document.getElementById('modal-form');
+  const tipo = form.dataset.tipo;
+  const isEditing = editItemIndex !== null;
+  let arr = (tipo === 'inventario') ? inventario : (tipo === 'categoria' ? categorias : tiendas);
+
+  if(tipo === 'inventario'){
+    const obj = {
+      Codigo: document.getElementById('f_Codigo').value.trim(),
+      Serie: document.getElementById('f_Serie').value.trim(),
+      Equipo: document.getElementById('f_Equipo').value.trim(),
+      Marca: document.getElementById('f_Marca').value.trim(),
+      Modelo: document.getElementById('f_Modelo').value.trim(),
+      Categoria: document.getElementById('f_Categoria').value.trim(),
+      Tienda: document.getElementById('f_Tienda').value.trim()
     };
-    if(editItemIndex!==null){ inventario[editItemIndex]={...inventario[editItemIndex],...obj}; }
-    else { inventario.push(obj); }
-  } else {
-    const obj={nombre:document.getElementById('f_nombre').value};
-    if(editItemIndex!==null){
-      if(tipo==='categoria') categorias[editItemIndex]=obj;
-      else tiendas[editItemIndex]=obj;
+
+    if(isEditing){
+      // actualizar solo campos (no tocar idSheet)
+      const existing = arr[editItemIndex] || {};
+      arr[editItemIndex] = Object.assign({}, existing, obj);
+      // push update to pendingOps (for sync)
+      pendingOps.push({ tipo, action: 'update', item: arr[editItemIndex] });
     } else {
-      if(tipo==='categoria') categorias.push(obj);
-      else tiendas.push(obj);
+      // nuevo: asignar idLocal para seguimiento
+      const newItem = Object.assign({ idLocal: crypto.randomUUID() }, obj);
+      arr.push(newItem);
+      pendingOps.push({ tipo, action: 'add', item: newItem });
+    }
+  } else {
+    const obj = { nombre: document.getElementById('f_nombre').value.trim() };
+    if(isEditing){
+      const existing = arr[editItemIndex] || {};
+      arr[editItemIndex] = Object.assign({}, existing, obj);
+      pendingOps.push({ tipo, action: 'update', item: arr[editItemIndex] });
+    } else {
+      const newItem = Object.assign({ idLocal: crypto.randomUUID() }, obj);
+      arr.push(newItem);
+      pendingOps.push({ tipo, action: 'add', item: newItem });
+    }
+
+    // Si agregamos categoría/tienda, actualizar selects del formulario (si abierto)
+    if(tipo === 'categoria' || tipo === 'tienda'){
+      // simplemente re-render para que los selects se reciclen al abrir el modal
     }
   }
-  saveData(); render(); closeModal();
+
+  saveData();
+  render();
+  closeModal();
+
+  // sincronizar en background (rápido)
+  setTimeout(syncPending, 200);
 }
 
-/* Eliminar */
-function deleteItem(tipo,index){
+/* --- Delete: eliminar local ya y enviar a pending si tiene idSheet --- */
+function deleteItem(tipo, index){
+  if(index === -1 || index === undefined || index === null){
+    console.warn('deleteItem index invalid', tipo, index);
+    return;
+  }
   if(!confirm('¿Eliminar este registro?')) return;
-  const arr=(tipo==='inventario')?inventario:(tipo==='categoria'?categorias:tiendas);
-  arr.splice(index,1);
-  saveData(); render();
+  const arr = (tipo === 'inventario') ? inventario : (tipo === 'categoria' ? categorias : tiendas);
+  const item = arr[index];
+  if(item && item.idSheet){
+    pendingOps.push({ tipo, action: 'delete', item: item });
+  }
+  // eliminar local inmediatamente
+  arr.splice(index, 1);
+  saveData();
+  render();
+
+  // intentar sincronizar en back
+  setTimeout(syncPending, 200);
 }
 
-loadData(); render();
+/* ----------------- Inicialización ----------------- */
+loadData();
+nav(currentView);
+loadInitialData();
+
+// sincronizar cada 10s en background
+setInterval(syncPending, 10000);
 </script>
+
 </body>
 </html>
-
