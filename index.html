@@ -6,122 +6,132 @@
 <title>Inventario Tiendas 3A</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
-:root{
-  --primary:#ff4d00; 
-  --accent:#0f62fe;
-  --bg:#f4f4f4;
-  --card-bg:#fff;
-  --text:#333;
-  --shadow: rgba(0,0,0,0.1);
-}
+/* ---------- Reset básico ---------- */
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial, sans-serif;}
+body{display:flex;min-height:100vh;flex-direction:column;}
+a{text-decoration:none;color:inherit;}
+button{cursor:pointer;border:none;background:none;}
 
-*{box-sizing:border-box;margin:0;padding:0;font-family:sans-serif;}
-body{background:var(--bg);color:var(--text);display:flex;min-height:100vh;flex-direction:column;}
-header{background:var(--primary);color:#fff;padding:1rem;display:flex;justify-content:space-between;align-items:center;}
-header h1{font-size:1.5rem;}
+/* ---------- Sidebar ---------- */
+#sidebar{width:250px;background:#ff4d00;color:#fff;transition:width .3s;flex-shrink:0;overflow:hidden;}
+#sidebar.collapsed{width:60px;}
+#sidebar h2{padding:20px;text-align:center;}
+#sidebar .accordion{padding:15px 20px;cursor:pointer;background:#ff6600;margin:5px 0;border-radius:5px;display:flex;justify-content:space-between;align-items:center;}
+#sidebar .accordion.active{background:#ff5500;}
+#sidebar .panel{max-height:0;overflow:hidden;transition:max-height .3s;background:#ff7700;margin-bottom:5px;border-radius:5px;}
+#sidebar .panel a{display:block;padding:10px 20px;color:#fff;}
+
+/* ---------- Main ---------- */
+#main{flex:1;display:flex;flex-direction:column;}
+#main-header{background:#0f62fe;color:#fff;padding:15px;display:flex;align-items:center;justify-content:space-between;}
+#main-header h1{font-size:1.2rem;}
 #toggleSidebar{font-size:1.5rem;cursor:pointer;}
-#sidebar{width:220px;background:#222;color:#fff;flex-shrink:0;transition:all 0.3s;overflow:auto;}
-#sidebar.collapsed{margin-left:-220px;}
-#sidebar ul{list-style:none;}
-#sidebar li{padding:0.8rem 1rem;cursor:pointer;border-bottom:1px solid #333;}
-#sidebar li:hover{background:rgba(255,255,255,0.1);}
-.accordion{background:none;border:none;color:#fff;width:100%;text-align:left;font-size:1rem;padding:0.8rem 1rem;cursor:pointer;}
-.accordion.active{background:rgba(255,255,255,0.2);}
-.accordion + div{max-height:0;overflow:hidden;transition:max-height 0.3s ease;}
-#main{flex:1;display:flex;flex-direction:row;overflow:hidden;}
-#content{flex:1;padding:1rem;overflow:auto;}
-.cards{display:flex;flex-wrap:wrap;gap:1rem;}
-.card{flex:1 1 150px;background:var(--card-bg);padding:1rem;border-radius:8px;box-shadow:0 2px 5px var(--shadow);display:flex;align-items:center;justify-content:center;gap:0.5rem;cursor:pointer;transition:0.2s;}
-.card:hover{transform:scale(1.03);}
-table{width:100%;border-collapse:collapse;margin-top:1rem;}
-table th,table td{padding:0.5rem;border:1px solid #ccc;text-align:left;font-size:0.9rem;}
-.actions button{margin-right:0.3rem;background:none;border:none;cursor:pointer;font-size:0.9rem;}
-.search-bar{margin-bottom:0.5rem;}
-.search-bar input{width:100%;padding:0.5rem;border-radius:4px;border:1px solid #ccc;}
-#modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;}
-#modal .modal-content{background:#fff;padding:1rem;border-radius:8px;width:90%;max-width:500px;}
-#modal-form input, #modal-form select{width:100%;padding:0.5rem;margin:0.3rem 0;border-radius:4px;border:1px solid #ccc;}
-#modal button{margin-top:0.5rem;padding:0.5rem 1rem;border:none;border-radius:4px;background:var(--primary);color:#fff;cursor:pointer;}
+
+/* ---------- Cards Dashboard ---------- */
+.cards{display:flex;flex-wrap:wrap;gap:20px;padding:20px;}
+.card{flex:1 1 150px;background:#fff;color:#000;padding:20px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.2);transition:transform .2s;}
+.card:hover{transform:scale(1.05);}
+.card i{font-size:2rem;margin-bottom:10px;}
+
+/* ---------- Tabla ---------- */
+table{width:100%;border-collapse:collapse;margin:20px 0;}
+th,td{padding:10px;border:1px solid #ddd;text-align:center;}
+th{background:#0f62fe;color:#fff;}
+.actions button{margin:0 5px;font-size:1rem;}
+
+/* ---------- Search ---------- */
+.search-bar{padding:10px;}
+.search-bar input{width:100%;padding:10px;border-radius:5px;border:1px solid #ccc;}
+
+/* ---------- Modal ---------- */
+#modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:999;}
+#modal .modal-content{background:#fff;padding:20px;border-radius:10px;width:90%;max-width:500px;}
+#modal input{width:100%;padding:10px;margin:5px 0;border:1px solid #ccc;border-radius:5px;}
+
+/* ---------- Responsive ---------- */
 @media(max-width:768px){
-  #main{flex-direction:column;}
-  #sidebar{width:100%;height:auto;position:relative;margin-left:0;}
-  #sidebar.collapsed{margin-left:0;}
-  .cards{flex-direction:column;}
-  table th,table td{font-size:0.8rem;}
+    .cards{flex-direction:column;}
+    #sidebar{position:absolute;z-index:1000;height:100%;}
+    #main{margin-left:60px;}
+    #sidebar.collapsed{width:0;}
 }
 </style>
 </head>
 <body>
-<header>
-  <h1 id="main-title">Dashboard</h1>
-  <i id="toggleSidebar" class="fa-solid fa-bars"></i>
-</header>
+
+<div id="sidebar">
+    <h2>Menú</h2>
+    <div class="accordion">Dashboard <i class="fa fa-angle-down"></i></div>
+    <div class="panel">
+        <a href="javascript:nav('dashboard')">Inicio</a>
+        <a href="javascript:nav('inventario')">Inventario</a>
+        <a href="javascript:nav('categoria')">Categorías</a>
+        <a href="javascript:nav('tienda')">Tiendas</a>
+    </div>
+</div>
+
 <div id="main">
-  <nav id="sidebar">
-    <ul>
-      <li class="accordion">Inventario</li>
-      <div>
-        <li onclick="nav('inventario')">Ver Inventario</li>
-        <li onclick="openAddForm('inventario')">Agregar Inventario</li>
-      </div>
-      <li class="accordion">Categorías</li>
-      <div>
-        <li onclick="nav('categoria')">Ver Categorías</li>
-        <li onclick="openAddForm('categoria')">Agregar Categoría</li>
-      </div>
-      <li class="accordion">Tiendas</li>
-      <div>
-        <li onclick="nav('tienda')">Ver Tiendas</li>
-        <li onclick="openAddForm('tienda')">Agregar Tienda</li>
-      </div>
-    </ul>
-  </nav>
-  <div id="content"></div>
+    <div id="main-header">
+        <span id="toggleSidebar"><i class="fa fa-bars"></i></span>
+        <h1 id="main-title">Dashboard</h1>
+        <button onclick="openAddForm(currentView)"><i class="fa fa-plus"></i> Agregar</button>
+    </div>
+    <div id="content"></div>
 </div>
 
 <!-- Modal -->
 <div id="modal">
-  <div class="modal-content">
-    <h2 id="modal-title"></h2>
-    <div id="modal-form"></div>
-    <button onclick="saveItem()">Guardar</button>
-    <button onclick="closeModal()">Cancelar</button>
-  </div>
+    <div class="modal-content">
+        <h2 id="modal-title"></h2>
+        <div id="modal-form"></div>
+        <button onclick="saveItem()">Guardar</button>
+        <button onclick="closeModal()">Cancelar</button>
+    </div>
 </div>
 
 <script>
-// === SCRIPT COMPLETO OPTIMIZADO ===
-const APPWEB_URL = "https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec"; 
+// ------------------------- SCRIPT -------------------------
+const APPWEB_URL = "https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
 let inventario=[], categorias=[], tiendas=[], pendingOps=[];
 let editItemIndex=null, currentView='dashboard', currentSearch='';
 const STORAGE_KEY='inventario3a';
-const CHUNK_SIZE=50;
 
 // Sidebar y acordeón
 document.getElementById('toggleSidebar').onclick = () => document.getElementById('sidebar').classList.toggle('collapsed');
-document.querySelectorAll('.accordion').forEach(btn => btn.addEventListener('click', () => {
+function toggleAccordion(button){
     document.querySelectorAll('.accordion').forEach(acc => {
-        if(acc!==btn && acc.classList.contains('active')){acc.classList.remove('active');acc.nextElementSibling.style.maxHeight=null;}
+        if(acc!==button && acc.classList.contains('active')){
+            acc.classList.remove('active');
+            if(acc.nextElementSibling) acc.nextElementSibling.style.maxHeight=null;
+        }
     });
-    btn.classList.toggle('active');
-    const panel=btn.nextElementSibling; panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight+"px";
-}));
+    button.classList.toggle('active');
+    const panel = button.nextElementSibling;
+    if(panel) panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight+"px";
+}
+document.querySelectorAll('.accordion').forEach(btn => btn.addEventListener('click', () => toggleAccordion(btn)));
 
 // LocalStorage
 function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify({inventario,categorias,tiendas,pendingOps}));}
 function loadData(){
     const data = localStorage.getItem(STORAGE_KEY);
-    if(data){const parsed = JSON.parse(data); inventario = parsed.inventario || []; categorias = parsed.categorias || []; tiendas = parsed.tiendas || []; pendingOps = parsed.pendingOps || [];}
+    if(data){
+        const parsed = JSON.parse(data);
+        inventario = parsed.inventario || [];
+        categorias = parsed.categorias || [];
+        tiendas = parsed.tiendas || [];
+        pendingOps = parsed.pendingOps || [];
+    }
 }
 
-// Fetch
+// Fetch inicial
 async function fetchSheet(sheet){
     try{
         const res = await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get&t=${Date.now()}`);
         const json = await res.json();
         return json.map(row => ({
-            idSheet: row.id||'',
-            nombre: row.nombre||row.Nombre||row.Categoria||row.Tienda||'',
+            idSheet: row.id || '',
+            nombre: row.nombre || row.Nombre || row.Categoria || row.Tienda || '',
             Codigo: row.Codigo||'',
             Serie: row.Serie||'',
             Equipo: row.Equipo||'',
@@ -133,39 +143,39 @@ async function fetchSheet(sheet){
     }catch(e){console.warn("fetchSheet error",e); return [];}
 }
 
-// Sync
+// Sync item
 async function syncItem(tipo,item,action){
     if(!item) return false;
     const sheet=(tipo==='inventario')?'inventario':(tipo==='categoria'?'categoria':'tienda');
-    const params=new URLSearchParams(); params.append('sheet',sheet); params.append('action',action);
+    const params=new URLSearchParams();
+    params.append('sheet',sheet);
+    params.append('action',action);
+
     if(action==='add'||action==='update'){
         if(action==='update' && !item.idSheet) return false;
         const fields=(tipo==='inventario')?['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda']:['nombre'];
         if(action==='update'){params.append('idCol','id'); params.append('idValue',item.idSheet);}
         fields.forEach(k=>params.append(k,item[k]||''));
-    }else if(action==='delete'){if(!item.idSheet) return true; params.append('idCol','id'); params.append('idValue',item.idSheet);}
-    try{const res = await fetch(`${APPWEB_URL}?${params.toString()}`,{method:'POST'}); const data = await res.json(); if(data.success && action==='add' && data.id){item.idSheet = data.id;} return data.success;}catch(e){console.warn("syncItem error:",e); return false;}
+    } else if(action==='delete'){
+        if(!item.idSheet) return true;
+        params.append('idCol','id'); params.append('idValue',item.idSheet);
+    }
+
+    try{
+        const res = await fetch(`${APPWEB_URL}?${params.toString()}`,{method:'POST'});
+        const data = await res.json();
+        if(data.success && action==='add' && data.id){item.idSheet = data.id;}
+        return data.success;
+    }catch(e){console.warn("syncItem error:",e); return false;}
 }
 
-async function syncPending(){if(pendingOps.length===0) return; for(const op of [...pendingOps]){ const ok = await syncItem(op.tipo,op.item,op.action); if(ok) pendingOps.splice(pendingOps.indexOf(op),1);} saveData();}
-
-// Render incremental
-function renderChunk(arr, container, start=0){
-    const end = Math.min(arr.length, start+CHUNK_SIZE);
-    for(let i=start;i<end;i++){
-        const item=arr[i]; let row=document.createElement('tr');
-        if(currentView==='inventario'){
-            row.innerHTML=`<td>${item.idSheet||''}</td><td>${item.Codigo||''}</td><td>${item.Serie||''}</td>
-            <td>${item.Equipo||''}</td><td>${item.Marca||''}</td><td>${item.Modelo||''}</td>
-            <td>${item.Categoria||''}</td><td>${item.Tienda||''}</td>
-            <td class="actions"><button class="btn-edit" onclick="openEditForm('${currentView}',${i})"><i class="fa-solid fa-pen"></i></button>
-            <button class="btn-del" onclick="deleteItem('${currentView}',${i})"><i class="fa-solid fa-trash"></i></button></td>`;
-        }else{row.innerHTML=`<td>${item.idSheet||''}</td><td>${item.nombre||''}</td>
-            <td class="actions"><button class="btn-edit" onclick="openEditForm('${currentView}',${i})"><i class="fa-solid fa-pen"></i></button>
-            <button class="btn-del" onclick="deleteItem('${currentView}',${i})"><i class="fa-solid fa-trash"></i></button></td>`;}
-        container.appendChild(row);
+async function syncPending(){
+    if(pendingOps.length===0) return;
+    for(const op of [...pendingOps]){
+        const ok = await syncItem(op.tipo,op.item,op.action);
+        if(ok) pendingOps.splice(pendingOps.indexOf(op),1);
     }
-    if(end<arr.length){setTimeout(()=>renderChunk(arr, container, end),0);}
+    saveData();
 }
 
 // Render
@@ -178,13 +188,29 @@ function render(){
             <div class="card" onclick="nav('tienda')"><i class="fa-solid fa-store"></i><span>Tiendas (${tiendas.length})</span></div>
         </div>`; return;
     }
+
     const arr = (currentView==='inventario')?inventario:(currentView==='categoria')?categorias:tiendas;
     const filtered = arr.filter(item => (item.nombre||'').toLowerCase().includes(currentSearch.toLowerCase()) || (item.Codigo||'').toLowerCase().includes(currentSearch.toLowerCase()));
-    const html = document.createElement('div');
-    html.innerHTML=`<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="searchItems(this.value)" value="${currentSearch}"></div>
-    <table><thead><tr>`+(currentView==='inventario'?'<th>ID</th><th>Codigo</th><th>Serie</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Categoria</th><th>Tienda</th>':'<th>ID</th><th>Nombre</th>')+'<th>Acciones</th></tr></thead><tbody></tbody></table>`;
-    container.appendChild(html);
-    renderChunk(filtered, html.querySelector('tbody'));
+
+    let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="searchItems(this.value)" value="${currentSearch}"></div>
+    <table><thead><tr>`;
+    if(currentView==='inventario'){html+='<th>ID</th><th>Codigo</th><th>Serie</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Categoria</th><th>Tienda</th>';}
+    else{html+='<th>ID</th><th>Nombre</th>';}
+    html+='<th>Acciones</th></tr></thead><tbody>';
+
+    filtered.forEach((item,i)=>{
+        html+='<tr>';
+        if(currentView==='inventario'){
+            html+=`<td>${item.idSheet||''}</td><td>${item.Codigo||''}</td><td>${item.Serie||''}</td><td>${item.Equipo||''}</td>
+            <td>${item.Marca||''}</td><td>${item.Modelo||''}</td><td>${item.Categoria||''}</td><td>${item.Tienda||''}</td>`;
+        }else{html+=`<td>${item.idSheet||''}</td><td>${item.nombre||''}</td>`;}
+        html+=`<td class="actions">
+            <button class="btn-edit" onclick="openEditForm('${currentView}',${arr.indexOf(item)})"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn-del" onclick="deleteItem('${currentView}',${arr.indexOf(item)})"><i class="fa-solid fa-trash"></i></button>
+        </td></tr>`;
+    });
+
+    html+='</tbody></table>'; container.innerHTML=html;
 }
 
 // Navegación y búsqueda
@@ -192,8 +218,43 @@ function nav(view){currentView=view;currentSearch='';document.getElementById('ma
 function searchItems(val){currentSearch=val; render();}
 
 // Modal
-function openAddForm(tipo){editItemIndex=null; document.getElementById('modal').style.display='flex'; document.getElementById('modal-title').innerText='Agregar '+tipo; const formDiv=document.getElementById('modal-form'); let html=''; if(tipo==='inventario'){html+=`<input placeholder="Codigo" id="Codigo"><input placeholder="Serie" id="Serie"><input placeholder="Equipo" id="Equipo"><input placeholder="Marca" id="Marca"><input placeholder="Modelo" id="Modelo">`; html+='<input list="listaCategorias" placeholder="Categoria" id="Categoria"><datalist id="listaCategorias">'; categorias.forEach(c=>html+=`<option value="${c.nombre}">`); html+='</datalist>'; html+='<input list="listaTiendas" placeholder="Tienda" id="Tienda"><datalist id="listaTiendas">'; tiendas.forEach(t=>html+=`<option value="${t.nombre}">`); html+='</datalist>';}else{html+='<input placeholder="Nombre" id="nombre">';} formDiv.innerHTML=html;}
-function openEditForm(tipo,index){editItemIndex=index; document.getElementById('modal').style.display='flex'; document.getElementById('modal-title').innerText='Editar '+tipo; const formDiv=document.getElementById('modal-form'); const item=(tipo==='inventario')?inventario[index]:(tipo==='categoria')?categorias[index]:tiendas[index]; let html=''; if(tipo==='inventario'){html+=`<input placeholder="Codigo" id="Codigo" value="${item.Codigo||''}"><input placeholder="Serie" id="Serie" value="${item.Serie||''}"><input placeholder="Equipo" id="Equipo" value="${item.Equipo||''}"><input placeholder="Marca" id="Marca" value="${item.Marca||''}"><input placeholder="Modelo" id="Modelo" value="${item.Modelo||''}">`; html+='<input list="listaCategorias" placeholder="Categoria" id="Categoria" value="'+(item.Categoria||'')+'"><datalist id="listaCategorias">'; categorias.forEach(c=>html+=`<option value="${c.nombre}">`); html+='</datalist>'; html+='<input list="listaTiendas" placeholder="Tienda" id="Tienda" value="'+(item.Tienda||'')+'"><datalist id="listaTiendas">'; tiendas.forEach(t=>html+=`<option value="${t.nombre}">`); html+='</datalist>';}else{html+='<input placeholder="Nombre" id="nombre" value="'+(item.nombre||'')+'">';} formDiv.innerHTML=html;}
+function openAddForm(tipo){
+    editItemIndex=null;
+    document.getElementById('modal').style.display='flex';
+    document.getElementById('modal-title').innerText='Agregar '+tipo;
+    const formDiv = document.getElementById('modal-form');
+    let html='';
+    if(tipo==='inventario'){
+        html+=`<input placeholder="Codigo" id="Codigo"><input placeholder="Serie" id="Serie"><input placeholder="Equipo" id="Equipo">
+        <input placeholder="Marca" id="Marca"><input placeholder="Modelo" id="Modelo">`;
+        html+='<input list="listaCategorias" placeholder="Categoria" id="Categoria"><datalist id="listaCategorias">';
+        categorias.forEach(c=>html+=`<option value="${c.nombre}">`);
+        html+='</datalist>';
+        html+='<input list="listaTiendas" placeholder="Tienda" id="Tienda"><datalist id="listaTiendas">';
+        tiendas.forEach(t=>html+=`<option value="${t.nombre}">`);
+        html+='</datalist>';
+    }else{html+='<input placeholder="Nombre" id="nombre">';}
+    formDiv.innerHTML=html;
+}
+
+function openEditForm(tipo,index){
+    editItemIndex=index;
+    document.getElementById('modal').style.display='flex';
+    document.getElementById('modal-title').innerText='Editar '+tipo;
+    const formDiv = document.getElementById('modal-form');
+    const item = (tipo==='inventario')?inventario[index]:(tipo==='categoria')?categorias[index]:tiendas[index];
+    let html='';
+    if(tipo==='inventario'){
+        html+=`<input placeholder="Codigo" id="Codigo" value="${item.Codigo||''}"><input placeholder="Serie" id="Serie" value="${item.Serie||''}">
+        <input placeholder="Equipo" id="Equipo" value="${item.Equipo||''}"><input placeholder="Marca" id="Marca" value="${item.Marca||''}">
+        <input placeholder="Modelo" id="Modelo" value="${item.Modelo||''}">`;
+        html+='<input list="listaCategorias" placeholder="Categoria" id="Categoria" value="'+(item.Categoria||'')+'"><datalist id="listaCategorias">';
+        categorias.forEach(c=>html+=`<option value="${c.nombre}">`); html+='</datalist>';
+        html+='<input list="listaTiendas" placeholder="Tienda" id="Tienda" value="'+(item.Tienda||'')+'"><datalist id="listaTiendas">';
+        tiendas.forEach(t=>html+=`<option value="${t.nombre}">`); html+='</datalist>';
+    }else{html+='<input placeholder="Nombre" id="nombre" value="'+(item.nombre||'')+'">';}
+    formDiv.innerHTML=html;
+}
 
 function closeModal(){document.getElementById('modal').style.display='none';}
 async function saveItem(){
@@ -201,15 +262,31 @@ async function saveItem(){
     const fields=(tipo==='inventario')?['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda']:['nombre'];
     const item={}; fields.forEach(f=>item[f]=document.getElementById(f).value.trim());
     const arr=(tipo==='inventario')?inventario:(tipo==='categoria')?categorias:tiendas;
-    if(editItemIndex!==null){const oldItem=arr[editItemIndex]; fields.forEach(f=>oldItem[f]=item[f]); await syncItem(tipo,oldItem,'update');}
-    else{await syncItem(tipo,item,'add'); arr.push(item);}
+    if(editItemIndex!==null){
+        const oldItem=arr[editItemIndex]; fields.forEach(f=>oldItem[f]=item[f]);
+        await syncItem(tipo,oldItem,'update');
+    }else{
+        await syncItem(tipo,item,'add'); arr.push(item);
+    }
     closeModal(); saveData(); render(); syncPending();
 }
 
-function deleteItem(tipo,index){if(!confirm('¿Eliminar este registro?')) return; const arr=(tipo==='inventario')?inventario:(tipo==='categoria')?categorias:tiendas; const item=arr[index]; if(item.idSheet) pendingOps.push({tipo,action:'delete',item}); arr.splice(index,1); saveData(); render(); syncPending();}
+function deleteItem(tipo,index){
+    if(!confirm('¿Eliminar este registro?')) return;
+    const arr=(tipo==='inventario')?inventario:(tipo==='categoria')?categorias:tiendas;
+    const item=arr[index]; if(item.idSheet) pendingOps.push({tipo,action:'delete',item});
+    arr.splice(index,1); saveData(); render(); syncPending();
+}
 
 // Inicializar
-async function init(){loadData(); if(inventario.length===0) inventario=await fetchSheet('inventario'); if(categorias.length===0) categorias=await fetchSheet('categoria'); if(tiendas.length===0) tiendas=await fetchSheet('tienda'); render(); syncPending();}
+async function init(){
+    loadData();
+    if(inventario.length===0) inventario=await fetchSheet('inventario');
+    if(categorias.length===0) categorias=await fetchSheet('categoria');
+    if(tiendas.length===0) tiendas=await fetchSheet('tienda');
+    render();
+    syncPending();
+}
 init();
 </script>
 </body>
