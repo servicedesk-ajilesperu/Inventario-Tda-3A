@@ -6,18 +6,17 @@
 <title>Inventario Tiendas 3A</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
-/* Estilos generales */
+/* ----------- Estilos Generales ----------- */
 body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 * { box-sizing: border-box; }
 
 /* Sidebar */
-.sidebar { width:260px; position:fixed; height:100%; background:#ff4d00; color:white; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; display:flex; z-index:10; }
+.sidebar { width:260px; position:fixed; height:100%; background:#ff4d00; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
 .sidebar.collapsed { width:60px; padding:20px 5px; }
 .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.2rem; position:relative; margin-bottom:10px; }
 #toggleSidebar { position:absolute; right:0; top:0; background:#cc3c00; color:white; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; }
 
-/* Acordeón */
-.menu-section { width:100%; }
+/* Acordeón del Menú */
 .menu-section .accordion { background:transparent; color:white; border:none; padding:10px; width:100%; display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600; justify-content:space-between; border-radius:4px; transition:0.2s; }
 .menu-section .accordion.active, .menu-section .accordion:hover { background-color:#e64500; }
 .menu-section .panel { padding:0 10px; max-height:0; overflow:hidden; transition:max-height 0.3s ease-in-out; background-color:#e64500; display:flex; flex-direction:column; gap:4px; }
@@ -31,26 +30,26 @@ body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 .sidebar.collapsed .accordion { justify-content:center; }
 .sidebar.collapsed .accordion i.fa-chevron-down { display:none; }
 
-/* Main */
+/* Contenido principal */
 .main { margin-left:260px; padding:20px; transition:0.3s; }
 .sidebar.collapsed ~ .main { margin-left:60px; }
 
-/* Cards */
+/* Cards Dashboard */
 .cards { display:flex; gap:20px; margin-top:20px; flex-wrap:wrap; }
 .card { flex:1; min-width:150px; background:white; color:#ff4d00; padding:20px; border-radius:12px; text-align:center; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.1); transition:0.2s; }
 .card:hover { transform:translateY(-3px); box-shadow:0 6px 12px rgba(0,0,0,0.15); }
 .card span { font-weight:700; font-size:1.3rem; display:block; margin-top:5px; }
 .card i { font-size:2rem; }
 
-/* Busqueda */
+/* Buscador */
 .search-bar { margin-bottom:15px; display:flex; gap:10px; }
 .search-bar input { flex-grow:1; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
 
-/* Tablas */
+/* Tabla */
 table { width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.05); }
 th, td { border:1px solid #eee; padding:10px; text-align:center; font-size:0.9rem; }
 th { background:#ff4d00; color:white; font-weight:600; }
-tr:nth-child(even){ background-color:#f9f9f9; }
+tr:nth-child(even) { background-color:#f9f9f9; }
 .actions button { margin:0 2px; padding:6px; border-radius:50%; border:none; cursor:pointer; width:32px; height:32px; transition:0.1s; }
 .actions button:hover { opacity:0.8; }
 .btn-edit { background:#ffb86b; color:white; }
@@ -68,24 +67,22 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 
 /* Responsive */
 @media(max-width:768px){
-.sidebar{ left:-260px; position:fixed; }
-.sidebar.collapsed{ left:0; }
-.main{ margin-left:0; padding:10px; }
-.cards{ flex-direction:column; }
-.card{ min-width:100%; }
+.sidebar { left:-260px; position:fixed; }
+.sidebar.collapsed { left:0; }
+.main { margin-left:0; padding:10px; }
+.cards { flex-direction:column; }
+.card { min-width:100%; }
 }
 </style>
 </head>
 <body>
 
 <aside class="sidebar" id="sidebar">
-<div class="brand">
-<i class="fa-solid fa-boxes-stacked"></i><span>Inventario 3A</span>
-<button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
-</div>
+<div class="brand"><i class="fa-solid fa-boxes-stacked"></i><span>Inventario 3A</span>
+<button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button></div>
 
 <div class="menu-section">
-<button class="accordion active" onclick="nav('dashboard')"><i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i></button>
+<button class="accordion active"><i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i></button>
 <div class="panel" style="max-height: 500px;">
 <button onclick="nav('dashboard')"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
 </div>
@@ -133,160 +130,123 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-// Arrays de datos
-let inventario=[], categorias=[], tiendas=[];
-let editIndex=null;
-let currentView='dashboard';
-let STORAGE_KEY='inventario3a';
+const APPWEB_URL = "https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
+let currentSheet = '';
+let editId = null;
 
-// LocalStorage
-function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify({inventario,categorias,tiendas})); }
-function loadData(){ 
-  const data=localStorage.getItem(STORAGE_KEY);
-  if(data){ const d=JSON.parse(data); inventario=d.inventario||[]; categorias=d.categorias||[]; tiendas=d.tiendas||[]; }
-}
+// Sidebar Toggle
+document.getElementById('toggleSidebar').onclick = ()=>{ document.getElementById('sidebar').classList.toggle('collapsed'); }
 
-// Sidebar
-document.getElementById('toggleSidebar').onclick=function(){ document.getElementById('sidebar').classList.toggle('collapsed'); };
-
-// Render
-function render(){
-const c=document.getElementById('content');
-const title=document.getElementById('main-title');
-c.innerHTML='';
-
-if(currentView==='dashboard'){
-  title.innerText='Dashboard';
-  const cards=document.createElement('div'); cards.className='cards';
-  const createCard=(label,count,view,icon)=>{const card=document.createElement('div'); card.className='card'; card.innerHTML=`<i class="fa-solid ${icon}"></i><span>${label}: ${count}</span>`; card.onclick=()=>nav(view); return card; };
-  cards.appendChild(createCard('Equipos',inventario.length,'inventario','fa-computer'));
-  cards.appendChild(createCard('Categorias',categorias.length,'categoria','fa-tags'));
-  cards.appendChild(createCard('Tiendas',tiendas.length,'tienda','fa-store'));
-  c.appendChild(cards); return;
-}
-
-const searchBar=document.createElement('div'); searchBar.className='search-bar';
-searchBar.innerHTML=`<input type="text" placeholder="Buscar..." onkeyup="applySearch(this.value)">`;
-c.appendChild(searchBar);
-
-let arr=[], headers=[], tipo='';
-if(currentView==='inventario'){ arr=inventario; headers=['ID','Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda','Acciones']; tipo='inventario'; title.innerText='Inventario'; }
-else if(currentView==='categoria'){ arr=categorias; headers=['ID','Nombre','Acciones']; tipo='categoria'; title.innerText='Categorias'; }
-else { arr=tiendas; headers=['ID','Nombre','Acciones']; tipo='tienda'; title.innerText='Tiendas'; }
-
-const tbl=document.createElement('table');
-tbl.innerHTML=`<thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
-const tb=document.createElement('tbody');
-
-arr.forEach((item,i)=>{
-  const tr=document.createElement('tr');
-  // ID
-  const idCell=document.createElement('td'); idCell.innerText=item.id||('id-'+(i+1)); tr.appendChild(idCell);
-
-  if(tipo==='inventario'){
-    ['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda'].forEach(f=>{const td=document.createElement('td'); td.innerText=item[f]||''; tr.appendChild(td);});
-  } else { const td=document.createElement('td'); td.innerText=item.nombre||''; tr.appendChild(td); }
-
-  const tdActions=document.createElement('td'); tdActions.className='actions';
-  const btnEdit=document.createElement('button'); btnEdit.className='btn-edit'; btnEdit.innerHTML='<i class="fa-solid fa-pen"></i>'; btnEdit.onclick=()=>editItemFunc(tipo,i);
-  const btnDel=document.createElement('button'); btnDel.className='btn-del'; btnDel.innerHTML='<i class="fa-solid fa-trash"></i>'; btnDel.onclick=()=>deleteItem(tipo,i);
-  tdActions.appendChild(btnEdit); tdActions.appendChild(btnDel); tr.appendChild(tdActions);
-
-  tb.appendChild(tr);
+// Acordeón
+document.querySelectorAll('.accordion').forEach(acc => {
+  acc.onclick = function() {
+    this.classList.toggle("active");
+    const panel = this.nextElementSibling;
+    if(panel.style.maxHeight) panel.style.maxHeight = null;
+    else panel.style.maxHeight = panel.scrollHeight + "px";
+  }
 });
-tbl.appendChild(tb);
-c.appendChild(tbl);
-}
 
 // Navegación
-function nav(view){ currentView=view; render(); }
-
-// Buscar
-function applySearch(q){
-const v=q.toLowerCase(); document.querySelectorAll('table tbody tr').forEach(tr=>{
-  let show=false;
-  tr.querySelectorAll('td').forEach(td=>{if(td.innerText.toLowerCase().includes(v)) show=true;});
-  tr.style.display=show?'':'none';
-});
-}
-
-// Formulario
-function openAddForm(tipo,index=null){
-editIndex=index;
-document.getElementById('modal').style.display='flex';
-const form=document.getElementById('modal-form');
-form.innerHTML='';
-form.dataset.tipo=tipo;
-
-if(tipo==='inventario'){
-document.getElementById('modal-title').innerText=(index!==null?'Editar ':'Agregar ')+'Inventario';
-const flds=['Codigo','Serie','Equipo','Marca','Modelo'];
-flds.forEach(f=>{const inp=document.createElement('input'); inp.id='form-'+f; inp.placeholder=f; if(index!==null) inp.value=inventario[index][f]||''; form.appendChild(inp); });
-
-// Combobox Categoria
-const catSelect=document.createElement('select'); catSelect.id='form-Categoria';
-categorias.forEach(c=>{const opt=document.createElement('option'); opt.value=c.nombre; opt.text=c.nombre; if(index!==null && inventario[index].Categoria===c.nombre) opt.selected=true; catSelect.appendChild(opt); });
-form.appendChild(catSelect);
-
-// Combobox Tienda
-const tSelect=document.createElement('select'); tSelect.id='form-Tienda';
-tiendas.forEach(t=>{const opt=document.createElement('option'); opt.value=t.nombre; opt.text=t.nombre; if(index!==null && inventario[index].Tienda===t.nombre) opt.selected=true; tSelect.appendChild(opt); });
-form.appendChild(tSelect);
-
-}else{
-document.getElementById('modal-title').innerText=(index!==null?'Editar ':'Agregar ')+(tipo==='categoria'?'Categoria':'Tienda');
-const inp=document.createElement('input'); inp.id='form-nombre'; inp.placeholder='Nombre'; if(index!==null) inp.value=(tipo==='categoria'?categorias[index].nombre:tiendas[index].nombre)||''; form.appendChild(inp);
-}
-}
-
-// Guardar
-function saveItem(){
-const tipo=document.getElementById('modal-form').dataset.tipo;
-if(tipo==='inventario'){
-const item={};
-['Codigo','Serie','Equipo','Marca','Modelo'].forEach(f=>item[f]=document.getElementById('form-'+f).value);
-item.Categoria=document.getElementById('form-Categoria').value;
-item.Tienda=document.getElementById('form-Tienda').value;
-
-if(editIndex!==null){
-item.id=inventario[editIndex].id;
-inventario[editIndex]=item;
-}else{
-item.id='id-'+(inventario.length+1);
-inventario.push(item);
-}
-}else{
-const nombre=document.getElementById('form-nombre').value;
-if(editIndex!==null){
-if(tipo==='categoria') categorias[editIndex].nombre=nombre; else tiendas[editIndex].nombre=nombre;
-}else{
-const obj={id:'id-'+((tipo==='categoria'?categorias:tiendas).length+1), nombre:nombre};
-if(tipo==='categoria') categorias.push(obj); else tiendas.push(obj);
-}
-}
-closeModal();
-saveData();
-render();
-}
-
-// Editar
-function editItemFunc(tipo,i){ openAddForm(tipo,i); }
-
-// Eliminar
-function deleteItem(tipo,i){
-if(!confirm('¿Eliminar este registro?')) return;
-if(tipo==='inventario'){ inventario.splice(i,1); inventario.forEach((it,j)=>it.id='id-'+(j+1)); }
-else if(tipo==='categoria'){ categorias.splice(i,1); categorias.forEach((it,j)=>it.id='id-'+(j+1)); }
-else{ tiendas.splice(i,1); tiendas.forEach((it,j)=>it.id='id-'+(j+1)); }
-saveData(); render();
+function nav(sheet){
+  currentSheet = sheet;
+  editId = null;
+  document.getElementById('main-title').innerText = sheet.charAt(0).toUpperCase() + sheet.slice(1);
+  fetchData();
 }
 
 // Modal
+function openAddForm(sheet){
+  currentSheet = sheet;
+  editId = null;
+  document.getElementById('modal-title').innerText = 'Agregar ' + sheet;
+  buildForm(sheet);
+  document.getElementById('modal').style.display = 'flex';
+}
+
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-loadData();
-render();
-</script>
+// Construir formulario dinámico
+async function buildForm(sheet){
+  let html='';
+  const data = await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get`).then(r=>r.json());
+  if(sheet==='inventario'){
+    // Combo de Categoría
+    const categorias = await fetch(`${APPWEB_URL}?sheet=categoria&action=get`).then(r=>r.json());
+    const tiendas = await fetch(`${APPWEB_URL}?sheet=tienda&action=get`).then(r=>r.json());
+    html+=`<label>Nombre:</label><input type="text" id="name" value="${editId ? data.find(x=>x.id==editId).Nombre : ''}"/>`;
+    html+=`<label>Categoría:</label><input list="catlist" id="categoria" value="${editId ? data.find(x=>x.id==editId).Categoria : ''}"/><datalist id="catlist">${categorias.map(c=>`<option value="${c.Nombre}">`).join('')}</datalist>`;
+    html+=`<label>Tienda:</label><input list="tdlist" id="tienda" value="${editId ? data.find(x=>x.id==editId).Tienda : ''}"/><datalist id="tdlist">${tiendas.map(t=>`<option value="${t.Nombre}">`).join('')}</datalist>`;
+    html+=`<label>Cantidad:</label><input type="number" id="cantidad" value="${editId ? data.find(x=>x.id==editId).Cantidad : ''}"/>`;
+  } else {
+    html+=`<label>Nombre:</label><input type="text" id="name" value="${editId ? data.find(x=>x.id==editId).Nombre : ''}"/>`;
+  }
+  document.getElementById('modal-form').innerHTML=html;
+}
 
+// Guardar Item
+function saveItem(){
+  const params={sheet:currentSheet};
+  if(currentSheet==='inventario'){
+    params.Nombre = document.getElementById('name').value;
+    params.Categoria = document.getElementById('categoria').value;
+    params.Tienda = document.getElementById('tienda').value;
+    params.Cantidad = document.getElementById('cantidad').value;
+  } else {
+    params.Nombre = document.getElementById('name').value;
+  }
+  let url = APPWEB_URL+'?sheet='+currentSheet;
+  if(editId){
+    params.action='update';
+    params.idCol='id';
+    params.idValue=editId;
+  } else {
+    params.action='add';
+  }
+  const formData = new URLSearchParams(params);
+  fetch(url,{method:'POST',body:formData}).then(r=>r.json()).then(r=>{
+    if(r.success){
+      closeModal();
+      fetchData();
+    } else alert(r.msg);
+  });
+}
+
+// Cargar tabla
+async function fetchData(){
+  const data = await fetch(`${APPWEB_URL}?sheet=${currentSheet}&action=get`).then(r=>r.json());
+  if(!data.length){ document.getElementById('content').innerHTML='<p>No hay registros.</p>'; return; }
+  const headers=Object.keys(data[0]);
+  let table=`<div class="search-bar"><input placeholder="Buscar..." oninput="filterTable(this.value)"/></div><table><tr>${headers.map(h=>`<th>${h}</th>`).join('')}<th>Acciones</th></tr>`;
+  data.forEach(row=>{
+    table+=`<tr>${headers.map(h=>`<td>${row[h]}</td>`).join('')}<td class="actions"><button class="btn-edit" onclick="editItem(${row.id})"><i class="fa-solid fa-pen"></i></button><button class="btn-del" onclick="delItem(${row.id})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+  });
+  table+='</table>';
+  document.getElementById('content').innerHTML=table;
+}
+
+// Editar
+function editItem(id){ editId=id; openAddForm(currentSheet); }
+
+// Eliminar
+function delItem(id){
+  if(confirm('¿Eliminar este registro?')){
+    const params = new URLSearchParams({sheet:currentSheet, action:'delete', idValue:id});
+    fetch(APPWEB_URL,{method:'POST',body:params}).then(r=>r.json()).then(r=>{
+      if(r.success) fetchData();
+      else alert(r.msg);
+    });
+  }
+}
+
+// Filtrar tabla
+function filterTable(text){
+  const trs=document.querySelectorAll('#content table tr');
+  trs.forEach((tr,i)=>{
+    if(i===0) return;
+    tr.style.display = tr.innerText.toLowerCase().includes(text.toLowerCase())?'':'none';
+  });
+}
+</script>
 </body>
 </html>
