@@ -1,59 +1,110 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Inventario Tiendas 3A</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 <style>
-/* === ESTILOS CONSERVADOS === */
-body, html { margin:0; padding:0; font-family: sans-serif; background:#f7f7f7;}
+/* === ESTILOS GENERALES === */
+body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 * { box-sizing:border-box; }
-.sidebar{width:260px;position:fixed;height:100%;background:#ff4d00;color:#fff;display:flex;flex-direction:column;gap:12px;padding:20px;transition:0.3s;overflow-y:auto;z-index:10}
-.sidebar.collapsed{width:60px;padding:20px 5px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.2rem;position:relative;margin-bottom:10px}
-#toggleSidebar{position:absolute;right:0;top:0;background:#cc3c00;color:white;border:none;border-radius:6px;padding:4px 8px;cursor:pointer}
-.menu-section .accordion{background:transparent;color:white;border:none;padding:10px;width:100%;display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;justify-content:space-between;transition:0.2s;border-radius:4px}
-.menu-section .accordion.active,.menu-section .accordion:hover{background:#e64500}
-.menu-section .panel{padding:0 10px;max-height:0;overflow:hidden;transition:max-height 0.28s ease-in-out;background:#e64500;display:flex;flex-direction:column;gap:4px}
-.menu-section .panel button{background:transparent;color:white;border:none;padding:8px;text-align:left;display:flex;align-items:center;gap:6px;cursor:pointer;width:100%;border-radius:4px}
-.menu-section .panel button:hover{background:#cc4000}
-.sidebar.collapsed .brand span,.sidebar.collapsed .accordion span,.sidebar.collapsed .panel button span{display:none}
-.main{margin-left:260px;padding:20px;transition:0.3s}
-.sidebar.collapsed ~ .main{margin-left:60px}
-.cards{display:flex;gap:20px;margin-top:20px;flex-wrap:wrap}
-.card{flex:1;min-width:150px;background:white;color:#ff4d00;padding:20px;border-radius:12px;text-align:center;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,.1);transition:0.2s}
-.card:hover{transform:translateY(-3px);box-shadow:0 6px 12px rgba(0,0,0,.15)}
-.card span{font-weight:700;font-size:1.3rem;display:block;margin-top:5px}
-.card i{font-size:2rem}
-.search-bar{margin-bottom:15px;display:flex;gap:10px}
-.search-bar input{flex-grow:1;padding:10px;border-radius:6px;border:1px solid #ccc;font-size:1rem}
-table{width:100%;border-collapse:collapse;margin-top:20px;background:white;box-shadow:0 2px 4px rgba(0,0,0,.05);display:block;overflow-x:auto;white-space:nowrap}
-th,td{border:1px solid #eee;padding:10px;text-align:center;font-size:.9rem}
-th{background:#ff4d00;color:white;font-weight:600}
-tr:nth-child(even){background:#f9f9f9}
-.actions button{margin:0 2px;padding:6px;border-radius:50%;border:none;cursor:pointer;width:32px;height:32px}
-.btn-edit{background:#ffb86b;color:white}
-.btn-del{background:#d9534f;color:white}
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50}
-.modal{background:white;padding:25px;border-radius:12px;width:520px;max-width:95%}
-input,select{padding:10px;border-radius:6px;border:1px solid #ccc;width:100%;margin-bottom:12px;font-size:1rem}
-.modal button{padding:8px 15px;border-radius:6px;cursor:pointer;border:none;font-weight:600}
-.modal button:last-child{background:#ff4d00;color:white}
-.modal button:first-child{background:#eee;color:#333;margin-right:10px}
-@media(max-width:768px){.sidebar{left:-260px}.sidebar.collapsed{left:0}.main{margin-left:0;padding:10px}.cards{flex-direction:column}}
+
+/* Sidebar */
+.sidebar {
+  width: 260px; position:fixed; height:100%; background:#ff4d00; color:white;
+  display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s;
+  overflow-y:auto; z-index:10;
+}
+.sidebar.collapsed { width:60px; padding:20px 5px; }
+.brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.2rem; position:relative; margin-bottom:10px; }
+#toggleSidebar { position:absolute; right:0; top:0; background:#cc3c00; color:white; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; }
+
+/* Acordeón */
+.menu-section .accordion {
+  background:transparent; color:white; border:none; padding:10px; width:100%; display:flex;
+  align-items:center; gap:10px; cursor:pointer; font-weight:600; justify-content:space-between;
+  border-radius:4px;
+}
+.menu-section .accordion.active, .menu-section .accordion:hover { background-color:#e64500; }
+.menu-section .panel {
+  padding:0 10px; max-height:0; overflow:hidden; transition:max-height 0.3s ease-in-out;
+  background-color:#e64500; display:flex; flex-direction:column; gap:4px;
+}
+.menu-section .panel button {
+  background:transparent; color:white; border:none; padding:8px; text-align:left;
+  display:flex; align-items:center; gap:6px; cursor:pointer; width:100%; border-radius:4px;
+}
+.menu-section .panel button:hover { background-color:#cc4000; }
+
+.sidebar.collapsed .brand span,
+.sidebar.collapsed .accordion span,
+.sidebar.collapsed .panel button span { display:none; }
+.sidebar.collapsed .accordion { justify-content:center; }
+.sidebar.collapsed .accordion i.fa-chevron-down { display:none; }
+
+/* Contenido */
+.main { margin-left:260px; padding:20px; transition:0.3s; }
+.sidebar.collapsed ~ .main { margin-left:60px; }
+
+/* Dashboard Cards */
+.cards { display:flex; gap:20px; margin-top:20px; flex-wrap:wrap; }
+.card {
+  flex:1; min-width:150px; background:white; color:#ff4d00; padding:20px; border-radius:12px; text-align:center;
+  cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.1); transition:0.2s;
+}
+.card:hover { transform:translateY(-3px); box-shadow:0 6px 12px rgba(0,0,0,0.15); }
+.card span { font-weight:700; font-size:1.3rem; display:block; margin-top:5px;}
+.card i { font-size:2rem; }
+
+/* Búsqueda */
+.search-bar { margin-bottom:15px; display:flex; gap:10px; }
+.search-bar input { flex-grow:1; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
+
+/* Tablas */
+table { width:100%; border-collapse:collapse; margin-top:20px; background:white;
+  box-shadow:0 2px 4px rgba(0,0,0,0.05); display:block; overflow-x:auto; white-space:nowrap;
+}
+th, td { border:1px solid #eee; padding:10px; text-align:center; font-size:0.9rem; }
+th { background:#ff4d00; color:white; font-weight:600; }
+tr:nth-child(even) { background-color:#f9f9f9; }
+.actions button { margin:0 2px; padding:6px; border-radius:50%; border:none; cursor:pointer;
+  width:32px; height:32px; transition:0.1s; }
+.actions button:hover { opacity:0.8; }
+.btn-edit { background:#ffb86b; color:white; }
+.btn-del { background:#d9534f; color:white; }
+
+/* Modal */
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:50; }
+.modal { background:white; padding:25px; border-radius:12px; width:450px; max-width:95%; box-shadow:0 10px 20px rgba(0,0,0,0.2); }
+input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:100%; margin-bottom:12px; font-size:1rem; }
+.modal button { padding:8px 15px; border-radius:6px; cursor:pointer; border:none; font-weight:600; transition:0.1s; }
+.modal button:last-child { background:#ff4d00; color:white; }
+.modal button:last-child:hover { background:#cc3c00; }
+.modal button:first-child { background:#eee; color:#333; margin-right:10px; }
+.modal button:first-child:hover { background:#ddd; }
+
+/* Responsive */
+@media(max-width:768px) {
+  .cards { flex-direction:column; }
+  .card { min-width:100%; }
+  .sidebar { left:-260px; position:fixed; }
+  .sidebar.collapsed { left:0; }
+  .main { margin-left:0; padding:10px; }
+}
 </style>
 </head>
 <body>
-<!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
   <div class="brand">
     <i class="fa-solid fa-boxes-stacked"></i><span>Inventario 3A</span>
     <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
   </div>
   <div class="menu-section">
-    <button class="accordion active"><i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i></button>
-    <div class="panel" style="max-height:500px;"><button onclick="nav('dashboard')"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button></div>
+    <button class="accordion active" onclick="nav('dashboard')"><i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i></button>
+    <div class="panel" style="max-height:500px;">
+      <button onclick="nav('dashboard')"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
+    </div>
   </div>
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-computer"></i><span>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
@@ -77,33 +128,106 @@ input,select{padding:10px;border-radius:6px;border:1px solid #ccc;width:100%;mar
     </div>
   </div>
 </aside>
-<div class="main"><h2 id="main-title"></h2><div id="content"></div></div>
-<div class="modal-backdrop" id="modal"><div class="modal"><h3 id="modal-title"></h3><div id="modal-form"></div><div style="text-align:right"><button onclick="closeModal()">Cancelar</button><button onclick="saveItem()">Guardar</button></div></div></div>
+
+<div class="main">
+  <h2 id="main-title">Inventario de Tienda</h2>
+  <div id="content"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <h3 id="modal-title"></h3>
+    <div id="modal-form"></div>
+    <div style="text-align:right; margin-top:15px;">
+      <button onclick="closeModal()">Cancelar</button>
+      <button onclick="saveItem()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const APPWEB_URL="https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
-let inventario=[],categorias=[],tiendas=[],pendingOps=[],editItemIndex=null,currentView='dashboard',currentSearch='',syncing=false;
+let inventario=[],categorias=[],tiendas=[],pendingOps=[];
+let editItemIndex=null; let editTipo=null; let currentView='dashboard'; let currentSearch='';
 const STORAGE_KEY='inventario3a';
-/* --- LocalStorage --- */
-function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify({inventario,categorias,tiendas,pendingOps}))}
-function loadData(){const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return;try{const d=JSON.parse(raw);inventario=d.inventario||[];categorias=d.categorias||[];tiendas=d.tiendas||[];pendingOps=d.pendingOps||[]}catch(e){}}
-/* --- Fetch server --- */
-async function fetchSheet(sheet){try{const r=await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get&t=${Date.now()}`);return await r.json()}catch(e){return[]}}
-/* --- Sync --- */
-async function syncItem(tipo,item,action){const sheet=tipo;const params=new URLSearchParams({sheet,action});if(action!=='add'&&item.idSheet){params.append('idCol','id');params.append('idValue',item.idSheet)};if(action!=='delete'){for(const k in item)if(k!=='idSheet')params.append(k,item[k]||'')}try{const r=await fetch(`${APPWEB_URL}?${params}`,{method:'POST'});const d=await r.json();if(d.success&&d.id)item.idSheet=d.id;return d.success}catch(e){return false}}
-async function syncPending(){if(syncing||!pendingOps.length)return;syncing=true;const newPending=[];for(const op of pendingOps){const ok=await syncItem(op.tipo,op.item,op.action);if(!ok)newPending.push(op)}pendingOps=newPending;saveData();await reloadFromServer();syncing=false}
-async function reloadFromServer(){const [inv,cat,td]=await Promise.all([fetchSheet('inventario'),fetchSheet('categoria'),fetchSheet('tienda')]);inventario=[...inv,...inventario.filter(i=>!i.idSheet)];categorias=[...cat,...categorias.filter(c=>!c.idSheet)];tiendas=[...td,...tiendas.filter(t=>!t.idSheet)];saveData();render()}
-/* --- UI --- */
-function nav(view){currentView=view;render()}
-function applySearch(q){currentSearch=q.toLowerCase();render()}
-function render(){const c=document.getElementById('content');c.innerHTML='';if(currentView==='dashboard'){document.getElementById('main-title').innerText='Dashboard';c.innerHTML=`<div class="cards"><div class="card" onclick="nav('inventario')"><i class="fa-solid fa-computer"></i><span>Equipos: ${inventario.length}</span></div><div class="card" onclick="nav('categoria')"><i class="fa-solid fa-tags"></i><span>Categorías: ${categorias.length}</span></div><div class="card" onclick="nav('tienda')"><i class="fa-solid fa-store"></i><span>Tiendas: ${tiendas.length}</span></div></div>`;return}
-let arr=(currentView==='inventario'?inventario:currentView==='categoria'?categorias:tiendas).filter(it=>!currentSearch||JSON.stringify(it).toLowerCase().includes(currentSearch));let h=(currentView==='inventario'?['ID','Código','Serie','Equipo','Marca','Modelo','Categoría','Tienda','Acciones']:['ID','Nombre','Acciones']);let html=`<div class="search-bar"><input placeholder="Buscar..." onkeyup="applySearch(this.value)"/></div><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>`;for(const [i,it]of arr.entries()){html+="<tr>";if(currentView==='inventario'){html+=`<td>${it.idSheet||''}</td><td>${it.Codigo||''}</td><td>${it.Serie||''}</td><td>${it.Equipo||''}</td><td>${it.Marca||''}</td><td>${it.Modelo||''}</td><td>${it.Categoria||''}</td><td>${it.Tienda||''}</td>`}else{html+=`<td>${it.idSheet||''}</td><td>${it.nombre||''}</td>`}html+=`<td class="actions"><button class="btn-edit" onclick="openAddForm('${currentView}',${i})"><i class="fa-solid fa-pen"></i></button><button class="btn-del" onclick="deleteItem('${currentView}',${i})"><i class="fa-solid fa-trash"></i></button></td></tr>`}html+="</tbody></table>";c.innerHTML=html}
-/* --- Modal --- */
-function openAddForm(tipo,i=null){editItemIndex=i;document.getElementById('modal').style.display='flex';const f=document.getElementById('modal-form');f.dataset.tipo=tipo;f.innerHTML='';if(tipo==='inventario'){['Codigo','Serie','Equipo','Marca','Modelo'].forEach(k=>f.innerHTML+=`<input id="f_${k}" placeholder="${k}"/>`);let sc=`<select id="f_Categoria"><option value="">--Categoría--</option>${categorias.map(c=>`<option>${c.nombre}</option>`).join('')}</select>`;let st=`<select id="f_Tienda"><option value="">--Tienda--</option>${tiendas.map(t=>`<option>${t.nombre}</option>`).join('')}</select>`;f.innerHTML+=sc+st;if(i!=null){let it=inventario[i];['Codigo','Serie','Equipo','Marca','Modelo'].forEach(k=>document.getElementById('f_'+k).value=it[k]||'');document.getElementById('f_Categoria').value=it.Categoria||'';document.getElementById('f_Tienda').value=it.Tienda||''}}else{f.innerHTML=`<input id="f_nombre" placeholder="Nombre"/>`;if(i!=null){let it=(tipo==='categoria'?categorias:tiendas)[i];document.getElementById('f_nombre').value=it.nombre||''}}}
-function closeModal(){document.getElementById('modal').style.display='none';editItemIndex=null}
-function saveItem(){const f=document.getElementById('modal-form');const tipo=f.dataset.tipo;let arr=(tipo==='inventario'?inventario:tipo==='categoria'?categorias:tiendas);if(tipo==='inventario'){let obj={Codigo:document.getElementById('f_Codigo').value,Serie:document.getElementById('f_Serie').value,Equipo:document.getElementById('f_Equipo').value,Marca:document.getElementById('f_Marca').value,Modelo:document.getElementById('f_Modelo').value,Categoria:document.getElementById('f_Categoria').value,Tienda:document.getElementById('f_Tienda').value};if(editItemIndex!=null){Object.assign(arr[editItemIndex],obj);pendingOps.push({tipo,action:'update',item:arr[editItemIndex]})}else{arr.push(obj);pendingOps.push({tipo,action:'add',item:obj})}}else{let obj={nombre:document.getElementById('f_nombre').value};if(editItemIndex!=null){Object.assign(arr[editItemIndex],obj);pendingOps.push({tipo,action:'update',item:arr[editItemIndex]})}else{arr.push(obj);pendingOps.push({tipo,action:'add',item:obj})}}saveData();render();closeModal();setTimeout(syncPending,1000)}
-function deleteItem(tipo,i){let arr=(tipo==='inventario'?inventario:tipo==='categoria'?categorias:tiendas);let item=arr[i];if(item&&item.idSheet)pendingOps.push({tipo,action:'delete',item});arr.splice(i,1);saveData();render();setTimeout(syncPending,1000)}
-/* --- Init --- */
-document.getElementById('toggleSidebar').onclick=()=>document.getElementById('sidebar').classList.toggle('collapsed');loadData();nav(currentView);reloadFromServer();setInterval(syncPending,5000);
+
+/* Sidebar y Acordeón */
+document.getElementById('toggleSidebar').onclick=()=>document.getElementById('sidebar').classList.toggle('collapsed');
+document.querySelectorAll('.accordion').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.accordion').forEach(acc=>{ if(acc!==btn&&acc.classList.contains('active')){ acc.classList.remove('active'); acc.nextElementSibling.style.maxHeight=null; } });
+  btn.classList.toggle('active');
+  const panel=btn.nextElementSibling; panel.style.maxHeight=panel.style.maxHeight?null:panel.scrollHeight+"px";
+}));
+
+/* LocalStorage */
+function saveData(){ localStorage.setItem(STORAGE_KEY,JSON.stringify({inventario,categorias,tiendas,pendingOps})); }
+function loadData(){ const d=localStorage.getItem(STORAGE_KEY); if(d){const p=JSON.parse(d); inventario=p.inventario||[]; categorias=p.categorias||[]; tiendas=p.tiendas||[]; pendingOps=p.pendingOps||[];} }
+
+/* Fetch */
+async function fetchSheet(sheet){ try{ const res=await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get&t=${Date.now()}`); return await res.json(); }catch(e){return [];} }
+async function reloadFromServer(){
+  const [inv,cat,td]=await Promise.all([fetchSheet('inventario'),fetchSheet('categoria'),fetchSheet('tienda')]);
+  inventario=[...inv]; categorias=[...cat]; tiendas=[...td];
+  pendingOps.forEach(op=>{ if(op.action==='add'&&!op.item.idSheet){ if(op.tipo==='inventario')inventario.push(op.item); if(op.tipo==='categoria')categorias.push(op.item); if(op.tipo==='tienda')tiendas.push(op.item);} });
+  saveData(); render();
+}
+
+/* Sync */
+async function syncItem(tipo,item,action){
+  if(!item)return false; const sheet=tipo; const params=new URLSearchParams();
+  params.append('sheet',sheet); params.append('action',action);
+  const fields=tipo==='inventario'?['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda']:['nombre'];
+  if(action==='update'||action==='delete'){ if(!item.idSheet)return true; params.append('idCol','id'); params.append('idValue',item.idSheet); }
+  if(action==='add'||action==='update'){ fields.forEach(k=>params.append(k,item[k]||'')); }
+  try{ const res=await fetch(`${APPWEB_URL}?${params.toString()}`,{method:'POST'}); const data=await res.json();
+    if(data.success&&action==='add'&&data.id)item.idSheet=data.id; return data.success;
+  }catch(e){return false;}
+}
+async function syncPending(){ if(pendingOps.length===0)return; const newP=[]; for(const op of pendingOps){const ok=await syncItem(op.tipo,op.item,op.action); if(!ok)newP.push(op);} pendingOps=newP; saveData(); render();}
+
+/* Render */
+function filterData(arr){ if(!currentSearch)return arr; return arr.filter(i=>Object.values(i).some(v=>(v||'').toString().toLowerCase().includes(currentSearch))); }
+function render(){
+  const c=document.getElementById('content'); c.innerHTML=''; const t=document.getElementById('main-title');
+  if(currentView==='dashboard'){ t.innerText='Dashboard de Inventario'; const cards=document.createElement('div'); cards.className='cards';
+    const mk=(l,n,v,ic)=>{const d=document.createElement('div');d.className='card';d.innerHTML=`<i class="fa-solid ${ic}"></i><span>${l}: ${n}</span>`;d.onclick=()=>nav(v);return d;};
+    cards.appendChild(mk('Equipos',inventario.length,'inventario','fa-computer'));
+    cards.appendChild(mk('Categorías',categorias.length,'categoria','fa-tags'));
+    cards.appendChild(mk('Tiendas',tiendas.length,'tienda','fa-store'));
+    c.appendChild(cards); return; }
+  const sb=document.createElement('div'); sb.className='search-bar'; sb.innerHTML=`<input type="text" placeholder="Buscar..." value="${currentSearch}" onkeyup="applySearch(this.value)">`; c.appendChild(sb);
+  let arr=[],headers=[]; if(currentView==='inventario'){ t.innerText='Ver Inventario'; arr=filterData(inventario); headers=['ID','Código','Serie','Equipo','Marca','Modelo','Categoría','Tienda','Acciones']; }
+  if(currentView==='categoria'){ t.innerText='Ver Categorías'; arr=filterData(categorias); headers=['ID','Nombre','Acciones']; }
+  if(currentView==='tienda'){ t.innerText='Ver Tiendas'; arr=filterData(tiendas); headers=['ID','Nombre','Acciones']; }
+  const tbl=document.createElement('table'); tbl.innerHTML=`<thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`; const tb=document.createElement('tbody');
+  arr.forEach((it,i)=>{ const id=it.idSheet||it.idLocal||'---'; const cells=currentView==='inventario'?[id,it.Codigo,it.Serie,it.Equipo,it.Marca,it.Modelo,it.Categoria,it.Tienda]:[id,it.nombre];
+    const g=currentView==='inventario'?inventario:currentView==='categoria'?categorias:tiendas; const idx=g.findIndex(x=>x.idSheet===it.idSheet||x.idLocal===it.idLocal);
+    const tr=document.createElement('tr'); tr.innerHTML=cells.map(v=>`<td>${v}</td>`).join('')+`<td class="actions"><button class="btn-edit" onclick="editItemFunc('${currentView}',${idx})"><i class="fa-solid fa-pen"></i></button><button class="btn-del" onclick="deleteItem('${currentView}',${idx})"><i class="fa-solid fa-trash"></i></button></td>`; tb.appendChild(tr); });
+  tbl.appendChild(tb); c.appendChild(tbl);
+}
+
+/* Nav */
+function nav(v){currentView=v;currentSearch='';render();} function applySearch(q){currentSearch=q.toLowerCase().trim();render();}
+
+/* Modal */
+function openAddForm(tipo,index=null){ editItemIndex=index; editTipo=tipo; document.getElementById('modal').style.display='flex'; const mf=document.getElementById('modal-form'); const mt=document.getElementById('modal-title'); let h=''; if(tipo==='inventario'){ mt.innerText=(index===null?'Agregar':'Editar')+' Inventario';
+  const it=index!==null?inventario[index]:{}; h=`<input placeholder="Código" value="${it.Codigo||''}" id="f-Codigo"/><input placeholder="Serie" value="${it.Serie||''}" id="f-Serie"/><input placeholder="Equipo" value="${it.Equipo||''}" id="f-Equipo"/><input placeholder="Marca" value="${it.Marca||''}" id="f-Marca"/><input placeholder="Modelo" value="${it.Modelo||''}" id="f-Modelo"/>`;
+  h+=`<select id="f-Categoria">${categorias.map(c=>`<option ${c.nombre===it.Categoria?'selected':''}>${c.nombre}</option>`).join('')}</select>`;
+  h+=`<select id="f-Tienda">${tiendas.map(t=>`<option ${t.nombre===it.Tienda?'selected':''}>${t.nombre}</option>`).join('')}</select>`;}
+  else{ mt.innerText=(index===null?'Agregar ':'Editar ')+(tipo==='categoria'?'Categoría':'Tienda'); const it=index!==null?(tipo==='categoria'?categorias[index]:tiendas[index]):{}; h=`<input placeholder="Nombre" value="${it.nombre||''}" id="f-nombre"/>`; }
+  mf.innerHTML=h;
+}
+function closeModal(){document.getElementById('modal').style.display='none'; editItemIndex=null; editTipo=null;}
+function saveItem(){const tipo=editTipo; if(!tipo)return; let item={}; if(tipo==='inventario'){ item={Codigo:document.getElementById('f-Codigo').value,Serie:document.getElementById('f-Serie').value,Equipo:document.getElementById('f-Equipo').value,Marca:document.getElementById('f-Marca').value,Modelo:document.getElementById('f-Modelo').value,Categoria:document.getElementById('f-Categoria').value,Tienda:document.getElementById('f-Tienda').value};}
+ else{ item={nombre:document.getElementById('f-nombre').value}; }
+ if(editItemIndex!==null){ const arr=tipo==='inventario'?inventario:tipo==='categoria'?categorias:tiendas; const old=arr[editItemIndex]; item.idSheet=old.idSheet; item.idLocal=old.idLocal; arr[editItemIndex]=item; pendingOps.push({tipo,item,action:'update'});}
+ else{ item.idLocal='L'+Date.now(); const arr=tipo==='inventario'?inventario:tipo==='categoria'?categorias:tiendas; arr.push(item); pendingOps.push({tipo,item,action:'add'});}
+ saveData(); closeModal(); render(); }
+function editItemFunc(tipo,index){openAddForm(tipo,index);} function deleteItem(tipo,index){ const arr=tipo==='inventario'?inventario:tipo==='categoria'?categorias:tiendas; const item=arr[index]; if(item.idSheet)pendingOps.push({tipo,item,action:'delete'}); arr.splice(index,1); saveData(); render(); }
+
+/* Init */
+loadData(); render(); setInterval(syncPending,5000); reloadFromServer();
 </script>
 </body>
 </html>
