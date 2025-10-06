@@ -1,420 +1,268 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Inventario Tiendas 3A</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-<style>
-/* === ESTILOS GENERALES === */
-body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
-* { box-sizing:border-box; }
-
-/* Sidebar */
-.sidebar {
-  width: 260px; position:fixed; height:100%; background:#ff4d00; color:white;
-  display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s;
-  overflow-y:auto; z-index:10;
-}
-.sidebar.collapsed { width:60px; padding:20px 5px; }
-.brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.2rem; position:relative; margin-bottom:10px; }
-#toggleSidebar { position:absolute; right:0; top:0; background:#cc3c00; color:white; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; }
-
-/* Acordeón */
-.menu-section .accordion {
-  background:transparent; color:white; border:none; padding:10px; width:100%; display:flex;
-  align-items:center; gap:10px; cursor:pointer; font-weight:600; justify-content:space-between;
-  border-radius:4px;
-}
-.menu-section .accordion.active, .menu-section .accordion:hover { background-color:#e64500; }
-.menu-section .panel {
-  padding:0 10px; max-height:0; overflow:hidden; transition:max-height 0.3s ease-in-out;
-  background-color:#e64500; display:flex; flex-direction:column; gap:4px;
-}
-.menu-section .panel button {
-  background:transparent; color:white; border:none; padding:8px; text-align:left;
-  display:flex; align-items:center; gap:6px; cursor:pointer; width:100%; border-radius:4px;
-}
-.menu-section .panel button:hover { background-color:#cc4000; }
-
-.sidebar.collapsed .brand span,
-.sidebar.collapsed .accordion span,
-.sidebar.collapsed .panel button span { display:none; }
-.sidebar.collapsed .accordion { justify-content:center; }
-.sidebar.collapsed .accordion i.fa-chevron-down { display:none; }
-
-/* Contenido */
-.main { margin-left:260px; padding:20px; transition:0.3s; }
-.sidebar.collapsed ~ .main { margin-left:60px; }
-
-/* Dashboard Cards */
-.cards { display:flex; gap:20px; margin-top:20px; flex-wrap:wrap; }
-.card {
-  flex:1; min-width:150px; background:white; color:#ff4d00; padding:20px; border-radius:12px; text-align:center;
-  cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.1); transition:0.2s;
-}
-.card:hover { transform:translateY(-3px); box-shadow:0 6px 12px rgba(0,0,0,0.15); }
-.card span { font-weight:700; font-size:1.3rem; display:block; margin-top:5px;}
-.card i { font-size:2rem; }
-
-/* Búsqueda */
-.search-bar { margin-bottom:15px; display:flex; gap:10px; }
-.search-bar input { flex-grow:1; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
-
-/* Tablas */
-table { width:100%; border-collapse:collapse; margin-top:20px; background:white;
-  box-shadow:0 2px 4px rgba(0,0,0,0.05); display:block; overflow-x:auto; white-space:nowrap;
-}
-th, td { border:1px solid #eee; padding:10px; text-align:center; font-size:0.9rem; }
-th { background:#ff4d00; color:white; font-weight:600; }
-tr:nth-child(even) { background-color:#f9f9f9; }
-.actions button { margin:0 2px; padding:6px; border-radius:50%; border:none; cursor:pointer;
-  width:32px; height:32px; transition:0.1s; }
-.actions button:hover { opacity:0.8; }
-.btn-edit { background:#ffb86b; color:white; }
-.btn-del { background:#d9534f; color:white; }
-
-/* Modal */
-.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:50; }
-.modal { background:white; padding:25px; border-radius:12px; width:450px; max-width:95%; box-shadow:0 10px 20px rgba(0,0,0,0.2); }
-input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:100%; margin-bottom:12px; font-size:1rem; }
-.modal button { padding:8px 15px; border-radius:6px; cursor:pointer; border:none; font-weight:600; transition:0.1s; }
-.modal button:last-child { background:#ff4d00; color:white; }
-.modal button:last-child:hover { background:#cc3c00; }
-.modal button:first-child { background:#eee; color:#333; margin-right:10px; }
-.modal button:first-child:hover { background:#ddd; }
-
-/* Responsive */
-@media(max-width:768px) {
-  .cards { flex-direction:column; }
-  .card { min-width:100%; }
-  .sidebar { left:-260px; position:fixed; }
-  .sidebar.collapsed { left:0; }
-  .main { margin-left:0; padding:10px; }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario Tiendas 3A</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;padding:0;background:#f4f4f4;}
+    header{background:#ff6600;color:#fff;text-align:center;padding:10px;}
+    nav{display:flex;justify-content:center;background:#333;}
+    nav button{background:#444;color:#fff;border:none;padding:10px 20px;cursor:pointer;}
+    nav button:hover{background:#555;}
+    section{padding:20px;}
+    table{width:100%;border-collapse:collapse;margin-top:10px;}
+    th,td{border:1px solid #ddd;padding:8px;text-align:left;}
+    th{background:#f2f2f2;}
+    .actions button{margin-right:5px;}
+    #formModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;}
+    #formModal .modal-content{background:#fff;padding:20px;border-radius:8px;min-width:300px;}
+    #formModal .modal-content h3{margin-top:0;}
+    #formModal input{width:100%;padding:8px;margin:5px 0;}
+  </style>
 </head>
 <body>
-<aside class="sidebar" id="sidebar">
-  <div class="brand">
-    <i class="fa-solid fa-boxes-stacked"></i><span>Inventario 3A</span>
-    <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
-  </div>
-  <div class="menu-section">
-    <button class="accordion active" onclick="nav('dashboard')"><i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i></button>
-    <div class="panel" style="max-height:500px;">
-      <button onclick="nav('dashboard')"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
+  <header>
+    <h1>Inventario Tiendas 3A</h1>
+  </header>
+
+  <nav>
+    <button onclick="showSection('inventario')">Inventario</button>
+    <button onclick="showSection('categoria')">Categorías</button>
+    <button onclick="showSection('tienda')">Tiendas</button>
+  </nav>
+
+  <!-- Secciones -->
+  <section id="inventarioSection">
+    <h2>Inventario</h2>
+    <button onclick="openForm('inventario')">Agregar Inventario</button>
+    <table id="inventarioTable">
+      <thead>
+        <tr>
+          <th>Código</th><th>Serie</th><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Categoría</th><th>Tienda</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="categoriaSection" style="display:none;">
+    <h2>Categorías</h2>
+    <button onclick="openForm('categoria')">Agregar Categoría</button>
+    <table id="categoriaTable">
+      <thead>
+        <tr><th>Nombre</th><th>Acciones</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="tiendaSection" style="display:none;">
+    <h2>Tiendas</h2>
+    <button onclick="openForm('tienda')">Agregar Tienda</button>
+    <table id="tiendaTable">
+      <thead>
+        <tr><th>Nombre</th><th>Acciones</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- Modal Form -->
+  <div id="formModal">
+    <div class="modal-content">
+      <h3 id="formTitle">Formulario</h3>
+      <form id="dataForm" onsubmit="event.preventDefault(); saveData();">
+        <div id="inventarioFields" style="display:none;">
+          <input type="text" name="Codigo" placeholder="Código"/>
+          <input type="text" name="Serie" placeholder="Serie"/>
+          <input type="text" name="Equipo" placeholder="Equipo"/>
+          <input type="text" name="Marca" placeholder="Marca"/>
+          <input type="text" name="Modelo" placeholder="Modelo"/>
+          <input type="text" name="Categoria" placeholder="Categoría"/>
+          <input type="text" name="Tienda" placeholder="Tienda"/>
+        </div>
+        <div id="categoriaFields" style="display:none;">
+          <input type="text" name="nombre" placeholder="Nombre Categoría"/>
+        </div>
+        <div id="tiendaFields" style="display:none;">
+          <input type="text" name="nombre" placeholder="Nombre Tienda"/>
+        </div>
+        <button type="submit">Guardar</button>
+        <button type="button" onclick="closeForm()">Cancelar</button>
+      </form>
     </div>
   </div>
-  <div class="menu-section">
-    <button class="accordion"><i class="fa-solid fa-computer"></i><span>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
-    <div class="panel">
-      <button onclick="openAddForm('inventario')"><i class="fa-solid fa-plus"></i><span>Agregar Inventario</span></button>
-      <button onclick="nav('inventario')"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
-    </div>
-  </div>
-  <div class="menu-section">
-    <button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorías</span><i class="fa-solid fa-chevron-down"></i></button>
-    <div class="panel">
-      <button onclick="openAddForm('categoria')"><i class="fa-solid fa-plus"></i><span>Agregar Categoría</span></button>
-      <button onclick="nav('categoria')"><i class="fa-solid fa-table"></i><span>Ver Categorías</span></button>
-    </div>
-  </div>
-  <div class="menu-section">
-    <button class="accordion"><i class="fa-solid fa-store"></i><span>Tiendas</span><i class="fa-solid fa-chevron-down"></i></button>
-    <div class="panel">
-      <button onclick="openAddForm('tienda')"><i class="fa-solid fa-plus"></i><span>Agregar Tienda</span></button>
-      <button onclick="nav('tienda')"><i class="fa-solid fa-table"></i><span>Ver Tiendas</span></button>
-    </div>
-  </div>
-</aside>
 
-<div class="main">
-  <h2 id="main-title">Inventario de Tienda</h2>
-  <div id="content"></div>
-</div>
+  <script>
+  const APPWEB_URL = "TU_URL_DEL_SCRIPT"; // Reemplazar con tu URL de Apps Script
 
-<!-- Modal -->
-<div class="modal-backdrop" id="modal">
-  <div class="modal">
-    <h3 id="modal-title"></h3>
-    <div id="modal-form"></div>
-    <div style="text-align:right; margin-top:15px;">
-      <button onclick="closeModal()">Cancelar</button>
-      <button onclick="saveItem()">Guardar</button>
-    </div>
-  </div>
-</div>
+  let inventario=[], categorias=[], tiendas=[];
+  let pendingOps=[];
+  let currentSheet="inventario";
+  let editId=null;
 
-<script>
-/* ================== CONFIG ================== */
-// Pega aquí la URL publicada de tu Apps Script (web app)
-const APPWEB_URL="https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
-
-let inventario=[],categorias=[],tiendas=[],pendingOps=[];
-let editItemIndex=null; let editTipo=null; let currentView='dashboard'; let currentSearch='';
-const STORAGE_KEY='inventario3a';
-
-/* Sidebar y Acordeón */
-document.getElementById('toggleSidebar').onclick=()=>document.getElementById('sidebar').classList.toggle('collapsed');
-document.querySelectorAll('.accordion').forEach(btn=>btn.addEventListener('click',()=>{
-  document.querySelectorAll('.accordion').forEach(acc=>{ if(acc!==btn&&acc.classList.contains('active')){ acc.classList.remove('active'); acc.nextElementSibling.style.maxHeight=null; } });
-  btn.classList.toggle('active');
-  const panel=btn.nextElementSibling; panel.style.maxHeight=panel.style.maxHeight?null:panel.scrollHeight+"px";
-}));
-
-/* LocalStorage */
-function saveData(){ localStorage.setItem(STORAGE_KEY,JSON.stringify({inventario,categorias,tiendas,pendingOps})); }
-function loadData(){ const d=localStorage.getItem(STORAGE_KEY); if(d){try{const p=JSON.parse(d); inventario=p.inventario||[]; categorias=p.categorias||[]; tiendas=p.tiendas||[]; pendingOps=p.pendingOps||[];}catch(e){inventario=[];categorias=[];tiendas=[];pendingOps=[];}} }
-
-/* ======= FETCH helpers ======= */
-async function fetchSheet(sheet){
-  try{
-    const res = await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get&t=${Date.now()}`);
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
-  }catch(e){
-    console.error("fetchSheet error", e);
-    return [];
-  }
-}
-
-/* Reload server data and merge local pending adds */
-async function reloadFromServer(){
-  const [inv,cat,td] = await Promise.all([fetchSheet('inventario'), fetchSheet('categoria'), fetchSheet('tienda')]);
-  inventario = Array.isArray(inv) ? inv : [];
-  categorias = Array.isArray(cat) ? cat : [];
-  tiendas = Array.isArray(td) ? td : [];
-
-  // Ensure idLocal entries that are pending 'add' remain shown locally
-  pendingOps.forEach(op=>{
-    if(op.action==='add' && !op.item.idSheet){
-      if(op.tipo==='inventario' && !inventario.find(x=>x.idLocal && x.idLocal===op.item.idLocal)) inventario.push(op.item);
-      if(op.tipo==='categoria' && !categorias.find(x=>x.idLocal && x.idLocal===op.item.idLocal)) categorias.push(op.item);
-      if(op.tipo==='tienda' && !tiendas.find(x=>x.idLocal && x.idLocal===op.item.idLocal)) tiendas.push(op.item);
-    }
-  });
-
-  saveData();
-  render();
-}
-
-/* ======= SYNC: add / update / delete ======= */
-async function syncItem(tipo,item,action){
-  if(!item) return false;
-  const params = new URLSearchParams();
-  params.append('sheet', tipo);
-  params.append('action', action);
-
-  // For update/delete, server expects 'id'
-  if(action==='update' || action==='delete'){
-    if(!item.idSheet) return false; // can't update/delete if it has no server id
-    params.append('id', item.idSheet);
+  function showSection(tipo){
+    document.getElementById("inventarioSection").style.display="none";
+    document.getElementById("categoriaSection").style.display="none";
+    document.getElementById("tiendaSection").style.display="none";
+    document.getElementById(tipo+"Section").style.display="block";
+    currentSheet=tipo;
+    renderTable(tipo, tipo==="inventario"?inventario:(tipo==="categoria"?categorias:tiendas));
   }
 
-  // Append fields
-  if(action==='add' || action==='update'){
-    if(tipo==='inventario'){
-      params.append('Codigo', item.Codigo || '');
-      params.append('Serie', item.Serie || '');
-      params.append('Equipo', item.Equipo || '');
-      params.append('Marca', item.Marca || '');
-      params.append('Modelo', item.Modelo || '');
-      params.append('Categoria', item.Categoria || '');
-      params.append('Tienda', item.Tienda || '');
-    } else {
-      params.append('nombre', item.nombre || '');
-    }
+  function openForm(tipo){
+    editId=null;
+    currentSheet=tipo;
+    document.getElementById("dataForm").reset();
+    document.getElementById("inventarioFields").style.display="none";
+    document.getElementById("categoriaFields").style.display="none";
+    document.getElementById("tiendaFields").style.display="none";
+    if(tipo==="inventario") document.getElementById("inventarioFields").style.display="block";
+    if(tipo==="categoria") document.getElementById("categoriaFields").style.display="block";
+    if(tipo==="tienda") document.getElementById("tiendaFields").style.display="block";
+    document.getElementById("formModal").style.display="flex";
   }
 
-  try{
-    const res = await fetch(APPWEB_URL, { method:'POST', body: params });
-    const data = await res.json();
-    if(data && data.success){
-      if(action==='add' && data.id){
-        // assign server id to the local item object
-        item.idSheet = data.id;
+  function closeForm(){ document.getElementById("formModal").style.display="none"; }
+
+  function renderTable(tipo,data){
+    const tbody=document.querySelector(`#${tipo}Table tbody`);
+    tbody.innerHTML="";
+    data.forEach(item=>{
+      const tr=document.createElement("tr");
+      if(tipo==="inventario"){
+        tr.innerHTML=`<td>${item.Codigo||""}</td>
+          <td>${item.Serie||""}</td>
+          <td>${item.Equipo||""}</td>
+          <td>${item.Marca||""}</td>
+          <td>${item.Modelo||""}</td>
+          <td>${item.Categoria||""}</td>
+          <td>${item.Tienda||""}</td>
+          <td class="actions">
+            <button onclick="editItem('${tipo}',${item.id||item.idLocal})">Editar</button>
+            <button onclick="deleteItem('${tipo}',${item.id||item.idLocal})">Eliminar</button>
+          </td>`;
+      }else{
+        tr.innerHTML=`<td>${item.nombre||""}</td>
+          <td class="actions">
+            <button onclick="editItem('${tipo}',${item.id||item.idLocal})">Editar</button>
+            <button onclick="deleteItem('${tipo}',${item.id||item.idLocal})">Eliminar</button>
+          </td>`;
       }
-      return true;
-    } else {
-      console.warn("syncItem failed", data);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function saveData(){
+    const form=document.getElementById("dataForm");
+    const formData=new FormData(form);
+    let obj={};
+    for(let [k,v] of formData.entries()) obj[k]=v.trim();
+    if(Object.values(obj).every(v=>!v)){
+      alert("Debes completar al menos un campo.");
+      return;
+    }
+    if(editId){
+      obj.id=editId;
+      pendingOps.push({tipo:currentSheet,action:'update',data:obj});
+    }else{
+      obj.idLocal=Date.now();
+      pendingOps.push({tipo:currentSheet,action:'add',data:obj});
+      if(currentSheet==="inventario") inventario.push(obj);
+      if(currentSheet==="categoria") categorias.push(obj);
+      if(currentSheet==="tienda") tiendas.push(obj);
+    }
+    closeForm();
+    renderTable(currentSheet,currentSheet==="inventario"?inventario:(currentSheet==="categoria"?categorias:tiendas));
+    syncAll();
+  }
+
+  function editItem(tipo,id){
+    let arr=tipo==="inventario"?inventario:(tipo==="categoria"?categorias:tiendas);
+    let item=arr.find(x=>(x.id||x.idLocal)==id);
+    if(!item) return;
+    editId=id;
+    const form=document.getElementById("dataForm");
+    form.reset();
+    for(let k in item){ if(form.elements[k]) form.elements[k].value=item[k]; }
+    document.getElementById("inventarioFields").style.display="none";
+    document.getElementById("categoriaFields").style.display="none";
+    document.getElementById("tiendaFields").style.display="none";
+    if(tipo==="inventario") document.getElementById("inventarioFields").style.display="block";
+    if(tipo==="categoria") document.getElementById("categoriaFields").style.display="block";
+    if(tipo==="tienda") document.getElementById("tiendaFields").style.display="block";
+    document.getElementById("formModal").style.display="flex";
+  }
+
+  function deleteItem(tipo,id){
+    let arr=tipo==="inventario"?inventario:(tipo==="categoria"?categorias:tiendas);
+    let idx=arr.findIndex(x=>(x.id||x.idLocal)==id);
+    if(idx===-1) return;
+    let item=arr[idx];
+    arr.splice(idx,1);
+    pendingOps.push({tipo,action:'delete',data:item});
+    renderTable(tipo,arr);
+    syncAll();
+  }
+
+  async function syncAll(){
+    for(let i=0;i<pendingOps.length;i++){
+      let op=pendingOps[i];
+      let ok=await syncItem(op.tipo,op.data,op.action);
+      if(ok){ pendingOps.splice(i,1); i--; }
+    }
+  }
+
+  async function syncItem(tipo,item,action){
+    if(!item) return false;
+    const params=new URLSearchParams();
+    params.append("sheet",tipo);
+    params.append("action",action);
+
+    if(action==="update"||action==="delete"){
+      if(!item.id) return false;
+      params.append("idValue",item.id);
+      params.append("idCol","id");
+    }
+
+    if(action==="add"||action==="update"){
+      if(tipo==="inventario"){
+        params.append("Codigo",item.Codigo||"");
+        params.append("Serie",item.Serie||"");
+        params.append("Equipo",item.Equipo||"");
+        params.append("Marca",item.Marca||"");
+        params.append("Modelo",item.Modelo||"");
+        params.append("Categoria",item.Categoria||"");
+        params.append("Tienda",item.Tienda||"");
+      }else{
+        params.append("nombre",item.nombre||"");
+      }
+    }
+
+    try{
+      const res=await fetch(APPWEB_URL,{method:"POST",body:params});
+      const data=await res.json();
+      if(data && data.success){
+        if(action==="add" && data.id){
+          let arr=tipo==="inventario"?inventario:(tipo==="categoria"?categorias:tiendas);
+          const idx=arr.findIndex(x=>x.idLocal===item.idLocal);
+          if(idx!==-1){
+            delete arr[idx].idLocal;
+            arr[idx].id=data.id;
+          }
+        }
+        return true;
+      }else{
+        console.warn("syncItem failed",data);
+        return false;
+      }
+    }catch(e){
+      console.error("syncItem error",e);
       return false;
     }
-  }catch(e){
-    console.error("syncItem error", e);
-    return false;
   }
-}
-
-async function syncPending(){
-  if(pendingOps.length===0) return;
-  const original = [...pendingOps];
-  const newP = [];
-  let anySynced = false;
-  for(const op of pendingOps){
-    const ok = await syncItem(op.tipo, op.item, op.action);
-    if(!ok){
-      newP.push(op);
-    } else {
-      anySynced = true;
-    }
-  }
-  pendingOps = newP;
-  saveData();
-  if(anySynced){
-    // refresh authoritative data from server after successful syncs
-    await reloadFromServer();
-  } else {
-    render();
-  }
-}
-
-/* ======= RENDER ======= */
-function filterData(arr){ if(!currentSearch) return arr; return arr.filter(i=>Object.values(i).some(v=>(v||'').toString().toLowerCase().includes(currentSearch))); }
-
-function render(){
-  const c=document.getElementById('content'); c.innerHTML=''; const t=document.getElementById('main-title');
-  if(currentView==='dashboard'){ t.innerText='Dashboard de Inventario'; const cards=document.createElement('div'); cards.className='cards';
-    const mk=(l,n,v,ic)=>{const d=document.createElement('div');d.className='card';d.innerHTML=`<i class="fa-solid ${ic}"></i><span>${l}: ${n}</span>`;d.onclick=()=>nav(v);return d;};
-    cards.appendChild(mk('Equipos',inventario.length,'inventario','fa-computer'));
-    cards.appendChild(mk('Categorías',categorias.length,'categoria','fa-tags'));
-    cards.appendChild(mk('Tiendas',tiendas.length,'tienda','fa-store'));
-    c.appendChild(cards); return; }
-  const sb=document.createElement('div'); sb.className='search-bar'; sb.innerHTML=`<input type="text" placeholder="Buscar..." value="${currentSearch}" onkeyup="applySearch(this.value)">`; c.appendChild(sb);
-  let arr=[],headers=[]; if(currentView==='inventario'){ t.innerText='Ver Inventario'; arr=filterData(inventario); headers=['ID','Código','Serie','Equipo','Marca','Modelo','Categoría','Tienda','Acciones']; }
-  if(currentView==='categoria'){ t.innerText='Ver Categorías'; arr=filterData(categorias); headers=['ID','Nombre','Acciones']; }
-  if(currentView==='tienda'){ t.innerText='Ver Tiendas'; arr=filterData(tiendas); headers=['ID','Nombre','Acciones']; }
-
-  const tbl=document.createElement('table');
-  tbl.innerHTML=`<thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
-  const tb=document.createElement('tbody');
-
-  arr.forEach((it)=>{
-    const id = it.idSheet || it.idLocal || '---';
-    const cells = currentView==='inventario' ? [id, it.Codigo || '', it.Serie || '', it.Equipo || '', it.Marca || '', it.Modelo || '', it.Categoria || '', it.Tienda || ''] : [id, it.nombre || ''];
-    const tr=document.createElement('tr');
-    tr.innerHTML = cells.map(v=>`<td>${v}</td>`).join('') + `<td class="actions">
-      <button class="btn-edit" onclick="editItemById('${currentView}','${it.idSheet||it.idLocal}')"><i class="fa-solid fa-pen"></i></button>
-      <button class="btn-del" onclick="deleteItemById('${currentView}','${it.idSheet||it.idLocal}')"><i class="fa-solid fa-trash"></i></button>
-    </td>`;
-    tb.appendChild(tr);
-  });
-
-  tbl.appendChild(tb); c.appendChild(tbl);
-}
-
-/* ======= NAV & SEARCH ======= */
-function nav(v){ currentView=v; currentSearch=''; render(); }
-function applySearch(q){ currentSearch=q.toLowerCase().trim(); render(); }
-
-/* ======= MODAL FORM ======= */
-function openAddForm(tipo,index=null){
-  editItemIndex = index;
-  editTipo = tipo;
-  document.getElementById('modal').style.display = 'flex';
-  const mf = document.getElementById('modal-form');
-  const mt = document.getElementById('modal-title');
-  let h = '';
-  if(tipo === 'inventario'){
-    const it = (index!==null && inventario[index]) ? inventario[index] : {};
-    mt.innerText = (index===null ? 'Agregar' : 'Editar') + ' Inventario';
-    h = `<input placeholder="Código" value="${it.Codigo||''}" id="f-Codigo"/><input placeholder="Serie" value="${it.Serie||''}" id="f-Serie"/><input placeholder="Equipo" value="${it.Equipo||''}" id="f-Equipo"/><input placeholder="Marca" value="${it.Marca||''}" id="f-Marca"/><input placeholder="Modelo" value="${it.Modelo||''}" id="f-Modelo"/>`;
-    h += `<select id="f-Categoria"><option value="">--Categoria--</option>${categorias.map(c=>`<option ${ (c.nombre===it.Categoria) ? 'selected' : '' }>${c.nombre}</option>`).join('')}</select>`;
-    h += `<select id="f-Tienda"><option value="">--Tienda--</option>${tiendas.map(t=>`<option ${ (t.nombre===it.Tienda) ? 'selected' : '' }>${t.nombre}</option>`).join('')}</select>`;
-  } else {
-    const it = (index!==null && (tipo==='categoria'?categorias[index]:tiendas[index])) ? (tipo==='categoria'?categorias[index]:tiendas[index]) : {};
-    mt.innerText = (index===null ? 'Agregar ' : 'Editar ') + (tipo==='categoria' ? 'Categoría' : 'Tienda');
-    h = `<input placeholder="Nombre" value="${it.nombre||''}" id="f-nombre"/>`;
-  }
-  mf.innerHTML = h;
-}
-
-function closeModal(){ document.getElementById('modal').style.display='none'; editItemIndex=null; editTipo=null; }
-
-/* ======= SAVE (ADD/UPDATE) ======= */
-function saveItem(){
-  const tipo = editTipo; if(!tipo) return;
-  let item = {};
-  if(tipo === 'inventario'){
-    item = {
-      Codigo: document.getElementById('f-Codigo').value,
-      Serie: document.getElementById('f-Serie').value,
-      Equipo: document.getElementById('f-Equipo').value,
-      Marca: document.getElementById('f-Marca').value,
-      Modelo: document.getElementById('f-Modelo').value,
-      Categoria: document.getElementById('f-Categoria').value,
-      Tienda: document.getElementById('f-Tienda').value
-    };
-  } else {
-    item = { nombre: document.getElementById('f-nombre').value };
-  }
-
-  const arr = tipo==='inventario'?inventario:(tipo==='categoria'?categorias:tiendas);
-
-  if(editItemIndex !== null){
-    const old = arr[editItemIndex];
-    // preserve ids if existed
-    if(old && old.idSheet) item.idSheet = old.idSheet;
-    if(old && old.idLocal) item.idLocal = old.idLocal;
-    arr[editItemIndex] = item;
-    // push pending operation
-    if(item.idSheet){
-      pendingOps.push({ tipo, item, action: 'update' });
-    } else {
-      // local item being edited before being assigned idSheet -> treat as add
-      pendingOps.push({ tipo, item, action: 'add' });
-    }
-  } else {
-    // new
-    item.idLocal = 'L' + Date.now();
-    arr.push(item);
-    pendingOps.push({ tipo, item, action: 'add' });
-  }
-
-  saveData();
-  closeModal();
-  render();
-  // try to sync immediately
-  syncPending();
-}
-
-/* ======= EDIT / DELETE by identifier (idSheet or idLocal) ======= */
-function findIndexById(tipo, identifier){
-  const arr = tipo==='inventario'?inventario:(tipo==='categoria'?categorias:tiendas);
-  return arr.findIndex(x => {
-    if(!x) return false;
-    if(x.idSheet && x.idSheet.toString() === identifier.toString()) return true;
-    if(x.idLocal && x.idLocal.toString() === identifier.toString()) return true;
-    return false;
-  });
-}
-
-function editItemById(tipo, identifier){
-  const idx = findIndexById(tipo, identifier);
-  if(idx === -1){ alert('Registro no encontrado'); return; }
-  openAddForm(tipo, idx);
-}
-
-function deleteItemById(tipo, identifier){
-  const idx = findIndexById(tipo, identifier);
-  if(idx === -1){ alert('Registro no encontrado'); return; }
-  const arr = tipo==='inventario'?inventario:(tipo==='categoria'?categorias:tiendas);
-  const item = arr[idx];
-  if(item && item.idSheet){
-    pendingOps.push({ tipo, item, action: 'delete' });
-  }
-  arr.splice(idx,1);
-  saveData();
-  render();
-  // try to sync immediately
-  syncPending();
-}
-
-/* ======= INIT ======= */
-loadData();
-render();
-setInterval(syncPending,5000); // intenta sincronizar cada 5s
-reloadFromServer(); // carga datos desde servidor
-</script>
+  </script>
 </body>
 </html>
