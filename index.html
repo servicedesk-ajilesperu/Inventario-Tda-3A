@@ -1,184 +1,129 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Inventario Tiendas 3A</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-<style>
-body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
-* { box-sizing:border-box; }
-.sidebar { width: 260px; position:fixed; height:100%; background:#ff4d00; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
-.sidebar.collapsed { width:60px; padding:20px 5px; }
-.brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.2rem; position:relative; margin-bottom:10px; }
-#toggleSidebar { position:absolute; right:0; top:0; background:#cc3c00; color:white; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; }
-.menu-section .accordion { background:transparent; color:white; border:none; padding:10px; width:100%; display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600; justify-content:space-between; border-radius:4px; }
-.menu-section .accordion.active, .menu-section .accordion:hover { background-color:#e64500; }
-.menu-section .panel { padding:0 10px; max-height:0; overflow:hidden; transition:max-height 0.3s ease-in-out; background-color:#e64500; display:flex; flex-direction:column; gap:4px; }
-.menu-section .panel button { background:transparent; color:white; border:none; padding:8px; text-align:left; display:flex; align-items:center; gap:6px; cursor:pointer; width:100%; border-radius:4px; }
-.menu-section .panel button:hover { background-color:#cc4000; }
-.sidebar.collapsed .brand span, .sidebar.collapsed .accordion span, .sidebar.collapsed .panel button span { display:none; }
-.sidebar.collapsed .accordion { justify-content:center; }
-.sidebar.collapsed .accordion i.fa-chevron-down { display:none; }
-.main { margin-left:260px; padding:20px; transition:0.3s; }
-.sidebar.collapsed ~ .main { margin-left:60px; }
-.cards { display:flex; gap:20px; margin-top:20px; flex-wrap:wrap; }
-.card { flex:1; min-width:150px; background:white; color:#ff4d00; padding:20px; border-radius:12px; text-align:center; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.1); transition:0.2s; }
-.card:hover { transform:translateY(-3px); box-shadow:0 6px 12px rgba(0,0,0,0.15); }
-.card span { font-weight:700; font-size:1.3rem; display:block; margin-top:5px;}
-.card i { font-size:2rem; }
-.search-bar { margin-bottom:15px; display:flex; gap:10px; }
-.search-bar input { flex-grow:1; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
-table { width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.05); display:block; overflow-x:auto; white-space:nowrap; }
-th, td { border:1px solid #eee; padding:10px; text-align:center; font-size:0.9rem; }
-th { background:#ff4d00; color:white; font-weight:600; }
-tr:nth-child(even) { background-color:#f9f9f9; }
-.actions button { margin:0 2px; padding:6px; border-radius:50%; border:none; cursor:pointer; width:32px; height:32px; transition:0.1s; }
-.actions button:hover { opacity:0.8; }
-.btn-edit { background:#ffb86b; color:white; }
-.btn-del { background:#d9534f; color:white; }
-.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:50; }
-.modal { background:white; padding:25px; border-radius:12px; width:450px; max-width:95%; box-shadow:0 10px 20px rgba(0,0,0,0.2); }
-input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:100%; margin-bottom:12px; font-size:1rem; }
-.modal button { padding:8px 15px; border-radius:6px; cursor:pointer; border:none; font-weight:600; transition:0.1s; }
-.modal button:last-child { background:#ff4d00; color:white; }
-.modal button:last-child:hover { background:#cc3c00; }
-.modal button:first-child { background:#eee; color:#333; margin-right:10px; }
-.modal button:first-child:hover { background:#ddd; }
-@media(max-width:768px) { .cards { flex-direction:column; } .card { min-width:100%; } .sidebar { left:-260px; position:fixed; } .sidebar.collapsed { left:0; } .main { margin-left:0; padding:10px; } }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Tiendas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h2 {
+      color: #333;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    input {
+      margin: 5px;
+      padding: 5px;
+    }
+    button {
+      padding: 6px 12px;
+      margin: 5px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background: #f4f4f4;
+    }
+  </style>
 </head>
 <body>
-<aside class="sidebar" id="sidebar">
-<div class="brand">
-<i class="fa-solid fa-boxes-stacked"></i><span>Inventario 3A</span>
-<button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
-</div>
-<div class="menu-section">
-<button class="accordion active" onclick="nav('dashboard')"><i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i></button>
-<div class="panel" style="max-height:500px;">
-<button onclick="nav('dashboard')"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
-</div>
-</div>
-<div class="menu-section">
-<button class="accordion"><i class="fa-solid fa-computer"></i><span>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
-<div class="panel">
-<button onclick="openAddForm('inventario')"><i class="fa-solid fa-plus"></i><span>Agregar Inventario</span></button>
-<button onclick="nav('inventario')"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
-</div>
-</div>
-<div class="menu-section">
-<button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorías</span><i class="fa-solid fa-chevron-down"></i></button>
-<div class="panel">
-<button onclick="openAddForm('categoria')"><i class="fa-solid fa-plus"></i><span>Agregar Categoría</span></button>
-<button onclick="nav('categoria')"><i class="fa-solid fa-table"></i><span>Ver Categorías</span></button>
-</div>
-</div>
-<div class="menu-section">
-<button class="accordion"><i class="fa-solid fa-store"></i><span>Tiendas</span><i class="fa-solid fa-chevron-down"></i></button>
-<div class="panel">
-<button onclick="openAddForm('tienda')"><i class="fa-solid fa-plus"></i><span>Agregar Tienda</span></button>
-<button onclick="nav('tienda')"><i class="fa-solid fa-table"></i><span>Ver Tiendas</span></button>
-</div>
-</div>
-</aside>
-<div class="main">
-<h2 id="main-title">Inventario de Tienda</h2>
-<div id="content"></div>
-</div>
-<div class="modal-backdrop" id="modal">
-<div class="modal">
-<h3 id="modal-title"></h3>
-<div id="modal-form"></div>
-<div style="text-align:right; margin-top:15px;">
-<button onclick="closeModal()">Cancelar</button>
-<button onclick="saveItem()">Guardar</button>
-</div>
-</div>
-</div>
-<script>
-const APPWEB_URL="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
-let inventario=[],categorias=[],tiendas=[],pendingOps=[];
-let editItemIndex=null, editTipo=null, currentView='dashboard', currentSearch='';
-const STORAGE_KEY='inventario3a';
 
-document.getElementById('toggleSidebar').onclick=()=>document.getElementById('sidebar').classList.toggle('collapsed');
-document.querySelectorAll('.accordion').forEach(btn=>btn.addEventListener('click',()=>{
-  document.querySelectorAll('.accordion').forEach(acc=>{
-    if(acc!==btn&&acc.classList.contains('active')){
-      acc.classList.remove('active');
-      acc.nextElementSibling.style.maxHeight=null;
+  <h2>Gestión de Tiendas</h2>
+
+  <!-- Formulario -->
+  <form id="tiendaForm">
+    <input type="text" id="codigo" placeholder="Código de Tienda" required>
+    <input type="text" id="nombre" placeholder="Nombre de Tienda" required>
+    <button type="submit">Agregar Tienda</button>
+  </form>
+
+  <!-- Tabla -->
+  <table>
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Nombre</th>
+      </tr>
+    </thead>
+    <tbody id="tiendaTableBody"></tbody>
+  </table>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // 👈 reemplaza con tu URL del WebApp
+
+    // Cargar tiendas al iniciar
+    async function loadTiendas() {
+      try {
+        const res = await fetch(`${scriptURL}?sheet=tienda&action=get&t=${Date.now()}`);
+        const data = await res.json();
+        const tbody = document.getElementById("tiendaTableBody");
+        tbody.innerHTML = "";
+        data.forEach(tienda => {
+          let row = `<tr>
+            <td>${tienda.codigo || ""}</td>
+            <td>${tienda.nombre || ""}</td>
+          </tr>`;
+          tbody.innerHTML += row;
+        });
+      } catch (err) {
+        console.error("Error cargando tiendas:", err);
+      }
     }
-  });
-  btn.classList.toggle('active');
-  const panel=btn.nextElementSibling;
-  panel.style.maxHeight=panel.style.maxHeight?null:panel.scrollHeight+"px";
-}));
 
-function saveData(){ localStorage.setItem(STORAGE_KEY,JSON.stringify({inventario,categorias,tiendas,pendingOps})); }
-function loadData(){ const d=localStorage.getItem(STORAGE_KEY); if(d){ const p=JSON.parse(d); inventario=p.inventario||[]; categorias=p.categorias||[]; tiendas=p.tiendas||[]; pendingOps=p.pendingOps||[]; } }
+    // Agregar tienda
+    document.getElementById("tiendaForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const codigo = document.getElementById("codigo").value.trim();
+      const nombre = document.getElementById("nombre").value.trim();
 
-async function fetchSheet(sheet){ try{ const res=await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get&t=${Date.now()}`); return await res.json(); }catch(e){return [];} }
-async function reloadFromServer(){ const [inv,cat,td]=await Promise.all([fetchSheet('inventario'),fetchSheet('categoria'),fetchSheet('tienda')]); inventario=[...inv]; categorias=[...cat]; tiendas=[...td]; pendingOps.forEach(op=>{ if(op.action==='add'&&!op.item.idSheet){ if(op.tipo==='inventario')inventario.push(op.item); if(op.tipo==='categoria')categorias.push(op.item); if(op.tipo==='tienda')tiendas.push(op.item);} }); saveData(); render(); }
+      if (!codigo || !nombre) {
+        alert("Debes ingresar ambos campos.");
+        return;
+      }
 
-async function syncItem(tipo,item,action){ if(!item)return false; const sheet=tipo; const params=new URLSearchParams(); params.append('sheet',sheet); params.append('action',action); const fields=tipo==='inventario'?['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda']:tipo==='tienda'?['codigo','nombre']:['nombre']; if(action==='update'||action==='delete'){ if(!item.idSheet && !(tipo==='tienda' && item.codigo))return true; params.append('idCol',tipo==='tienda'?'codigo':'id'); params.append('idValue',tipo==='tienda'?item.codigo:item.idSheet); } if(action==='add'||action==='update'){ fields.forEach(k=>params.append(k,item[k]||'')); } try{ const res=await fetch(`${APPWEB_URL}?${params.toString()}`,{method:'POST'}); const data=await res.json(); if(data.success&&action==='add'&&data.id){ if(tipo==='tienda')item.codigo=item.codigo; else item.idSheet=data.id;} return data.success; }catch(e){return false;} }
+      try {
+        const formData = new URLSearchParams();
+        formData.append("sheet", "tienda");
+        formData.append("action", "add");
+        formData.append("codigo", codigo);
+        formData.append("nombre", nombre);
 
-async function syncPending(){ if(pendingOps.length===0)return; const newP=[]; for(const op of pendingOps){ const ok=await syncItem(op.tipo,op.item,op.action); if(!ok)newP.push(op);} pendingOps=newP; saveData(); render(); }
+        const res = await fetch(scriptURL, {
+          method: "POST",
+          body: formData
+        });
 
-function filterData(arr){ if(!currentSearch)return arr; return arr.filter(item=>Object.values(item).some(v=>String(v).toLowerCase().includes(currentSearch.toLowerCase()))); }
+        const result = await res.json();
+        if (result.success) {
+          alert("Tienda agregada correctamente.");
+          document.getElementById("tiendaForm").reset();
+          loadTiendas();
+        } else {
+          alert("Error: " + result.msg);
+        }
+      } catch (err) {
+        console.error("Error agregando tienda:", err);
+      }
+    });
 
-function render(){
-  const c=document.getElementById('content'); c.innerHTML=''; const t=document.getElementById('main-title');
-  if(currentView==='dashboard'){ t.innerText='Dashboard de Inventario'; return;}
-  const sb=document.createElement('div'); sb.className='search-bar'; sb.innerHTML=`<input type="text" placeholder="Buscar..." value="${currentSearch}" onkeyup="applySearch(this.value)">`; c.appendChild(sb);
-  let arr=[],headers=[];
-  if(currentView==='inventario'){ arr=inventario; headers=['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda']; }
-  if(currentView==='categoria'){ arr=categorias; headers=['Nombre']; }
-  if(currentView==='tienda'){ arr=tiendas; headers=['codigo','nombre']; }
-  const table=document.createElement('table'); const thead=document.createElement('thead'); const trh=document.createElement('tr');
-  headers.forEach(h=>{ const th=document.createElement('th'); th.innerText=h.charAt(0).toUpperCase()+h.slice(1); trh.appendChild(th); });
-  trh.appendChild(document.createElement('th')).innerText='Acciones'; thead.appendChild(trh); table.appendChild(thead);
-  const tbody=document.createElement('tbody'); arr.forEach(item=>{ const tr=document.createElement('tr'); headers.forEach(h=>{ const td=document.createElement('td'); td.innerText=item[h]||''; tr.appendChild(td); }); const td=document.createElement('td'); td.className='actions';
-  const btnEdit=document.createElement('button'); btnEdit.className='btn-edit'; btnEdit.innerHTML='<i class="fa-solid fa-pen"></i>'; btnEdit.onclick=()=>openEditForm(item,currentView);
-  const btnDel=document.createElement('button'); btnDel.className='btn-del'; btnDel.innerHTML='<i class="fa-solid fa-trash"></i>'; btnDel.onclick=()=>deleteItem(item,currentView);
-  td.appendChild(btnEdit); td.appendChild(btnDel); tr.appendChild(td); tbody.appendChild(tr); });
-  table.appendChild(tbody); c.appendChild(table);
-  if(currentView==='tienda') t.innerText='Ver Tiendas'; if(currentView==='categoria') t.innerText='Ver Categorías'; if(currentView==='inventario') t.innerText='Ver Inventario';
-}
-
-function nav(view){ currentView=view; currentSearch=''; render(); }
-function applySearch(v){ currentSearch=v; render(); }
-
-function openAddForm(tipo){
-  editItemIndex=null; editTipo=tipo; document.getElementById('modal-title').innerText='Agregar '+tipo.charAt(0).toUpperCase()+tipo.slice(1); const f=document.getElementById('modal-form'); f.innerHTML='';
-  if(tipo==='inventario'){ ['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda'].forEach(k=>{ f.innerHTML+=`<input type="text" id="${k}" placeholder="${k}">`; }); }
-  if(tipo==='categoria'){ f.innerHTML=`<input type="text" id="nombre" placeholder="Nombre">`; }
-  if(tipo==='tienda'){ f.innerHTML=`<input type="text" id="codigo" placeholder="Código"><input type="text" id="nombre" placeholder="Nombre">`; }
-  document.getElementById('modal').style.display='flex';
-}
-
-function openEditForm(item,tipo){
-  editItemIndex=null; editTipo=tipo; document.getElementById('modal-title').innerText='Editar '+tipo.charAt(0).toUpperCase()+tipo.slice(1);
-  const f=document.getElementById('modal-form'); f.innerHTML='';
-  if(tipo==='inventario'){ ['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda'].forEach(k=>{ f.innerHTML+=`<input type="text" id="${k}" placeholder="${k}" value="${item[k]||''}">`; }); }
-  if(tipo==='categoria'){ f.innerHTML=`<input type="text" id="nombre" placeholder="Nombre" value="${item.nombre||''}">`; }
-  if(tipo==='tienda'){ f.innerHTML=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}"><input type="text" id="nombre" placeholder="Nombre" value="${item.nombre||''}">`; }
-  editItemIndex=item; document.getElementById('modal').style.display='flex';
-}
-
-function closeModal(){ document.getElementById('modal').style.display='none'; }
-
-async function saveItem(){
-  const f=document.getElementById('modal-form'); const obj={}; [...f.querySelectorAll('input')].forEach(inp=>obj[inp.id]=inp.value);
-  if(editTipo==='inventario'){ inventario.push(obj); pendingOps.push({tipo:'inventario',action:'add',item:obj}); }
-  if(editTipo==='categoria'){ categorias.push(obj); pendingOps.push({tipo:'categoria',action:'add',item:obj}); }
-  if(editTipo==='tienda'){ tiendas.push(obj); pendingOps.push({tipo:'tienda',action:'add',item:obj}); }
-  saveData(); render(); closeModal(); await syncPending();
-}
-
-function deleteItem(item,tipo){ if(!confirm('¿Eliminar registro?'))return; const arr=tipo==='inventario'?inventario:tipo==='categoria'?categorias:tiendas; const idx=arr.findIndex(i=>i===item); if(idx>-1)arr.splice(idx,1); pendingOps.push({tipo,action:'delete',item}); saveData(); render(); syncPending(); }
-
-loadData(); reloadFromServer();
-</script>
+    // Inicializar
+    loadTiendas();
+  </script>
 </body>
 </html>
