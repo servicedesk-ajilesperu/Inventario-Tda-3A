@@ -131,26 +131,29 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-const APPWEB_URL="https://script.google.com/macros/s/TU_APP_SCRIPT_ID_AQUI/exec"; // REEMPLAZAR con tu URL de Apps Script
+const APPWEB_URL="https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
 
 let inventario=[], categorias=[], tiendas=[], pendingOps=[];
 let editItemIndex=null, editTipo=null, currentView='dashboard', currentSearch='';
+
 const STORAGE_KEY='inventario3a';
 
-/* --- Sidebar y acordeón --- */
+/* Sidebar y acordeón */
 document.getElementById('toggleSidebar').onclick = ()=>document.getElementById('sidebar').classList.toggle('collapsed');
 document.querySelectorAll('.accordion').forEach(btn=>btn.addEventListener('click',()=>{
-  document.querySelectorAll('.accordion').forEach(acc=>{ if(acc!==btn&&acc.classList.contains('active')){ acc.classList.remove('active'); acc.nextElementSibling.style.maxHeight=null; }});
+  document.querySelectorAll('.accordion').forEach(acc=>{
+    if(acc!==btn&&acc.classList.contains('active')){ acc.classList.remove('active'); acc.nextElementSibling.style.maxHeight=null; }
+  });
   btn.classList.toggle('active');
   const panel=btn.nextElementSibling;
   panel.style.maxHeight=panel.style.maxHeight?null:panel.scrollHeight+"px";
 }));
 
-/* --- LocalStorage --- */
+/* LocalStorage */
 function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify({inventario,categorias,tiendas,pendingOps})); }
 function loadData(){ const d=localStorage.getItem(STORAGE_KEY); if(d){ const p=JSON.parse(d); inventario=p.inventario||[]; categorias=p.categorias||[]; tiendas=p.tiendas||[]; pendingOps=p.pendingOps||[]; } }
 
-/* --- Fetch --- */
+/* Fetch */
 async function fetchSheet(sheet){
   try{
     const res=await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get&t=${Date.now()}`);
@@ -171,9 +174,9 @@ async function reloadFromServer(){
   saveData(); render();
 }
 
-/* --- Sync --- */
+/* Sync */
 async function syncItem(tipo,item,action){
-  if(!item) return false;
+  if(!item)return false;
   const sheet=tipo;
   const params=new URLSearchParams();
   params.append('sheet', sheet);
@@ -185,7 +188,8 @@ async function syncItem(tipo,item,action){
   if(tipo==='tienda') fields=['codigo','nombre'];
 
   if(action==='update' || action==='delete'){
-    params.append('idCol', tipo==='tienda'?'codigo':'id');
+    if(!item.idSheet && tipo!=='tienda') return true;
+    params.append('idCol',tipo==='tienda'?'codigo':'id');
     params.append('idValue', tipo==='tienda'?item.codigo:item.idSheet);
   }
 
@@ -211,11 +215,12 @@ async function syncPending(){
   pendingOps=newP; saveData(); render();
 }
 
-/* --- Render --- */
+/* Render */
 function filterData(arr){ if(!currentSearch) return arr; return arr.filter(i=>Object.values(i).some(v=>(v||'').toString().toLowerCase().includes(currentSearch))); }
 
 function render(){
-  const c=document.getElementById('content'); c.innerHTML='';
+  const c=document.getElementById('content');
+  c.innerHTML='';
   const t=document.getElementById('main-title');
 
   if(currentView==='dashboard'){
@@ -246,7 +251,10 @@ function render(){
   const tbody=document.createElement('tbody');
   arr.forEach((item,i)=>{
     const tr=document.createElement('tr');
-    headers.forEach(h=>{ const key=h.toLowerCase(); const td=document.createElement('td'); td.innerText=item[key]||''; tr.appendChild(td); });
+    headers.forEach(h=>{
+      const key=h.toLowerCase();
+      const td=document.createElement('td'); td.innerText=item[key]||''; tr.appendChild(td);
+    });
     const td=document.createElement('td'); td.className='actions';
     const btnEdit=document.createElement('button'); btnEdit.className='btn-edit'; btnEdit.innerHTML='<i class="fa-solid fa-pen"></i>'; btnEdit.onclick=()=>openEditForm(item,currentView);
     const btnDel=document.createElement('button'); btnDel.className='btn-del'; btnDel.innerHTML='<i class="fa-solid fa-trash"></i>'; btnDel.onclick=()=>deleteItem(item,currentView);
@@ -256,13 +264,13 @@ function render(){
   table.appendChild(tbody); c.appendChild(table);
 }
 
-/* --- Search --- */
+/* Search */
 function applySearch(v){ currentSearch=v.toLowerCase(); render(); }
 
-/* --- Navigation --- */
+/* Navigation */
 function nav(view){ currentView=view; currentSearch=''; render(); }
 
-/* --- Modal --- */
+/* Modal */
 function openAddForm(tipo){
   editItemIndex=null; editTipo=tipo;
   document.getElementById('modal-title').innerText='Agregar '+tipo.charAt(0).toUpperCase()+tipo.slice(1);
@@ -307,14 +315,17 @@ function openEditForm(item,tipo){
 
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-/* --- Guardar Item --- */
+/* Guardar Item */
 async function saveItem(){
-  const f=document.getElementById('modal-form'); let item={};
+  const f=document.getElementById('modal-form');
+  let item={};
   if(editTipo==='inventario'){
     ['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda'].forEach(k=>item[k]=f.querySelector('#'+k).value);
     inventario.push(item);
   }
-  if(editTipo==='categoria'){ item.nombre=f.querySelector('#nombre').value; categorias.push(item); }
+  if(editTipo==='categoria'){
+    item.nombre=f.querySelector('#nombre').value; categorias.push(item);
+  }
   if(editTipo==='tienda'){
     item.codigo=f.querySelector('#codigo').value;
     item.nombre=f.querySelector('#nombre').value;
@@ -322,19 +333,25 @@ async function saveItem(){
     tiendas.push(item);
   }
   pendingOps.push({tipo:editTipo,item,action:'add'});
-  closeModal(); saveData(); render(); await syncPending();
+  closeModal();
+  saveData();
+  render();
+  await syncPending();
 }
 
-/* --- Eliminar --- */
+/* Eliminar */
 async function deleteItem(item,tipo){
   if(!confirm('Desea eliminar?')) return;
   const arr=tipo==='inventario'?inventario:tipo==='categoria'?categorias:tiendas;
   const idx=arr.findIndex(i=>i===item);
   if(idx!==-1) arr.splice(idx,1);
-  pendingOps.push({tipo, item, action:'delete'}); saveData(); render(); await syncPending();
+  pendingOps.push({tipo, item, action:'delete'});
+  saveData();
+  render();
+  await syncPending();
 }
 
-/* --- Inicial --- */
+/* Inicial */
 loadData(); reloadFromServer();
 </script>
 </body>
