@@ -6,7 +6,6 @@
 <title>Inventario Tiendas 3A</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 <style>
-/* 🎨 Estilos originales */
 body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 * { box-sizing:border-box; }
 .sidebar { width:260px; position:fixed; height:100%; background:#ff4d00; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
@@ -50,66 +49,83 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </style>
 </head>
 <body>
-<div class="sidebar">
+
+<div class="sidebar" id="sidebar">
   <div class="brand">
-    <span>Inventario 3A</span>
-    <button id="toggleSidebar"><i class="fas fa-bars"></i></button>
+    <i class="fa-solid fa-store"></i> <span>Inventario 3A</span>
+    <button id="toggleSidebar"><i class="fa fa-bars"></i></button>
   </div>
   <div class="menu-section">
-    <button class="accordion"><i class="fas fa-store"></i><span>Tiendas</span><i class="fas fa-chevron-down"></i></button>
+    <button class="accordion"><i class="fa fa-database"></i><span> Tablas</span><i class="fa fa-chevron-down"></i></button>
     <div class="panel">
-      <button onclick="openModal('tienda')"><i class="fas fa-plus"></i><span>Agregar Tienda</span></button>
-    </div>
-
-    <button class="accordion"><i class="fas fa-tags"></i><span>Categorías</span><i class="fas fa-chevron-down"></i></button>
-    <div class="panel">
-      <button onclick="openModal('categoria')"><i class="fas fa-plus"></i><span>Agregar Categoría</span></button>
-    </div>
-
-    <button class="accordion"><i class="fas fa-box"></i><span>Inventario</span><i class="fas fa-chevron-down"></i></button>
-    <div class="panel">
-      <button onclick="openModal('inventario')"><i class="fas fa-plus"></i><span>Agregar Inventario</span></button>
+      <button onclick="showSection('tiendas')"><i class="fa fa-shop"></i><span> Tiendas</span></button>
+      <button onclick="showSection('categorias')"><i class="fa fa-tags"></i><span> Categorías</span></button>
+      <button onclick="showSection('inventario')"><i class="fa fa-box"></i><span> Inventario</span></button>
     </div>
   </div>
 </div>
 
 <div class="main">
+  <h1>Dashboard</h1>
   <div class="cards">
-    <div class="card" onclick="showTable('tienda')"><i class="fas fa-store"></i><span>Tiendas</span></div>
-    <div class="card" onclick="showTable('categoria')"><i class="fas fa-tags"></i><span>Categorías</span></div>
-    <div class="card" onclick="showTable('inventario')"><i class="fas fa-box"></i><span>Inventario</span></div>
+    <div class="card" onclick="showSection('tiendas')">
+      <i class="fa fa-shop"></i>
+      <span>Tiendas</span>
+    </div>
+    <div class="card" onclick="showSection('categorias')">
+      <i class="fa fa-tags"></i>
+      <span>Categorías</span>
+    </div>
+    <div class="card" onclick="showSection('inventario')">
+      <i class="fa fa-box"></i>
+      <span>Inventario</span>
+    </div>
   </div>
 
-  <div id="tableContainer"></div>
-</div>
+  <!-- Secciones -->
+  <div id="tiendas" class="section" style="display:none;">
+    <h2>Tiendas</h2>
+    <table>
+      <thead>
+        <tr><th>Código</th><th>Nombre</th></tr>
+      </thead>
+      <tbody id="table-tiendas"></tbody>
+    </table>
+  </div>
 
-<!-- Modal -->
-<div class="modal-backdrop" id="modalBackdrop">
-  <div class="modal">
-    <h3 id="modalTitle"></h3>
-    <form id="modalForm"></form>
-    <div style="text-align:right;">
-      <button type="button" onclick="closeModal()">Cancelar</button>
-      <button type="submit" form="modalForm">Guardar</button>
-    </div>
+  <div id="categorias" class="section" style="display:none;">
+    <h2>Categorías</h2>
+    <table>
+      <thead>
+        <tr><th>Nombre</th></tr>
+      </thead>
+      <tbody id="table-categorias"></tbody>
+    </table>
+  </div>
+
+  <div id="inventario" class="section" style="display:none;">
+    <h2>Inventario</h2>
+    <table>
+      <thead>
+        <tr><th>Equipo</th><th>Serie</th><th>Estado</th></tr>
+      </thead>
+      <tbody id="table-inventario"></tbody>
+    </table>
   </div>
 </div>
 
 <script>
-const scriptURL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // 👈 cambia por tu URL
-let currentSheet = "";
-
-// Sidebar toggle
-document.getElementById("toggleSidebar").addEventListener("click", ()=>{
-  document.querySelector(".sidebar").classList.toggle("collapsed");
+// Toggle sidebar
+document.getElementById("toggleSidebar").addEventListener("click", () => {
+  document.getElementById("sidebar").classList.toggle("collapsed");
 });
 
 // Acordeón
-document.querySelectorAll(".accordion").forEach(acc=>{
-  acc.addEventListener("click", function(){
+document.querySelectorAll(".accordion").forEach(acc => {
+  acc.addEventListener("click", function() {
     this.classList.toggle("active");
-    const panel = this.nextElementSibling;
-    if(panel.style.maxHeight){
+    let panel = this.nextElementSibling;
+    if (panel.style.maxHeight) {
       panel.style.maxHeight = null;
     } else {
       panel.style.maxHeight = panel.scrollHeight + "px";
@@ -117,101 +133,39 @@ document.querySelectorAll(".accordion").forEach(acc=>{
   });
 });
 
-// Abrir modal dinámico
-function openModal(sheet) {
-  currentSheet = sheet;
-  const modal = document.getElementById("modalBackdrop");
-  modal.style.display = "flex";
-  const form = document.getElementById("modalForm");
-  form.innerHTML = "";
-
-  if (sheet === "tienda") {
-    document.getElementById("modalTitle").innerText = "Agregar Tienda";
-    form.innerHTML += `<input type="text" name="codigo" placeholder="Código" required>`;
-    form.innerHTML += `<input type="text" name="nombre" placeholder="Nombre" required>`;
-  }
-  if (sheet === "categoria") {
-    document.getElementById("modalTitle").innerText = "Agregar Categoría";
-    form.innerHTML += `<input type="text" name="nombre" placeholder="Nombre de Categoría" required>`;
-  }
-  if (sheet === "inventario") {
-    document.getElementById("modalTitle").innerText = "Agregar Inventario";
-    form.innerHTML += `<input type="text" name="producto" placeholder="Producto" required>`;
-    form.innerHTML += `<input type="number" name="cantidad" placeholder="Cantidad" required>`;
-  }
-}
-function closeModal(){ document.getElementById("modalBackdrop").style.display="none"; }
-
-// Enviar datos
-document.getElementById("modalForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  formData.append("sheet", currentSheet);
-  formData.append("action", "add");
-  const res = await fetch(scriptURL, { method:"POST", body:new URLSearchParams(formData)});
-  const result = await res.json();
-  if(result.success){ closeModal(); showTable(currentSheet); }
-  else{ alert("Error: " + result.msg); }
-});
-
-// Mostrar tabla
-async function showTable(sheet){
-  currentSheet = sheet;
-  const res = await fetch(`${scriptURL}?sheet=${sheet}&action=get&t=${Date.now()}`);
-  const data = await res.json();
-  let html = `<h2>${sheet.charAt(0).toUpperCase()+sheet.slice(1)}</h2>`;
-  html += `<div class="search-bar"><input type="text" placeholder="Buscar..." onkeyup="searchTable(this.value)"></div>`;
-  html += `<table><thead><tr>`;
-
-  if(sheet === "tienda"){
-    html += "<th>Código</th><th>Nombre</th>";
-  } else if(sheet === "categoria"){
-    html += "<th>Nombre</th>";
-  } else if(sheet === "inventario"){
-    html += "<th>Producto</th><th>Cantidad</th>";
-  }
-  html += "<th>Acciones</th></tr></thead><tbody>";
-
-  data.forEach(row=>{
-    html += "<tr>";
-    if(sheet === "tienda"){
-      html += `<td>${row.codigo || ""}</td><td>${row.nombre || ""}</td>`;
-    } else if(sheet === "categoria"){
-      html += `<td>${row.nombre || ""}</td>`;
-    } else if(sheet === "inventario"){
-      html += `<td>${row.producto || ""}</td><td>${row.cantidad || ""}</td>`;
-    }
-    html += `<td class="actions"><button class="btn-del" onclick="deleteRow('${sheet}','${row.codigo || row.id}')"><i class="fas fa-trash"></i></button></td>`;
-    html += "</tr>";
-  });
-
-  html += "</tbody></table>";
-  document.getElementById("tableContainer").innerHTML = html;
+// Mostrar secciones
+function showSection(id) {
+  document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
+  document.getElementById(id).style.display = "block";
 }
 
-// Eliminar fila
-async function deleteRow(sheet,idValue){
-  if(!confirm("¿Eliminar registro?")) return;
-  const formData = new URLSearchParams();
-  formData.append("sheet", sheet);
-  formData.append("action", "delete");
-  formData.append("idValue", idValue);
-  const res = await fetch(scriptURL,{method:"POST",body:formData});
-  const result = await res.json();
-  if(result.success){ showTable(sheet); }
-  else{ alert("Error: "+result.msg); }
+// Cargar datos desde Apps Script
+async function loadData(sheet, tableId) {
+  try {
+    const res = await fetch("TU_URL_DEL_SCRIPT?sheet=" + sheet + "&action=get");
+    const data = await res.json();
+    const tbody = document.getElementById(tableId);
+    tbody.innerHTML = "";
+    data.forEach(row => {
+      let tr = document.createElement("tr");
+      if(sheet === "tiendas"){
+        tr.innerHTML = `<td>${row.codigo || ""}</td><td>${row.nombre || ""}</td>`;
+      } else if(sheet === "categorias"){
+        tr.innerHTML = `<td>${row.nombre || ""}</td>`;
+      } else if(sheet === "inventario"){
+        tr.innerHTML = `<td>${row.equipo || ""}</td><td>${row.serie || ""}</td><td>${row.estado || ""}</td>`;
+      }
+      tbody.appendChild(tr);
+    });
+  } catch (e) {
+    console.error("Error cargando " + sheet, e);
+  }
 }
 
-// Buscar en tabla
-function searchTable(query){
-  const rows = document.querySelectorAll("#tableContainer table tbody tr");
-  rows.forEach(r=>{
-    r.style.display = r.innerText.toLowerCase().includes(query.toLowerCase())?"":"none";
-  });
-}
-
-// 👉 Mostrar Tiendas por defecto al cargar
-window.onload = ()=>{ showTable("tienda"); };
+// Inicial
+loadData("tiendas", "table-tiendas");
+loadData("categorias", "table-categorias");
+loadData("inventario", "table-inventario");
 </script>
 </body>
 </html>
