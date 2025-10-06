@@ -96,8 +96,26 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-const scriptURL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // 👈 Reemplazar con tu URL WebApp
+const scriptURL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // 👈 cambia por tu URL
 let currentSheet = "";
+
+// Sidebar toggle
+document.getElementById("toggleSidebar").addEventListener("click", ()=>{
+  document.querySelector(".sidebar").classList.toggle("collapsed");
+});
+
+// Acordeón
+document.querySelectorAll(".accordion").forEach(acc=>{
+  acc.addEventListener("click", function(){
+    this.classList.toggle("active");
+    const panel = this.nextElementSibling;
+    if(panel.style.maxHeight){
+      panel.style.maxHeight = null;
+    } else {
+      panel.style.maxHeight = panel.scrollHeight + "px";
+    }
+  });
+});
 
 // Abrir modal dinámico
 function openModal(sheet) {
@@ -191,6 +209,9 @@ function searchTable(query){
     r.style.display = r.innerText.toLowerCase().includes(query.toLowerCase())?"":"none";
   });
 }
+
+// 👉 Mostrar Tiendas por defecto al cargar
+window.onload = ()=>{ showTable("tienda"); };
 </script>
 </body>
 </html>
