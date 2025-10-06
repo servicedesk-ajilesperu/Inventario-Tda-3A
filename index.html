@@ -141,9 +141,7 @@ const STORAGE_KEY='inventario3a';
 /* Sidebar y acordeón */
 document.getElementById('toggleSidebar').onclick = ()=>document.getElementById('sidebar').classList.toggle('collapsed');
 document.querySelectorAll('.accordion').forEach(btn=>btn.addEventListener('click',()=>{
-  document.querySelectorAll('.accordion').forEach(acc=>{
-    if(acc!==btn && acc.classList.contains('active')){ acc.classList.remove('active'); acc.nextElementSibling.style.maxHeight=null; }
-  });
+  document.querySelectorAll('.accordion').forEach(acc=>{ if(acc!==btn&&acc.classList.contains('active')){ acc.classList.remove('active'); acc.nextElementSibling.style.maxHeight=null; }});
   btn.classList.toggle('active');
   const panel=btn.nextElementSibling;
   panel.style.maxHeight=panel.style.maxHeight?null:panel.scrollHeight+"px";
@@ -158,13 +156,13 @@ async function fetchSheet(sheet){
   try{
     const res=await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get&t=${Date.now()}`);
     return await res.json();
-  }catch(e){ return {data:[]}; }
+  }catch(e){ return []; }
 }
 async function reloadFromServer(){
   const [inv,cat,td]=await Promise.all([fetchSheet('inventario'),fetchSheet('categoria'),fetchSheet('tienda')]);
-  inventario=inv.data||[]; categorias=cat.data||[]; tiendas=td.data||[];
+  inventario=[...inv]; categorias=[...cat]; tiendas=[...td];
   pendingOps.forEach(op=>{
-    if(op.action==='add' && !op.item.idSheet){
+    if(op.action==='add'&&!op.item.idSheet){
       if(op.tipo==='inventario') inventario.push(op.item);
       if(op.tipo==='categoria') categorias.push(op.item);
       if(op.tipo==='tienda') tiendas.push(op.item);
@@ -175,21 +173,27 @@ async function reloadFromServer(){
 
 /* Sync */
 async function syncItem(tipo,item,action){
-  if(!item) return false;
+  if(!item)return false;
   const sheet=tipo;
   const params=new URLSearchParams();
   params.append('sheet', sheet);
   params.append('action', action);
+
   let fields=[];
   if(tipo==='inventario') fields=['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda'];
   if(tipo==='categoria') fields=['nombre'];
   if(tipo==='tienda') fields=['codigo','nombre'];
+
   if(action==='update' || action==='delete'){
     if(!item.idSheet && tipo!=='tienda') return true;
     params.append('idCol','id');
     params.append('idValue', tipo==='tienda'?item.codigo:item.idSheet);
   }
-  if(action==='add' || action==='update'){ fields.forEach(f=>params.append(f, item[f]||'')); }
+
+  if(action==='add' || action==='update'){
+    fields.forEach(f=>params.append(f, item[f]||''));
+  }
+
   try{
     const res=await fetch(`${APPWEB_URL}?${params.toString()}`, { method:'POST' });
     const data=await res.json();
@@ -207,13 +211,14 @@ async function syncPending(){
   pendingOps=newP; saveData(); render();
 }
 
-/* Render */
+/* Render y navegación (igual al anterior) */
 function filterData(arr){ if(!currentSearch) return arr; return arr.filter(i=>Object.values(i).some(v=>(v||'').toString().toLowerCase().includes(currentSearch))); }
 
 function render(){
   const c=document.getElementById('content');
   c.innerHTML='';
   const t=document.getElementById('main-title');
+
   if(currentView==='dashboard'){
     t.innerText='Dashboard de Inventario';
     const cards=document.createElement('div'); cards.className='cards';
@@ -223,118 +228,62 @@ function render(){
     cards.appendChild(mk('Tiendas',tiendas.length,'tienda','fa-store'));
     c.appendChild(cards); return;
   }
+
+  let data=[], cols=[];
+  if(currentView==='inventario'){ data=filterData(inventario); cols=['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda']; }
+  if(currentView==='categoria'){ data=filterData(categorias); cols=['nombre']; }
+  if(currentView==='tienda'){ data=filterData(tiendas); cols=['codigo','nombre']; }
+
   const sb=document.createElement('div'); sb.className='search-bar';
-  sb.innerHTML=`<input type="text" placeholder="Buscar..." value="${currentSearch}" onkeyup="applySearch(this.value)">`;
+  sb.innerHTML=`<input placeholder="Buscar..." value="${currentSearch}" oninput="currentSearch=this.value; render();">`;
   c.appendChild(sb);
-  let arr=[], headers=[];
-  if(currentView==='inventario'){ t.innerText='Ver Inventario'; arr=filterData(inventario); headers=['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda']; }
-  if(currentView==='categoria'){ t.innerText='Ver Categorías'; arr=filterData(categorias); headers=['Nombre']; }
-  if(currentView==='tienda'){ t.innerText='Ver Tiendas'; arr=filterData(tiendas); headers=['Codigo','Nombre']; }
+
   const table=document.createElement('table');
-  const thead=document.createElement('thead'); const trh=document.createElement('tr');
-  headers.forEach(h=>{ const th=document.createElement('th'); th.innerText=h; trh.appendChild(th); });
-  trh.appendChild(document.createElement('th')).innerText='Acciones';
-  thead.appendChild(trh); table.appendChild(thead);
-  const tbody=document.createElement('tbody');
-  arr.forEach((item,i)=>{
+  const th=document.createElement('tr');
+  cols.forEach(h=>{ const thc=document.createElement('th'); thc.innerText=h; th.appendChild(thc); });
+  const thActions=document.createElement('th'); thActions.innerText='Acciones'; th.appendChild(thActions);
+  table.appendChild(th);
+
+  data.forEach((row,i)=>{
     const tr=document.createElement('tr');
-    headers.forEach(h=>{ const key=h.toLowerCase(); const td=document.createElement('td'); td.innerText=item[key]||''; tr.appendChild(td); });
-    const td=document.createElement('td'); td.className='actions';
-    const btnEdit=document.createElement('button'); btnEdit.className='btn-edit'; btnEdit.innerHTML='<i class="fa-solid fa-pen"></i>'; btnEdit.onclick=()=>openEditForm(item,currentView);
-    const btnDel=document.createElement('button'); btnDel.className='btn-del'; btnDel.innerHTML='<i class="fa-solid fa-trash"></i>'; btnDel.onclick=()=>deleteItem(item,currentView);
-    td.appendChild(btnEdit); td.appendChild(btnDel); tr.appendChild(td);
-    tbody.appendChild(tr);
+    cols.forEach(col=>{ const td=document.createElement('td'); td.innerText=row[col]||''; tr.appendChild(td); });
+    const tdAct=document.createElement('td'); tdAct.className='actions';
+    const btnE=document.createElement('button'); btnE.className='btn-edit'; btnE.innerHTML='<i class="fa-solid fa-pen"></i>'; btnE.onclick=()=>openEditForm(currentView,i);
+    const btnD=document.createElement('button'); btnD.className='btn-del'; btnD.innerHTML='<i class="fa-solid fa-trash"></i>'; btnD.onclick=()=>deleteItem(currentView,i);
+    tdAct.appendChild(btnE); tdAct.appendChild(btnD); tr.appendChild(tdAct);
+    table.appendChild(tr);
   });
-  table.appendChild(tbody); c.appendChild(table);
+  c.appendChild(table);
 }
 
-/* Search */
-function applySearch(v){ currentSearch=v.toLowerCase(); render(); }
-
-/* Navigation */
-function nav(view){ currentView=view; currentSearch=''; render(); }
+/* Navegación */
+function nav(view){ currentView=view; render(); }
 
 /* Modal */
-function openAddForm(tipo){
-  editItemIndex=null; editTipo=tipo;
-  document.getElementById('modal-title').innerText='Agregar '+tipo.charAt(0).toUpperCase()+tipo.slice(1);
-  const f=document.getElementById('modal-form'); f.innerHTML='';
-  if(tipo==='inventario'){ f.innerHTML=`
-    <input placeholder="Codigo" id="Codigo">
-    <input placeholder="Serie" id="Serie">
-    <input placeholder="Equipo" id="Equipo">
-    <input placeholder="Marca" id="Marca">
-    <input placeholder="Modelo" id="Modelo">
-    <input placeholder="Categoría" id="Categoria">
-    <input placeholder="Tienda" id="Tienda">
-  `;}
-  if(tipo==='categoria'){ f.innerHTML=`<input placeholder="Nombre" id="nombre">`; }
-  if(tipo==='tienda'){ f.innerHTML=`
-    <input placeholder="Código" id="codigo">
-    <input placeholder="Nombre" id="nombre">
-  `;}
-  document.getElementById('modal').style.display='flex';
-}
-function openEditForm(item,tipo){
-  editItemIndex=item; editTipo=tipo;
-  document.getElementById('modal-title').innerText='Editar '+tipo.charAt(0).toUpperCase()+tipo.slice(1);
-  const f=document.getElementById('modal-form'); f.innerHTML='';
-  if(tipo==='inventario'){ f.innerHTML=`
-    <input placeholder="Codigo" id="Codigo" value="${item.codigo||''}">
-    <input placeholder="Serie" id="Serie" value="${item.serie||''}">
-    <input placeholder="Equipo" id="Equipo" value="${item.equipo||''}">
-    <input placeholder="Marca" id="Marca" value="${item.marca||''}">
-    <input placeholder="Modelo" id="Modelo" value="${item.modelo||''}">
-    <input placeholder="Categoría" id="Categoria" value="${item.categoria||''}">
-    <input placeholder="Tienda" id="Tienda" value="${item.tienda||''}">
-  `;}
-  if(tipo==='categoria'){ f.innerHTML=`<input placeholder="Nombre" id="nombre" value="${item.nombre||''}">`; }
-  if(tipo==='tienda'){ f.innerHTML=`
-    <input placeholder="Código" id="codigo" value="${item.codigo||''}">
-    <input placeholder="Nombre" id="nombre" value="${item.nombre||''}">
-  `;}
-  document.getElementById('modal').style.display='flex';
-}
+function openAddForm(tipo){ editItemIndex=null; editTipo=tipo; document.getElementById('modal-title').innerText='Agregar '+tipo; let html=''; if(tipo==='inventario'){ html=`<input placeholder="Codigo" id="Codigo"><input placeholder="Serie" id="Serie"><input placeholder="Equipo" id="Equipo"><input placeholder="Marca" id="Marca"><input placeholder="Modelo" id="Modelo"><input placeholder="Categoria" id="Categoria"><input placeholder="Tienda" id="Tienda">`; } else if(tipo==='categoria'){ html=`<input placeholder="Nombre" id="nombre">`; } else if(tipo==='tienda'){ html=`<input placeholder="Codigo" id="codigo"><input placeholder="Nombre" id="nombre">`; } document.getElementById('modal-form').innerHTML=html; document.getElementById('modal').style.display='flex'; }
+function openEditForm(tipo,index){ editItemIndex=index; editTipo=tipo; const item=(tipo==='inventario'?inventario:(tipo==='categoria'?categorias:tiendas))[index]; document.getElementById('modal-title').innerText='Editar '+tipo; let html=''; if(tipo==='inventario'){ html=`<input placeholder="Codigo" id="Codigo" value="${item.Codigo||''}"><input placeholder="Serie" id="Serie" value="${item.Serie||''}"><input placeholder="Equipo" id="Equipo" value="${item.Equipo||''}"><input placeholder="Marca" id="Marca" value="${item.Marca||''}"><input placeholder="Modelo" id="Modelo" value="${item.Modelo||''}"><input placeholder="Categoria" id="Categoria" value="${item.Categoria||''}"><input placeholder="Tienda" id="Tienda" value="${item.Tienda||''}">`; } else if(tipo==='categoria'){ html=`<input placeholder="Nombre" id="nombre" value="${item.nombre||''}">`; } else if(tipo==='tienda'){ html=`<input placeholder="Codigo" id="codigo" value="${item.codigo||''}"><input placeholder="Nombre" id="nombre" value="${item.nombre||''}">`; } document.getElementById('modal-form').innerHTML=html; document.getElementById('modal').style.display='flex'; }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-/* Guardar Item */
+/* Guardar */
 async function saveItem(){
-  const f=document.getElementById('modal-form');
-  let item={};
-  if(editTipo==='inventario'){
-    ['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda'].forEach(k=>item[k]=f.querySelector('#'+k).value);
-    inventario.push(item);
-  }
-  if(editTipo==='categoria'){
-    item.nombre=f.querySelector('#nombre').value; categorias.push(item);
-  }
-  if(editTipo==='tienda'){
-    item.codigo=f.querySelector('#codigo').value;
-    item.nombre=f.querySelector('#nombre').value;
-    if(!item.codigo || !item.nombre){ alert("Debe llenar ambos campos."); return; }
-    tiendas.push(item);
-  }
-  pendingOps.push({tipo:editTipo,item,action:'add'});
-  closeModal();
-  saveData();
-  render();
-  await syncPending();
+  const item={};
+  const form=document.getElementById('modal-form');
+  Array.from(form.querySelectorAll('input')).forEach(inp=>item[inp.id]=inp.value);
+  const arr=editTipo==='inventario'?inventario:(editTipo==='categoria'?categorias:tiendas);
+  if(editItemIndex!==null){ arr[editItemIndex]=Object.assign({},arr[editItemIndex],item); pendingOps.push({tipo:editTipo,item:arr[editItemIndex],action:'update'}); } 
+  else { arr.push(item); pendingOps.push({tipo:editTipo,item,action:'add'}); }
+  saveData(); closeModal(); render(); syncPending();
 }
 
 /* Eliminar */
-async function deleteItem(item,tipo){
-  if(!confirm('Desea eliminar?')) return;
-  const arr=tipo==='inventario'?inventario:tipo==='categoria'?categorias:tiendas;
-  const idx=arr.findIndex(i=>i===item);
-  if(idx!==-1) arr.splice(idx,1);
-  pendingOps.push({tipo, item, action:'delete'});
-  saveData();
-  render();
-  await syncPending();
+function deleteItem(tipo,index){
+  const arr=tipo==='inventario'?inventario:(tipo==='categoria'?categorias:tiendas);
+  const item=arr[index];
+  arr.splice(index,1); pendingOps.push({tipo,item,action:'delete'}); saveData(); render(); syncPending();
 }
 
-/* Inicial */
-loadData(); reloadFromServer();
+/* Init */
+loadData(); render(); reloadFromServer();
 </script>
 </body>
 </html>
