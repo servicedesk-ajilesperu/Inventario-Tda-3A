@@ -5,126 +5,195 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario Tiendas 3A</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-<style>
-body { font-family: sans-serif; margin:0; padding:0; background:#f4f4f4; }
-.container { max-width: 900px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1);}
-h2{margin-bottom:10px;}
-.form-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-.input { padding: 8px 10px; flex: 1; border-radius: 4px; border: 1px solid #ccc; }
-.btn { padding: 8px 12px; background: #ff4d00; color: #fff; border:none; border-radius:4px; cursor:pointer; }
-.btn:hover { background: #e64400; }
-.tabla { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-.tabla th, .tabla td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-.tabla th { background: #ff4d00; color: #fff; }
-.btn-eliminar { background: #dc3545; padding: 4px 8px; color: #fff; border:none; border-radius:4px; cursor:pointer; }
-.btn-eliminar:hover { background: #c82333; }
-</style>
 </head>
 <body>
-<div class="container">
-  <h2>Categorías</h2>
-  <div class="form-group">
-    <input type="text" id="nombreCategoria" placeholder="Nombre categoría" class="input">
-    <button onclick="agregarCategoria()" class="btn">Agregar</button>
-  </div>
-  <table id="tablaCategorias" class="tabla">
-    <thead>
-      <tr><th>Nombre</th><th>Acciones</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
 
-  <h2>Tiendas</h2>
-  <div class="form-group">
-    <input type="text" id="codigoTienda" placeholder="Código de tienda" class="input">
-    <input type="text" id="nombreTienda" placeholder="Nombre de la tienda" class="input">
-    <button onclick="agregarTienda()" class="btn">Agregar Tienda</button>
-  </div>
-  <table id="tablaTiendas" class="tabla">
-    <thead>
-      <tr><th>Código</th><th>Nombre</th><th>Acciones</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <h2>Inventario</h2>
-  <div class="form-group">
-    <input type="text" id="nombreInventario" placeholder="Nombre inventario" class="input">
-    <input type="text" id="cantidadInventario" placeholder="Cantidad" class="input">
-    <button onclick="agregarInventario()" class="btn">Agregar Inventario</button>
-  </div>
-  <table id="tablaInventario" class="tabla">
-    <thead>
-      <tr><th>Nombre</th><th>Cantidad</th><th>Acciones</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<!-- FORMULARIO CATEGORIAS -->
+<h2>Categorías</h2>
+<div id="formCategoria">
+  <input id="nombreCategoria" placeholder="Nombre categoría">
+  <button onclick="agregarCategoria()">Agregar</button>
 </div>
+<table id="tablaCategorias">
+  <thead>
+    <tr><th>Nombre</th><th>Acciones</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<!-- FORMULARIO TIENDAS -->
+<h2>Tiendas</h2>
+<div id="formTienda">
+  <input id="codigoTienda" placeholder="Código de tienda">
+  <input id="nombreTienda" placeholder="Nombre de la tienda">
+  <button onclick="agregarTienda()">Agregar</button>
+</div>
+<table id="tablaTiendas">
+  <thead>
+    <tr><th>Código</th><th>Nombre</th><th>Acciones</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<!-- FORMULARIO INVENTARIO -->
+<h2>Inventario</h2>
+<div id="formInventario">
+  <input id="nombreInventario" placeholder="Nombre inventario">
+  <input id="cantidadInventario" placeholder="Cantidad">
+  <button onclick="agregarInventario()">Agregar</button>
+</div>
+<table id="tablaInventario">
+  <thead>
+    <tr><th>Nombre</th><th>Cantidad</th><th>Acciones</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
 <script>
+// URL de tu Apps Script desplegado
 const URL_APP_SCRIPT = "TU_URL_APP_SCRIPT_AQUI";
 
-// --- Categorías ---
+//////////////////////////
+// CATEGORIAS
+//////////////////////////
 function agregarCategoria(){
   const nombre = document.getElementById("nombreCategoria").value.trim();
   if(!nombre){ alert("Ingrese nombre"); return; }
-  const fd=new FormData(); fd.append("sheet","categoria"); fd.append("action","add"); fd.append("Nombre",nombre);
-  fetch(URL_APP_SCRIPT,{method:"POST",body:fd}).then(r=>r.json()).then(d=>{ if(d.success){ document.getElementById("nombreCategoria").value=""; cargarCategorias(); } else alert(d.msg); });
+  const fd = new FormData();
+  fd.append("sheet","categoria");
+  fd.append("action","add");
+  fd.append("Nombre",nombre);
+  fetch(URL_APP_SCRIPT,{method:"POST", body:fd})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.success){
+        document.getElementById("nombreCategoria").value="";
+        cargarCategorias();
+      } else alert(d.msg);
+    });
 }
 function cargarCategorias(){
-  fetch(URL_APP_SCRIPT+"?sheet=categoria&action=get").then(r=>r.json()).then(data=>{
-    const tbody=document.querySelector("#tablaCategorias tbody"); tbody.innerHTML="";
-    data.forEach(c=>{ const tr=document.createElement("tr"); tr.innerHTML=`<td>${c.Nombre}</td><td><button onclick="eliminarCategoria('${c.Nombre}')" class="btn-eliminar">Eliminar</button></td>`; tbody.appendChild(tr); });
-  });
+  fetch(URL_APP_SCRIPT+"?sheet=categoria&action=get")
+    .then(r=>r.json())
+    .then(data=>{
+      const tbody = document.querySelector("#tablaCategorias tbody");
+      tbody.innerHTML="";
+      data.forEach(c=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML=`<td>${c.Nombre}</td><td><button onclick="eliminarCategoria('${c.Nombre}')">Eliminar</button></td>`;
+        tbody.appendChild(tr);
+      });
+    });
 }
 function eliminarCategoria(nombre){
   if(!confirm("Eliminar categoría?")) return;
-  const fd=new FormData(); fd.append("sheet","categoria"); fd.append("action","delete"); fd.append("idValue",nombre);
-  fetch(URL_APP_SCRIPT,{method:"POST",body:fd}).then(r=>r.json()).then(d=>{ if(d.success) cargarCategorias(); else alert(d.msg); });
+  const fd = new FormData();
+  fd.append("sheet","categoria");
+  fd.append("action","delete");
+  fd.append("idValue",nombre);
+  fetch(URL_APP_SCRIPT,{method:"POST", body:fd})
+    .then(r=>r.json())
+    .then(d=>{ if(d.success) cargarCategorias(); else alert(d.msg); });
 }
 
-// --- Tiendas ---
+//////////////////////////
+// TIENDAS
+//////////////////////////
 function agregarTienda(){
-  const codigo=document.getElementById("codigoTienda").value.trim();
-  const nombre=document.getElementById("nombreTienda").value.trim();
+  const codigo = document.getElementById("codigoTienda").value.trim();
+  const nombre = document.getElementById("nombreTienda").value.trim();
   if(!codigo||!nombre){ alert("Ingrese Código y Nombre"); return; }
-  const fd=new FormData(); fd.append("sheet","tienda"); fd.append("action","add"); fd.append("Codigo",codigo); fd.append("Nombre",nombre);
-  fetch(URL_APP_SCRIPT,{method:"POST",body:fd}).then(r=>r.json()).then(d=>{ if(d.success){ document.getElementById("codigoTienda").value=""; document.getElementById("nombreTienda").value=""; cargarTiendas(); } else alert(d.msg); });
+  const fd = new FormData();
+  fd.append("sheet","tienda");
+  fd.append("action","add");
+  fd.append("Codigo",codigo);
+  fd.append("Nombre",nombre);
+  fetch(URL_APP_SCRIPT,{method:"POST", body:fd})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.success){
+        document.getElementById("codigoTienda").value="";
+        document.getElementById("nombreTienda").value="";
+        cargarTiendas();
+      } else alert(d.msg);
+    });
 }
 function cargarTiendas(){
-  fetch(URL_APP_SCRIPT+"?sheet=tienda&action=get").then(r=>r.json()).then(data=>{
-    const tbody=document.querySelector("#tablaTiendas tbody"); tbody.innerHTML="";
-    data.forEach(t=>{ const tr=document.createElement("tr"); tr.innerHTML=`<td>${t.Codigo}</td><td>${t.Nombre}</td><td><button onclick="eliminarTienda('${t.Codigo}')" class="btn-eliminar">Eliminar</button></td>`; tbody.appendChild(tr); });
-  });
+  fetch(URL_APP_SCRIPT+"?sheet=tienda&action=get")
+    .then(r=>r.json())
+    .then(data=>{
+      const tbody = document.querySelector("#tablaTiendas tbody");
+      tbody.innerHTML="";
+      data.forEach(t=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML=`<td>${t.Codigo||""}</td><td>${t.Nombre||""}</td><td><button onclick="eliminarTienda('${t.Codigo}')">Eliminar</button></td>`;
+        tbody.appendChild(tr);
+      });
+    });
 }
 function eliminarTienda(codigo){
   if(!confirm("Eliminar tienda?")) return;
-  const fd=new FormData(); fd.append("sheet","tienda"); fd.append("action","delete"); fd.append("idValue",codigo);
-  fetch(URL_APP_SCRIPT,{method:"POST",body:fd}).then(r=>r.json()).then(d=>{ if(d.success) cargarTiendas(); else alert(d.msg); });
+  const fd = new FormData();
+  fd.append("sheet","tienda");
+  fd.append("action","delete");
+  fd.append("idValue",codigo);
+  fetch(URL_APP_SCRIPT,{method:"POST", body:fd})
+    .then(r=>r.json())
+    .then(d=>{ if(d.success) cargarTiendas(); else alert(d.msg); });
 }
 
-// --- Inventario ---
+//////////////////////////
+// INVENTARIO
+//////////////////////////
 function agregarInventario(){
-  const nombre=document.getElementById("nombreInventario").value.trim();
-  const cant=document.getElementById("cantidadInventario").value.trim();
+  const nombre = document.getElementById("nombreInventario").value.trim();
+  const cant = document.getElementById("cantidadInventario").value.trim();
   if(!nombre||!cant){ alert("Ingrese datos"); return; }
-  const fd=new FormData(); fd.append("sheet","inventario"); fd.append("action","add"); fd.append("Nombre",nombre); fd.append("Cantidad",cant);
-  fetch(URL_APP_SCRIPT,{method:"POST",body:fd}).then(r=>r.json()).then(d=>{ if(d.success){ document.getElementById("nombreInventario").value=""; document.getElementById("cantidadInventario").value=""; cargarInventario(); } else alert(d.msg); });
+  const fd = new FormData();
+  fd.append("sheet","inventario");
+  fd.append("action","add");
+  fd.append("Nombre",nombre);
+  fd.append("Cantidad",cant);
+  fetch(URL_APP_SCRIPT,{method:"POST", body:fd})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.success){
+        document.getElementById("nombreInventario").value="";
+        document.getElementById("cantidadInventario").value="";
+        cargarInventario();
+      } else alert(d.msg);
+    });
 }
 function cargarInventario(){
-  fetch(URL_APP_SCRIPT+"?sheet=inventario&action=get").then(r=>r.json()).then(data=>{
-    const tbody=document.querySelector("#tablaInventario tbody"); tbody.innerHTML="";
-    data.forEach(i=>{ const tr=document.createElement("tr"); tr.innerHTML=`<td>${i.Nombre}</td><td>${i.Cantidad}</td><td><button onclick="eliminarInventario('${i.Nombre}')" class="btn-eliminar">Eliminar</button></td>`; tbody.appendChild(tr); });
-  });
+  fetch(URL_APP_SCRIPT+"?sheet=inventario&action=get")
+    .then(r=>r.json())
+    .then(data=>{
+      const tbody = document.querySelector("#tablaInventario tbody");
+      tbody.innerHTML="";
+      data.forEach(i=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML=`<td>${i.Nombre||""}</td><td>${i.Cantidad||""}</td><td><button onclick="eliminarInventario('${i.Nombre}')">Eliminar</button></td>`;
+        tbody.appendChild(tr);
+      });
+    });
 }
 function eliminarInventario(nombre){
   if(!confirm("Eliminar inventario?")) return;
-  const fd=new FormData(); fd.append("sheet","inventario"); fd.append("action","delete"); fd.append("idValue",nombre);
-  fetch(URL_APP_SCRIPT,{method:"POST",body:fd}).then(r=>r.json()).then(d=>{ if(d.success) cargarInventario(); else alert(d.msg); });
+  const fd = new FormData();
+  fd.append("sheet","inventario");
+  fd.append("action","delete");
+  fd.append("idValue",nombre);
+  fetch(URL_APP_SCRIPT,{method:"POST", body:fd})
+    .then(r=>r.json())
+    .then(d=>{ if(d.success) cargarInventario(); else alert(d.msg); });
 }
 
 // --- Cargar todo al inicio ---
-window.onload = function(){ cargarCategorias(); cargarTiendas(); cargarInventario(); };
+window.onload = function(){
+  cargarCategorias();
+  cargarTiendas();
+  cargarInventario();
+}
 </script>
 </body>
 </html>
