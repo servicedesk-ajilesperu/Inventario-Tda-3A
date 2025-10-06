@@ -1,351 +1,153 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inventario Tiendas 3A</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-<style>
-/* === ESTILOS GENERALES === */
-body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
-* { box-sizing:border-box; }
+const SS = SpreadsheetApp.getActiveSpreadsheet();
 
-/* Sidebar */
-.sidebar { width: 260px; position:fixed; height:100%; background:#ff4d00; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
-.sidebar.collapsed { width:60px; padding:20px 5px; }
-.brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.2rem; position:relative; margin-bottom:10px; }
-#toggleSidebar { position:absolute; right:0; top:0; background:#cc3c00; color:white; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; }
-
-/* Acordeón */
-.menu-section .accordion { background:transparent; color:white; border:none; padding:10px; width:100%; display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600; justify-content:space-between; border-radius:4px; }
-.menu-section .accordion.active, .menu-section .accordion:hover { background-color:#e64500; }
-.menu-section .panel { padding:0 10px; max-height:0; overflow:hidden; transition:max-height 0.3s ease-in-out; background-color:#e64500; display:flex; flex-direction:column; gap:4px; }
-.menu-section .panel button { background:transparent; color:white; border:none; padding:8px; text-align:left; display:flex; align-items:center; gap:6px; cursor:pointer; width:100%; border-radius:4px; }
-.menu-section .panel button:hover { background-color:#cc4000; }
-.sidebar.collapsed .brand span, .sidebar.collapsed .accordion span, .sidebar.collapsed .panel button span { display:none; }
-.sidebar.collapsed .accordion { justify-content:center; }
-.sidebar.collapsed .accordion i.fa-chevron-down { display:none; }
-
-/* Contenido */
-.main { margin-left:260px; padding:20px; transition:0.3s; }
-.sidebar.collapsed ~ .main { margin-left:60px; }
-
-/* Dashboard Cards */
-.cards { display:flex; gap:20px; margin-top:20px; flex-wrap:wrap; }
-.card { flex:1; min-width:150px; background:white; color:#ff4d00; padding:20px; border-radius:12px; text-align:center; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.1); transition:0.2s; }
-.card:hover { transform:translateY(-3px); box-shadow:0 6px 12px rgba(0,0,0,0.15); }
-.card span { font-weight:700; font-size:1.3rem; display:block; margin-top:5px;}
-.card i { font-size:2rem; }
-
-/* Búsqueda */
-.search-bar { margin-bottom:15px; display:flex; gap:10px; }
-.search-bar input { flex-grow:1; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
-
-/* Tablas */
-table { width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.05); display:block; overflow-x:auto; white-space:nowrap; }
-th, td { border:1px solid #eee; padding:10px; text-align:center; font-size:0.9rem; }
-th { background:#ff4d00; color:white; font-weight:600; }
-tr:nth-child(even) { background-color:#f9f9f9; }
-.actions button { margin:0 2px; padding:6px; border-radius:50%; border:none; cursor:pointer; width:32px; height:32px; transition:0.1s; }
-.actions button:hover { opacity:0.8; }
-.btn-edit { background:#ffb86b; color:white; }
-.btn-del { background:#d9534f; color:white; }
-
-/* Modal */
-.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:50; }
-.modal { background:white; padding:25px; border-radius:12px; width:450px; max-width:95%; box-shadow:0 10px 20px rgba(0,0,0,0.2); }
-input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:100%; margin-bottom:12px; font-size:1rem; }
-.modal button { padding:8px 15px; border-radius:6px; cursor:pointer; border:none; font-weight:600; transition:0.1s; }
-.modal button:last-child { background:#ff4d00; color:white; }
-.modal button:last-child:hover { background:#cc3c00; }
-.modal button:first-child { background:#eee; color:#333; margin-right:10px; }
-.modal button:first-child:hover { background:#ddd; }
-
-/* Responsive */
-@media(max-width:768px) {
-  .cards { flex-direction:column; }
-  .card { min-width:100%; }
-  .sidebar { left:-260px; position:fixed; }
-  .sidebar.collapsed { left:0; }
-  .main { margin-left:0; padding:10px; }
+function capitalize(str) {
+  if (!str) return null;
+  const lowerStr = str.toLowerCase();
+  if (lowerStr === "categoria") return "Categorias";
+  if (lowerStr === "tienda") return "Tiendas";
+  if (lowerStr === "inventario") return "Inventario";
+  return null;
 }
-</style>
-</head>
-<body>
 
-<aside class="sidebar" id="sidebar">
-  <div class="brand">
-    <i class="fa-solid fa-boxes-stacked"></i><span>Inventario 3A</span>
-    <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
-  </div>
-
-  <div class="menu-section">
-    <button class="accordion active" onclick="nav('dashboard')">
-      <i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i>
-    </button>
-    <div class="panel" style="max-height:500px;">
-      <button onclick="nav('dashboard')"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
-    </div>
-  </div>
-
-  <div class="menu-section">
-    <button class="accordion"><i class="fa-solid fa-computer"></i><span>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
-    <div class="panel">
-      <button onclick="openAddForm('inventario')"><i class="fa-solid fa-plus"></i><span>Agregar Inventario</span></button>
-      <button onclick="nav('inventario')"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
-    </div>
-  </div>
-
-  <div class="menu-section">
-    <button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorías</span><i class="fa-solid fa-chevron-down"></i></button>
-    <div class="panel">
-      <button onclick="openAddForm('categoria')"><i class="fa-solid fa-plus"></i><span>Agregar Categoría</span></button>
-      <button onclick="nav('categoria')"><i class="fa-solid fa-table"></i><span>Ver Categorías</span></button>
-    </div>
-  </div>
-
-  <div class="menu-section">
-    <button class="accordion"><i class="fa-solid fa-store"></i><span>Tiendas</span><i class="fa-solid fa-chevron-down"></i></button>
-    <div class="panel">
-      <button onclick="openAddForm('tienda')"><i class="fa-solid fa-plus"></i><span>Agregar Tienda</span></button>
-      <button onclick="nav('tienda')"><i class="fa-solid fa-table"></i><span>Ver Tiendas</span></button>
-    </div>
-  </div>
-</aside>
-
-<div class="main">
-  <h2 id="main-title">Inventario de Tienda</h2>
-  <div id="content"></div>
-</div>
-
-<!-- Modal -->
-<div class="modal-backdrop" id="modal">
-  <div class="modal">
-    <h3 id="modal-title"></h3>
-    <div id="modal-form"></div>
-    <div style="text-align:right; margin-top:15px;">
-      <button onclick="closeModal()">Cancelar</button>
-      <button onclick="saveItem()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<script>
-const APPWEB_URL="https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
-
-let inventario=[], categorias=[], tiendas=[], pendingOps=[];
-let editItemIndex=null, editTipo=null, currentView='dashboard', currentSearch='';
-
-const STORAGE_KEY='inventario3a';
-
-/* Sidebar y acordeón */
-document.getElementById('toggleSidebar').onclick = ()=>document.getElementById('sidebar').classList.toggle('collapsed');
-document.querySelectorAll('.accordion').forEach(btn=>btn.addEventListener('click',()=>{
-  document.querySelectorAll('.accordion').forEach(acc=>{ if(acc!==btn&&acc.classList.contains('active')){ acc.classList.remove('active'); acc.nextElementSibling.style.maxHeight=null; }});
-  btn.classList.toggle('active');
-  const panel=btn.nextElementSibling;
-  panel.style.maxHeight=panel.style.maxHeight?null:panel.scrollHeight+"px";
-}));
-
-/* LocalStorage */
-function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify({inventario,categorias,tiendas,pendingOps})); }
-function loadData(){ const d=localStorage.getItem(STORAGE_KEY); if(d){ const p=JSON.parse(d); inventario=p.inventario||[]; categorias=p.categorias||[]; tiendas=p.tiendas||[]; pendingOps=p.pendingOps||[]; } }
-
-/* Fetch */
-async function fetchSheet(sheet){
-  try{
-    const res=await fetch(`${APPWEB_URL}?sheet=${sheet}&action=get&t=${Date.now()}`);
-    return await res.json();
-  }catch(e){ return []; }
+// === Manejo CORS ===
+function outputJSON(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeader("Access-Control-Allow-Origin", "*");
 }
-async function reloadFromServer(){
-  const [inv,cat,td]=await Promise.all([fetchSheet('inventario'),fetchSheet('categoria'),fetchSheet('tienda')]);
-  inventario=[...inv]; categorias=[...cat]; tiendas=[...td];
-  pendingOps.forEach(op=>{
-    if(op.action==='add'&&!op.item.idSheet){
-      if(op.tipo==='inventario') inventario.push(op.item);
-      if(op.tipo==='categoria') categorias.push(op.item);
-      if(op.tipo==='tienda') tiendas.push(op.item);
+
+function doGet(e) {
+  const sheetName = capitalize(e.parameter.sheet);
+  const action = e.parameter.action;
+  if (!sheetName || action !== 'get') {
+    return outputJSON({ success: false, msg: "Faltan parámetros 'sheet' o 'action' para GET." });
+  }
+  try {
+    const data = readData(SS, sheetName);
+    return outputJSON(data);
+  } catch (error) {
+    return outputJSON({ success: false, msg: "Error al leer datos: " + error.toString() });
+  }
+}
+
+function doPost(e) {
+  const params = e.parameter;
+  const sheetName = capitalize(params.sheet);
+  const action = params.action;
+  if (!sheetName || !action) {
+    return outputJSON({ success: false, msg: "Faltan parámetros 'sheet' o 'action' para POST." });
+  }
+  try {
+    let result = { success: false, msg: "Acción no reconocida." };
+    switch (action) {
+      case 'add':
+        result = addData(SS, sheetName, params);
+        break;
+      case 'update':
+        if (!params.idCol || !params.idValue) {
+          result = { success: false, msg: "Faltan parámetros de ID para UPDATE." };
+        } else {
+          result = updateData(SS, sheetName, params);
+        }
+        break;
+      case 'delete':
+        if (!params.idValue) {
+          result = { success: false, msg: "Falta idValue para DELETE." };
+        } else {
+          result = deleteData(SS, sheetName, params.idValue);
+        }
+        break;
     }
-  });
-  saveData(); render();
+    return outputJSON(result);
+  } catch (error) {
+    return outputJSON({ success: false, msg: "Error en el servidor: " + error.toString() });
+  }
 }
 
-/* Sync */
-async function syncItem(tipo,item,action){
-  if(!item)return false;
-  const sheet=tipo;
-  const params=new URLSearchParams();
-  params.append('sheet', sheet);
-  params.append('action', action);
+// === Leer datos ===
+function readData(ss, sheetName) {
+  const sh = ss.getSheetByName(sheetName);
+  if (!sh) throw new Error("Hoja no encontrada: " + sheetName);
+  const values = sh.getDataRange().getValues();
+  if (values.length <= 1) return [];
 
-  let fields=[];
-  if(tipo==='inventario') fields=['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda'];
-  if(tipo==='categoria') fields=['nombre'];
-  if(tipo==='tienda') fields=['codigo','nombre'];
+  const headers = values[0];
+  const data = [];
 
-  if(action==='update' || action==='delete'){
-    if(!item.idSheet && tipo!=='tienda') return true;
-    params.append('idCol','id');
-    params.append('idValue', tipo==='tienda'?item.codigo:item.idSheet);
+  for (let i = 1; i < values.length; i++) {
+    const row = {};
+    for (let j = 0; j < headers.length; j++) {
+      if (sheetName === "Tiendas") { // mostrar código y nombre
+        row[headers[j].toLowerCase()] = values[i][j];
+      } else {
+        if (headers[j].toLowerCase() === "id") continue;
+        row[headers[j]] = values[i][j];
+      }
+    }
+    data.push(row);
+  }
+  return data;
+}
+
+// === Agregar ===
+function addData(ss, sheetName, params) {
+  const sh = ss.getSheetByName(sheetName);
+  if (!sh) return { success: false, msg: "Hoja no encontrada." };
+  const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+
+  const newRow = [];
+  let newId = sh.getLastRow();
+  if (sheetName !== "Tiendas" && headers[0].toLowerCase() === "id") newRow.push(newId);
+
+  for (let i = sheetName==="Tiendas"?0:1; i < headers.length; i++) {
+    const header = headers[i];
+    newRow.push(params[header] || '');
   }
 
-  if(action==='add' || action==='update'){
-    fields.forEach(f=>params.append(f, item[f]||''));
+  if (newRow.slice(sheetName==="Tiendas"?0:1).every(v => v === "")) return { success: false, msg: "Fila vacía, no se insertó." };
+
+  sh.appendRow(newRow);
+  return { success: true, id: newId };
+}
+
+// === Editar ===
+function updateData(ss, sheetName, params) {
+  const sh = ss.getSheetByName(sheetName);
+  if (!sh) return { success: false, msg: "Hoja no encontrada." };
+  const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+
+  const idValue = params.idValue;
+  const idValues = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues();
+  const rowIndex = idValues.findIndex(row => row[0] == idValue);
+  if (rowIndex === -1) return { success: false, msg: "ID no encontrado." };
+
+  const sheetRow = rowIndex + 2;
+  for (let i = 1; i < headers.length; i++) {
+    const header = headers[i];
+    if (params.hasOwnProperty(header)) sh.getRange(sheetRow, i + 1).setValue(params[header]);
+  }
+  return { success: true, msg: "Registro actualizado." };
+}
+
+// === Eliminar ===
+function deleteData(ss, sheetName, idValue) {
+  const sh = ss.getSheetByName(sheetName);
+  if (!sh) return { success: false, msg: "Hoja no encontrada: " + sheetName };
+
+  const idValues = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues();
+  const rowIndex = idValues.findIndex(row => row[0] == idValue);
+  if (rowIndex === -1) return { success: false, msg: "ID no encontrado." };
+
+  sh.deleteRow(rowIndex + 2);
+
+  if (sheetName !== "Tiendas") {
+    const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+    if (headers[0].toLowerCase() === "id") {
+      const totalRows = sh.getLastRow();
+      for (let i = 2; i <= totalRows; i++) sh.getRange(i, 1).setValue(i - 1);
+    }
   }
 
-  try{
-    const res=await fetch(`${APPWEB_URL}?${params.toString()}`, { method:'POST' });
-    const data=await res.json();
-    if(data.success && action==='add' && data.id) item.idSheet=data.id;
-    return data.success;
-  }catch(e){ return false; }
+  return { success: true, msg: "Registro eliminado." };
 }
-async function syncPending(){
-  if(pendingOps.length===0) return;
-  const newP=[];
-  for(const op of pendingOps){
-    const ok=await syncItem(op.tipo,op.item,op.action);
-    if(!ok) newP.push(op);
-  }
-  pendingOps=newP; saveData(); render();
-}
-
-/* Render */
-function filterData(arr){ if(!currentSearch) return arr; return arr.filter(i=>Object.values(i).some(v=>(v||'').toString().toLowerCase().includes(currentSearch))); }
-
-function render(){
-  const c=document.getElementById('content');
-  c.innerHTML='';
-  const t=document.getElementById('main-title');
-
-  if(currentView==='dashboard'){
-    t.innerText='Dashboard de Inventario';
-    const cards=document.createElement('div'); cards.className='cards';
-    const mk=(l,n,v,ic)=>{ const d=document.createElement('div'); d.className='card'; d.innerHTML=`<i class="fa-solid ${ic}"></i><span>${l}: ${n}</span>`; d.onclick=()=>nav(v); return d; };
-    cards.appendChild(mk('Equipos',inventario.length,'inventario','fa-computer'));
-    cards.appendChild(mk('Categorías',categorias.length,'categoria','fa-tags'));
-    cards.appendChild(mk('Tiendas',tiendas.length,'tienda','fa-store'));
-    c.appendChild(cards); return;
-  }
-
-  const sb=document.createElement('div'); sb.className='search-bar';
-  sb.innerHTML=`<input type="text" placeholder="Buscar..." value="${currentSearch}" onkeyup="applySearch(this.value)">`;
-  c.appendChild(sb);
-
-  let arr=[], headers=[];
-  if(currentView==='inventario'){ t.innerText='Ver Inventario'; arr=filterData(inventario); headers=['Código','Serie','Equipo','Marca','Modelo','Categoría','Tienda']; }
-  if(currentView==='categoria'){ t.innerText='Ver Categorías'; arr=filterData(categorias); headers=['Nombre']; }
-  if(currentView==='tienda'){ t.innerText='Ver Tiendas'; arr=filterData(tiendas); headers=['Código','Nombre']; }
-
-  const table=document.createElement('table');
-  const thead=document.createElement('thead'); const trh=document.createElement('tr');
-  headers.forEach(h=>{ const th=document.createElement('th'); th.innerText=h; trh.appendChild(th); });
-  trh.appendChild(document.createElement('th')).innerText='Acciones';
-  thead.appendChild(trh); table.appendChild(thead);
-
-  const tbody=document.createElement('tbody');
-  arr.forEach((item,i)=>{
-    const tr=document.createElement('tr');
-    headers.forEach(h=>{ const key=h.toLowerCase(); const td=document.createElement('td'); td.innerText=item[key]||''; tr.appendChild(td); });
-    const td=document.createElement('td'); td.className='actions';
-    const btnEdit=document.createElement('button'); btnEdit.className='btn-edit'; btnEdit.innerHTML='<i class="fa-solid fa-pen"></i>'; btnEdit.onclick=()=>openEditForm(item,currentView);
-    const btnDel=document.createElement('button'); btnDel.className='btn-del'; btnDel.innerHTML='<i class="fa-solid fa-trash"></i>'; btnDel.onclick=()=>deleteItem(item,currentView);
-    td.appendChild(btnEdit); td.appendChild(btnDel); tr.appendChild(td);
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody); c.appendChild(table);
-}
-
-/* Search */
-function applySearch(v){ currentSearch=v.toLowerCase(); render(); }
-
-/* Navigation */
-function nav(view){ currentView=view; currentSearch=''; render(); }
-
-/* Modal */
-function openAddForm(tipo){
-  editItemIndex=null; editTipo=tipo;
-  document.getElementById('modal-title').innerText='Agregar '+tipo.charAt(0).toUpperCase()+tipo.slice(1);
-  const f=document.getElementById('modal-form'); f.innerHTML='';
-  if(tipo==='inventario'){ f.innerHTML=`
-    <input placeholder="Codigo" id="Codigo">
-    <input placeholder="Serie" id="Serie">
-    <input placeholder="Equipo" id="Equipo">
-    <input placeholder="Marca" id="Marca">
-    <input placeholder="Modelo" id="Modelo">
-    <input placeholder="Categoría" id="Categoria">
-    <input placeholder="Tienda" id="Tienda">
-  `;}
-  if(tipo==='categoria'){ f.innerHTML=`<input placeholder="Nombre" id="nombre">`; }
-  if(tipo==='tienda'){ f.innerHTML=`
-    <input placeholder="Código" id="codigo">
-    <input placeholder="Nombre" id="nombre">
-  `;}
-  document.getElementById('modal').style.display='flex';
-}
-
-function openEditForm(item,tipo){
-  editItemIndex=item; editTipo=tipo;
-  document.getElementById('modal-title').innerText='Editar '+tipo.charAt(0).toUpperCase()+tipo.slice(1);
-  const f=document.getElementById('modal-form'); f.innerHTML='';
-  if(tipo==='inventario'){ f.innerHTML=`
-    <input placeholder="Codigo" id="Codigo" value="${item.codigo||''}">
-    <input placeholder="Serie" id="Serie" value="${item.serie||''}">
-    <input placeholder="Equipo" id="Equipo" value="${item.equipo||''}">
-    <input placeholder="Marca" id="Marca" value="${item.marca||''}">
-    <input placeholder="Modelo" id="Modelo" value="${item.modelo||''}">
-    <input placeholder="Categoría" id="Categoria" value="${item.categoria||''}">
-    <input placeholder="Tienda" id="Tienda" value="${item.tienda||''}">
-  `;}
-  if(tipo==='categoria'){ f.innerHTML=`<input placeholder="Nombre" id="nombre" value="${item.nombre||''}">`; }
-  if(tipo==='tienda'){ f.innerHTML=`
-    <input placeholder="Código" id="codigo" value="${item.codigo||''}">
-    <input placeholder="Nombre" id="nombre" value="${item.nombre||''}">
-  `;}
-  document.getElementById('modal').style.display='flex';
-}
-
-function closeModal(){ document.getElementById('modal').style.display='none'; }
-
-/* Guardar Item */
-async function saveItem(){
-  const f=document.getElementById('modal-form');
-  let item={};
-  if(editTipo==='inventario'){
-    ['Codigo','Serie','Equipo','Marca','Modelo','Categoria','Tienda'].forEach(k=>item[k]=f.querySelector('#'+k).value);
-    inventario.push(item);
-  }
-  if(editTipo==='categoria'){
-    item.nombre=f.querySelector('#nombre').value; categorias.push(item);
-  }
-  if(editTipo==='tienda'){
-    item.codigo=f.querySelector('#codigo').value;
-    item.nombre=f.querySelector('#nombre').value;
-    if(!item.codigo || !item.nombre){ alert("Debe llenar ambos campos."); return; }
-    tiendas.push(item);
-  }
-  pendingOps.push({tipo:editTipo,item,action:'add'});
-  closeModal();
-  saveData();
-  render();
-  await syncPending();
-}
-
-/* Eliminar */
-async function deleteItem(item,tipo){
-  if(!confirm('Desea eliminar?')) return;
-  const arr=tipo==='inventario'?inventario:tipo==='categoria'?categorias:tiendas;
-  const idx=arr.findIndex(i=>i===item);
-  if(idx!==-1) arr.splice(idx,1);
-  pendingOps.push({tipo, item, action:'delete'});
-  saveData();
-  render();
-  await syncPending();
-}
-
-/* Inicial */
-loadData(); reloadFromServer();
-</script>
-</body>
-</html>
