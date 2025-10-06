@@ -1,171 +1,130 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inventario Tiendas 3A</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
-body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
-* { box-sizing:border-box; }
-.sidebar { width:260px; position:fixed; height:100%; background:#ff4d00; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
-.sidebar.collapsed { width:60px; padding:20px 5px; }
-.brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.2rem; position:relative; margin-bottom:10px; }
-#toggleSidebar { position:absolute; right:0; top:0; background:#cc3c00; color:white; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; }
-.menu-section .accordion { background:transparent; color:white; border:none; padding:10px; width:100%; display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600; justify-content:space-between; border-radius:4px; }
-.menu-section .accordion.active, .menu-section .accordion:hover { background-color:#e64500; }
-.menu-section .panel { padding:0 10px; max-height:0; overflow:hidden; transition:max-height 0.3s ease-in-out; background-color:#e64500; display:flex; flex-direction:column; gap:4px; }
-.menu-section .panel button { background:transparent; color:white; border:none; padding:8px; text-align:left; display:flex; align-items:center; gap:6px; cursor:pointer; width:100%; border-radius:4px; }
-.menu-section .panel button:hover { background-color:#cc4000; }
-.sidebar.collapsed .brand span, .sidebar.collapsed .accordion span, .sidebar.collapsed .panel button span { display:none; }
-.sidebar.collapsed .accordion { justify-content:center; }
-.sidebar.collapsed .accordion i.fa-chevron-down { display:none; }
-.main { margin-left:260px; padding:20px; transition:0.3s; }
-.sidebar.collapsed ~ .main { margin-left:60px; }
-.cards { display:flex; gap:20px; margin-top:20px; flex-wrap:wrap; }
-.card { flex:1; min-width:150px; background:white; color:#ff4d00; padding:20px; border-radius:12px; text-align:center; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.1); transition:0.2s; }
-.card:hover { transform:translateY(-3px); box-shadow:0 6px 12px rgba(0,0,0,0.15); }
-.card span { font-weight:700; font-size:1.3rem; display:block; margin-top:5px;}
-.card i { font-size:2rem; }
-.search-bar { margin-bottom:15px; display:flex; gap:10px; }
-.search-bar input { flex-grow:1; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
-table { width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.05); display:block; overflow-x:auto; white-space:nowrap; }
-th, td { border:1px solid #eee; padding:10px; text-align:center; font-size:0.9rem; }
-th { background:#ff4d00; color:white; font-weight:600; }
-tr:nth-child(even) { background-color:#f9f9f9; }
-.actions button { margin:0 2px; padding:6px; border-radius:50%; border:none; cursor:pointer; width:32px; height:32px; transition:0.1s; }
-.actions button:hover { opacity:0.8; }
-.btn-edit { background:#ffb86b; color:white; }
-.btn-del { background:#d9534f; color:white; }
-.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:50; }
-.modal { background:white; padding:25px; border-radius:12px; width:450px; max-width:95%; box-shadow:0 10px 20px rgba(0,0,0,0.2); }
-input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:100%; margin-bottom:12px; font-size:1rem; }
-.modal button { padding:8px 15px; border-radius:6px; cursor:pointer; border:none; font-weight:600; transition:0.1s; }
-.modal button:last-child { background:#ff4d00; color:white; }
-.modal button:last-child:hover { background:#cc3c00; }
-.modal button:first-child { background:#eee; color:#333; margin-right:10px; }
-.modal button:first-child:hover { background:#ddd; }
-@media(max-width:768px){.cards{flex-direction:column;}.card{min-width:100%;}.sidebar{left:-260px;position:fixed;}.sidebar.collapsed{left:0;}.main{margin-left:0;padding:10px;}}
+body { font-family: sans-serif; margin:0; padding:0; background:#f4f4f4; }
+.container { max-width: 900px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1);}
+h2{margin-bottom:10px;}
+.form-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+.input { padding: 8px 10px; flex: 1; border-radius: 4px; border: 1px solid #ccc; }
+.btn { padding: 8px 12px; background: #ff4d00; color: #fff; border:none; border-radius:4px; cursor:pointer; }
+.btn:hover { background: #e64400; }
+.tabla { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+.tabla th, .tabla td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+.tabla th { background: #ff4d00; color: #fff; }
+.btn-eliminar { background: #dc3545; padding: 4px 8px; color: #fff; border:none; border-radius:4px; cursor:pointer; }
+.btn-eliminar:hover { background: #c82333; }
 </style>
 </head>
 <body>
+<div class="container">
+  <h2>Categorías</h2>
+  <div class="form-group">
+    <input type="text" id="nombreCategoria" placeholder="Nombre categoría" class="input">
+    <button onclick="agregarCategoria()" class="btn">Agregar</button>
+  </div>
+  <table id="tablaCategorias" class="tabla">
+    <thead>
+      <tr><th>Nombre</th><th>Acciones</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-<div class="sidebar" id="sidebar">
-  <div class="brand">
-    <i class="fa-solid fa-store"></i> <span>Inventario 3A</span>
-    <button id="toggleSidebar"><i class="fa fa-bars"></i></button>
+  <h2>Tiendas</h2>
+  <div class="form-group">
+    <input type="text" id="codigoTienda" placeholder="Código de tienda" class="input">
+    <input type="text" id="nombreTienda" placeholder="Nombre de la tienda" class="input">
+    <button onclick="agregarTienda()" class="btn">Agregar Tienda</button>
   </div>
-  <div class="menu-section">
-    <button class="accordion"><i class="fa fa-database"></i><span> Tablas</span><i class="fa fa-chevron-down"></i></button>
-    <div class="panel">
-      <button onclick="showSection('tiendas')"><i class="fa fa-shop"></i><span> Tiendas</span></button>
-      <button onclick="showSection('categorias')"><i class="fa fa-tags"></i><span> Categorías</span></button>
-      <button onclick="showSection('inventario')"><i class="fa fa-box"></i><span> Inventario</span></button>
-    </div>
-  </div>
-</div>
+  <table id="tablaTiendas" class="tabla">
+    <thead>
+      <tr><th>Código</th><th>Nombre</th><th>Acciones</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-<div class="main">
-  <h1>Dashboard</h1>
-  <div class="cards">
-    <div class="card" onclick="showSection('tiendas')">
-      <i class="fa fa-shop"></i>
-      <span>Tiendas</span>
-    </div>
-    <div class="card" onclick="showSection('categorias')">
-      <i class="fa fa-tags"></i>
-      <span>Categorías</span>
-    </div>
-    <div class="card" onclick="showSection('inventario')">
-      <i class="fa fa-box"></i>
-      <span>Inventario</span>
-    </div>
+  <h2>Inventario</h2>
+  <div class="form-group">
+    <input type="text" id="nombreInventario" placeholder="Nombre inventario" class="input">
+    <input type="text" id="cantidadInventario" placeholder="Cantidad" class="input">
+    <button onclick="agregarInventario()" class="btn">Agregar Inventario</button>
   </div>
-
-  <!-- Secciones -->
-  <div id="tiendas" class="section" style="display:none;">
-    <h2>Tiendas</h2>
-    <table>
-      <thead>
-        <tr><th>Código</th><th>Nombre</th></tr>
-      </thead>
-      <tbody id="table-tiendas"></tbody>
-    </table>
-  </div>
-
-  <div id="categorias" class="section" style="display:none;">
-    <h2>Categorías</h2>
-    <table>
-      <thead>
-        <tr><th>Nombre</th></tr>
-      </thead>
-      <tbody id="table-categorias"></tbody>
-    </table>
-  </div>
-
-  <div id="inventario" class="section" style="display:none;">
-    <h2>Inventario</h2>
-    <table>
-      <thead>
-        <tr><th>Equipo</th><th>Serie</th><th>Estado</th></tr>
-      </thead>
-      <tbody id="table-inventario"></tbody>
-    </table>
-  </div>
+  <table id="tablaInventario" class="tabla">
+    <thead>
+      <tr><th>Nombre</th><th>Cantidad</th><th>Acciones</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 </div>
 
 <script>
-// Toggle sidebar
-document.getElementById("toggleSidebar").addEventListener("click", () => {
-  document.getElementById("sidebar").classList.toggle("collapsed");
-});
+const URL_APP_SCRIPT = "TU_URL_APP_SCRIPT_AQUI";
 
-// Acordeón
-document.querySelectorAll(".accordion").forEach(acc => {
-  acc.addEventListener("click", function() {
-    this.classList.toggle("active");
-    let panel = this.nextElementSibling;
-    if (panel.style.maxHeight) {
-      panel.style.maxHeight = null;
-    } else {
-      panel.style.maxHeight = panel.scrollHeight + "px";
-    }
+// --- Categorías ---
+function agregarCategoria(){
+  const nombre = document.getElementById("nombreCategoria").value.trim();
+  if(!nombre){ alert("Ingrese nombre"); return; }
+  const fd=new FormData(); fd.append("sheet","categoria"); fd.append("action","add"); fd.append("Nombre",nombre);
+  fetch(URL_APP_SCRIPT,{method:"POST",body:fd}).then(r=>r.json()).then(d=>{ if(d.success){ document.getElementById("nombreCategoria").value=""; cargarCategorias(); } else alert(d.msg); });
+}
+function cargarCategorias(){
+  fetch(URL_APP_SCRIPT+"?sheet=categoria&action=get").then(r=>r.json()).then(data=>{
+    const tbody=document.querySelector("#tablaCategorias tbody"); tbody.innerHTML="";
+    data.forEach(c=>{ const tr=document.createElement("tr"); tr.innerHTML=`<td>${c.Nombre}</td><td><button onclick="eliminarCategoria('${c.Nombre}')" class="btn-eliminar">Eliminar</button></td>`; tbody.appendChild(tr); });
   });
-});
-
-// Mostrar secciones
-function showSection(id) {
-  document.querySelectorAll(".section").forEach(sec => sec.style.display = "none");
-  document.getElementById(id).style.display = "block";
+}
+function eliminarCategoria(nombre){
+  if(!confirm("Eliminar categoría?")) return;
+  const fd=new FormData(); fd.append("sheet","categoria"); fd.append("action","delete"); fd.append("idValue",nombre);
+  fetch(URL_APP_SCRIPT,{method:"POST",body:fd}).then(r=>r.json()).then(d=>{ if(d.success) cargarCategorias(); else alert(d.msg); });
 }
 
-// Cargar datos desde Apps Script
-async function loadData(sheet, tableId) {
-  try {
-    const res = await fetch("TU_URL_DEL_SCRIPT?sheet=" + sheet + "&action=get");
-    const data = await res.json();
-    const tbody = document.getElementById(tableId);
-    tbody.innerHTML = "";
-    data.forEach(row => {
-      let tr = document.createElement("tr");
-      if(sheet === "tiendas"){
-        tr.innerHTML = `<td>${row.codigo || ""}</td><td>${row.nombre || ""}</td>`;
-      } else if(sheet === "categorias"){
-        tr.innerHTML = `<td>${row.nombre || ""}</td>`;
-      } else if(sheet === "inventario"){
-        tr.innerHTML = `<td>${row.equipo || ""}</td><td>${row.serie || ""}</td><td>${row.estado || ""}</td>`;
-      }
-      tbody.appendChild(tr);
-    });
-  } catch (e) {
-    console.error("Error cargando " + sheet, e);
-  }
+// --- Tiendas ---
+function agregarTienda(){
+  const codigo=document.getElementById("codigoTienda").value.trim();
+  const nombre=document.getElementById("nombreTienda").value.trim();
+  if(!codigo||!nombre){ alert("Ingrese Código y Nombre"); return; }
+  const fd=new FormData(); fd.append("sheet","tienda"); fd.append("action","add"); fd.append("Codigo",codigo); fd.append("Nombre",nombre);
+  fetch(URL_APP_SCRIPT,{method:"POST",body:fd}).then(r=>r.json()).then(d=>{ if(d.success){ document.getElementById("codigoTienda").value=""; document.getElementById("nombreTienda").value=""; cargarTiendas(); } else alert(d.msg); });
+}
+function cargarTiendas(){
+  fetch(URL_APP_SCRIPT+"?sheet=tienda&action=get").then(r=>r.json()).then(data=>{
+    const tbody=document.querySelector("#tablaTiendas tbody"); tbody.innerHTML="";
+    data.forEach(t=>{ const tr=document.createElement("tr"); tr.innerHTML=`<td>${t.Codigo}</td><td>${t.Nombre}</td><td><button onclick="eliminarTienda('${t.Codigo}')" class="btn-eliminar">Eliminar</button></td>`; tbody.appendChild(tr); });
+  });
+}
+function eliminarTienda(codigo){
+  if(!confirm("Eliminar tienda?")) return;
+  const fd=new FormData(); fd.append("sheet","tienda"); fd.append("action","delete"); fd.append("idValue",codigo);
+  fetch(URL_APP_SCRIPT,{method:"POST",body:fd}).then(r=>r.json()).then(d=>{ if(d.success) cargarTiendas(); else alert(d.msg); });
 }
 
-// Inicial
-loadData("tiendas", "table-tiendas");
-loadData("categorias", "table-categorias");
-loadData("inventario", "table-inventario");
+// --- Inventario ---
+function agregarInventario(){
+  const nombre=document.getElementById("nombreInventario").value.trim();
+  const cant=document.getElementById("cantidadInventario").value.trim();
+  if(!nombre||!cant){ alert("Ingrese datos"); return; }
+  const fd=new FormData(); fd.append("sheet","inventario"); fd.append("action","add"); fd.append("Nombre",nombre); fd.append("Cantidad",cant);
+  fetch(URL_APP_SCRIPT,{method:"POST",body:fd}).then(r=>r.json()).then(d=>{ if(d.success){ document.getElementById("nombreInventario").value=""; document.getElementById("cantidadInventario").value=""; cargarInventario(); } else alert(d.msg); });
+}
+function cargarInventario(){
+  fetch(URL_APP_SCRIPT+"?sheet=inventario&action=get").then(r=>r.json()).then(data=>{
+    const tbody=document.querySelector("#tablaInventario tbody"); tbody.innerHTML="";
+    data.forEach(i=>{ const tr=document.createElement("tr"); tr.innerHTML=`<td>${i.Nombre}</td><td>${i.Cantidad}</td><td><button onclick="eliminarInventario('${i.Nombre}')" class="btn-eliminar">Eliminar</button></td>`; tbody.appendChild(tr); });
+  });
+}
+function eliminarInventario(nombre){
+  if(!confirm("Eliminar inventario?")) return;
+  const fd=new FormData(); fd.append("sheet","inventario"); fd.append("action","delete"); fd.append("idValue",nombre);
+  fetch(URL_APP_SCRIPT,{method:"POST",body:fd}).then(r=>r.json()).then(d=>{ if(d.success) cargarInventario(); else alert(d.msg); });
+}
+
+// --- Cargar todo al inicio ---
+window.onload = function(){ cargarCategorias(); cargarTiendas(); cargarInventario(); };
 </script>
 </body>
 </html>
