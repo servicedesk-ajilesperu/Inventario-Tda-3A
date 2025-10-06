@@ -123,119 +123,119 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-const APPWEB_URL="https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec";
+// ==== VARIABLES ====
+let currentSheet = '';
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz5af-9YvEbD_2Lkwss6xPhBXqh9UEaqMqHIQ1OdXrv44SSxsYYa47Z5x4e6LFyPHFN/exec';
+let dataStore = { inventario:[], categoria:[], tienda:[] };
 
-let inventario=[], categorias=[], tiendas=[];
-let editItemIndex=null, editTipo=null, currentView='dashboard', currentSearch='';
+// ==== SIDEBAR ====
+document.getElementById('toggleSidebar').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
 
-/* Sidebar y acordeón */
-document.getElementById('toggleSidebar').onclick = ()=>document.getElementById('sidebar').classList.toggle('collapsed');
-document.querySelectorAll('.accordion').forEach(btn=>btn.addEventListener('click',()=>{
-  document.querySelectorAll('.accordion').forEach(acc=>{ if(acc!==btn&&acc.classList.contains('active')){ acc.classList.remove('active'); acc.nextElementSibling.style.maxHeight=null; }});
-  btn.classList.toggle('active');
-  const panel=btn.nextElementSibling;
-  panel.style.maxHeight=panel.style.maxHeight?null:panel.scrollHeight+"px";
-}));
-
-/* JSONP fetch */
-function fetchSheet(sheet,callback){
-  const script = document.createElement('script');
-  const cbName = 'cb_'+Date.now();
-  window[cbName] = function(data){
-    callback(data);
-    document.head.removeChild(script);
-    delete window[cbName];
-  }
-  script.src = `${APPWEB_URL}?sheet=${sheet}&action=get&callback=${cbName}&t=${Date.now()}`;
-  document.head.appendChild(script);
-}
-
-/* Reload data */
-function reloadFromServer(){
-  fetchSheet('inventario', data=>{ inventario=data||[]; render(); });
-  fetchSheet('categoria', data=>{ categorias=data||[]; render(); });
-  fetchSheet('tienda', data=>{ tiendas=data||[]; render(); });
-}
-
-/* Render tabla y dashboard */
-function render(){
-  const c=document.getElementById('content');
-  c.innerHTML='';
-  const t=document.getElementById('main-title');
-
-  if(currentView==='dashboard'){
-    t.innerText='Dashboard de Inventario';
-    const cards=document.createElement('div'); cards.className='cards';
-    const mk=(l,n,v,ic)=>{ const d=document.createElement('div'); d.className='card'; d.innerHTML=`<i class="fa-solid ${ic}"></i><span>${l}: ${n}</span>`; d.onclick=()=>nav(v); return d; };
-    cards.appendChild(mk('Equipos',inventario.length,'inventario','fa-computer'));
-    cards.appendChild(mk('Categorías',categorias.length,'categoria','fa-tags'));
-    cards.appendChild(mk('Tiendas',tiendas.length,'tienda','fa-store'));
-    c.appendChild(cards);
-  } else {
-    let data=currentView==='inventario'?inventario:currentView==='categoria'?categorias:tiendas;
-    t.innerText=currentView.charAt(0).toUpperCase()+currentView.slice(1);
-    const table=document.createElement('table');
-    if(!data.length){ table.innerHTML='<tr><td>No hay datos</td></tr>'; c.appendChild(table); return; }
-    const headers=Object.keys(data[0]);
-    table.innerHTML='<thead><tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'<th>Acciones</th></tr></thead>';
-    const tbody=document.createElement('tbody');
-    data.forEach((row,i)=>{
-      const tr=document.createElement('tr');
-      headers.forEach(h=>tr.innerHTML+=`<td>${row[h]||''}</td>`);
-      tr.innerHTML+=`<td class="actions">
-        <button class="btn-edit" onclick="editItem(${i},'${currentView}')"><i class="fa-solid fa-pen"></i></button>
-        <button class="btn-del" onclick="deleteItem(${i},'${currentView}')"><i class="fa-solid fa-trash"></i></button>
-      </td>`;
-      tbody.appendChild(tr);
-    });
-    table.appendChild(tbody);
-    c.appendChild(table);
-  }
-}
-
-/* Navegación */
-function nav(view){ currentView=view; render(); }
-
-/* Modal */
-function openAddForm(tipo){
-  editItemIndex=null; editTipo=tipo;
-  document.getElementById('modal-title').innerText='Agregar '+tipo;
-  const f=document.getElementById('modal-form'); f.innerHTML='';
-  const fields=(tipo==='inventario')?['nombre','categoria','tienda']:tipo==='categoria'?['nombre']:['codigo','nombre'];
-  fields.forEach(fld=>{
-    if(fld==='categoria'){
-      const sel=document.createElement('select'); sel.id='categoria'; categorias.forEach(c=>sel.innerHTML+=`<option value="${c.id}">${c.nombre}</option>`); f.appendChild(sel);
-    } else if(fld==='tienda'){
-      const sel=document.createElement('select'); sel.id='tienda'; tiendas.forEach(t=>sel.innerHTML+=`<option value="${t.codigo}">${t.nombre}</option>`); f.appendChild(sel);
-    } else {
-      const inp=document.createElement('input'); inp.id=fld; inp.placeholder=fld; f.appendChild(inp);
+document.querySelectorAll('.accordion').forEach(acc => {
+  acc.addEventListener('click', function() {
+    this.classList.toggle('active');
+    let panel = this.nextElementSibling;
+    if(panel.style.maxHeight){
+      panel.style.maxHeight = null;
+    }else{
+      panel.style.maxHeight = panel.scrollHeight + "px";
     }
   });
-  document.getElementById('modal').style.display='flex';
+});
+
+// ==== NAVIGATION ====
+function nav(sheet){
+  currentSheet = sheet;
+  document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
+  renderTable(sheet);
+}
+
+// ==== FETCH JSONP ====
+function fetchSheet(sheet){
+  return new Promise((resolve, reject)=>{
+    const cbName = 'cb_' + Math.random().toString(36).substring(2,15);
+    window[cbName] = function(response){
+      dataStore[sheet] = response || [];
+      resolve(dataStore[sheet]);
+      delete window[cbName];
+    };
+    const script = document.createElement('script');
+    script.src = `${APP_SCRIPT_URL}?sheet=${sheet}&action=get&callback=${cbName}`;
+    script.onerror = ()=>{ reject('Error cargando datos'); };
+    document.body.appendChild(script);
+  });
+}
+
+// ==== RENDER TABLE ====
+function renderTable(sheet){
+  fetchSheet(sheet).then(data=>{
+    let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
+    html += `<table><thead><tr>`;
+    if(data.length>0){
+      Object.keys(data[0]).forEach(h=>html+=`<th>${h}</th>`);
+      html += `<th>Acciones</th></tr></thead><tbody>`;
+      data.forEach((r,i)=>{
+        html += `<tr>`;
+        Object.values(r).forEach(v=>html+=`<td>${v}</td>`);
+        html += `<td class="actions">
+                  <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
+                  <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
+                 </td>`;
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+    } else {
+      html += `<tr><td colspan="100%">No hay datos</td></tr></table>`;
+    }
+    document.getElementById('content').innerHTML = html;
+  }).catch(err=>{ document.getElementById('content').innerHTML = err; });
+}
+
+// ==== FILTER ====
+function filterTable(value){
+  const tbody = document.querySelector('tbody');
+  if(!tbody) return;
+  Array.from(tbody.rows).forEach(row=>{
+    row.style.display = Array.from(row.cells).some(c=>c.textContent.toLowerCase().includes(value.toLowerCase())) ? '' : 'none';
+  });
+}
+
+// ==== MODAL ====
+function openAddForm(sheet){
+  currentSheet = sheet;
+  document.getElementById('modal-title').textContent = 'Agregar '+sheet;
+  let html = '';
+  if(sheet==='categoria'){
+    html += `<input type="text" id="name" placeholder="Nombre de Categoría">`;
+    html += `<select id="relatedStore"><option value="">Selecciona Tienda</option>`;
+    dataStore.tienda.forEach(t=>html+=`<option value="${t.id}">${t.nombre}</option>`);
+    html += `</select>`;
+  } else if(sheet==='tienda'){
+    html += `<input type="text" id="name" placeholder="Nombre de Tienda">`;
+  } else if(sheet==='inventario'){
+    html += `<input type="text" id="name" placeholder="Nombre de Item">`;
+    html += `<select id="category"><option value="">Selecciona Categoría</option>`;
+    dataStore.categoria.forEach(c=>html+=`<option value="${c.id}">${c.nombre}</option>`);
+    html += `</select>`;
+    html += `<select id="store"><option value="">Selecciona Tienda</option>`;
+    dataStore.tienda.forEach(t=>html+=`<option value="${t.id}">${t.nombre}</option>`);
+    html += `</select>`;
+  }
+  document.getElementById('modal-form').innerHTML = html;
+  document.getElementById('modal').style.display = 'flex';
 }
 
 function closeModal(){ document.getElementById('modal').style.display='none'; }
+function saveItem(){ alert('Aquí debes implementar guardar en App Script'); closeModal(); }
+function editItem(i){ alert('Aquí debes implementar editar en App Script'); }
+function deleteItem(i){ alert('Aquí debes implementar eliminar en App Script'); }
 
-/* Guardar item */
-function saveItem(){
-  const f=document.getElementById('modal-form');
-  const obj={};
-  Array.from(f.querySelectorAll('input,select')).forEach(inp=>obj[inp.id]=inp.value);
-  let arr=editTipo==='inventario'?inventario:editTipo==='categoria'?categorias:tiendas;
-  if(editItemIndex!==null){
-    arr[editItemIndex]=obj;
-  } else arr.push(obj);
-  closeModal(); render();
-}
-
-/* Editar */
-function editItem(i,tipo){ editItemIndex=i; editTipo=tipo; openAddForm(tipo); const arr=tipo==='inventario'?inventario:tipo==='categoria'?categorias:tiendas; const f=document.getElementById('modal-form'); Array.from(f.querySelectorAll('input,select')).forEach(inp=>inp.value=arr[i][inp.id]||''); }
-
-/* Eliminar */
-function deleteItem(i,tipo){ const arr=tipo==='inventario'?inventario:tipo==='categoria'?categorias:tiendas; arr.splice(i,1); render(); }
-
-/* Inicial */
-reloadFromServer();
+// ==== INIT ====
+Promise.all([fetchSheet('tienda'), fetchSheet('categoria'), fetchSheet('inventario')]).then(()=>{
+  nav('inventario');
+});
 </script>
 
 </body>
