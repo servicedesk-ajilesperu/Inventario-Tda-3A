@@ -71,35 +71,35 @@
   </div>
 
   <div class="menu-section">
-    <button class="accordion active" onclick="nav('dashboard')">
+    <button class="accordion active" onclick="nav('Dashboard')">
       <i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i>
     </button>
     <div class="panel" style="max-height:500px;">
-      <button onclick="nav('dashboard')"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
+      <button onclick="nav('Dashboard')"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
     </div>
   </div>
 
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-computer"></i><span>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
-      <button onclick="openAddForm('inventario')"><i class="fa-solid fa-plus"></i><span>Agregar Inventario</span></button>
-      <button onclick="nav('inventario')"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
+      <button onclick="openAddForm('Inventario')"><i class="fa-solid fa-plus"></i><span>Agregar Inventario</span></button>
+      <button onclick="nav('Inventario')"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
     </div>
   </div>
 
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorías</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
-      <button onclick="openAddForm('categoria')"><i class="fa-solid fa-plus"></i><span>Agregar Categoría</span></button>
-      <button onclick="nav('categoria')"><i class="fa-solid fa-table"></i><span>Ver Categorías</span></button>
+      <button onclick="openAddForm('Categorías')"><i class="fa-solid fa-plus"></i><span>Agregar Categoría</span></button>
+      <button onclick="nav('Categorías')"><i class="fa-solid fa-table"></i><span>Ver Categorías</span></button>
     </div>
   </div>
 
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-store"></i><span>Tiendas</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
-      <button onclick="openAddForm('tienda')"><i class="fa-solid fa-plus"></i><span>Agregar Tienda</span></button>
-      <button onclick="nav('tienda')"><i class="fa-solid fa-table"></i><span>Ver Tiendas</span></button>
+      <button onclick="openAddForm('Tiendas')"><i class="fa-solid fa-plus"></i><span>Agregar Tienda</span></button>
+      <button onclick="nav('Tiendas')"><i class="fa-solid fa-table"></i><span>Ver Tiendas</span></button>
     </div>
   </div>
 </aside>
@@ -123,7 +123,7 @@
 <script>
 let currentSheet = '';
 const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
-let dataStore = { inventario:[], categoria:[], tienda:[] };
+let dataStore = { Inventario:[], 'Categorías':[], Tiendas:[] };
 let editingIndex = null;
 
 // Sidebar toggle
@@ -141,137 +141,112 @@ document.querySelectorAll('.accordion').forEach(acc=>{
 // Navigation
 function nav(sheet){
   currentSheet = sheet;
-  document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
+  document.getElementById('main-title').textContent = sheet;
   renderTable(sheet);
 }
 
-// Fetch sheets (usando fetch JSON)
+// Fetch sheets
 function fetchSheet(sheet){
   return fetch(`${APP_SCRIPT_URL}?sheet=${sheet}&action=get`)
-    .then(r => r.json())
-    .then(response => {
-      if(response.success){
-        dataStore[sheet] = response.data;
-        return dataStore[sheet];
-      } else {
-        throw new Error(response.msg || 'Error cargando datos');
-      }
-    })
-    .catch(err => { throw err; });
+    .then(r=>r.json())
+    .then(res=>{
+      if(!res.success) throw new Error('Hoja "'+sheet+'" no encontrada');
+      dataStore[sheet]=res.data;
+      return res.data;
+    });
 }
 
-// Render Table
+// Render table
 function renderTable(sheet){
   fetchSheet(sheet).then(data=>{
     let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
-    if(data.length > 0){
-      html += `<table><thead><tr>`;
-      Object.keys(data[0]).forEach(h=> html += `<th>${h}</th>`);
-      html += `<th>Acciones</th></tr></thead><tbody>`;
+    if(data.length>0){
+      html+=`<table><thead><tr>`;
+      Object.keys(data[0]).forEach(h=> html+=`<th>${h}</th>`);
+      html+=`<th>Acciones</th></tr></thead><tbody>`;
       data.forEach((r,i)=>{
-        html += `<tr>`;
-        Object.values(r).forEach(v=> html += `<td>${v}</td>`);
-        html += `<td class="actions">
-                  <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
-                  <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
-                 </td>`;
-        html += `</tr>`;
+        html+=`<tr>${Object.values(r).map(v=>`<td>${v}</td>`).join('')}`;
+        html+=`<td class="actions">
+                <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
+               </td></tr>`;
       });
-      html += `</tbody></table>`;
-    } else {
-      html += `<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
-    }
-    document.getElementById('content').innerHTML = html;
+      html+=`</tbody></table>`;
+    } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
+    document.getElementById('content').innerHTML=html;
   }).catch(err=>{
-    document.getElementById('content').innerHTML = `<p style="color:red;">${err}</p>`;
+    document.getElementById('content').innerHTML=`<p style="color:red;">${err}</p>`;
   });
 }
 
-// Filter Table
+// Filter
 function filterTable(value){
-  const tbody = document.querySelector('tbody');
-  if(!tbody) return;
+  const tbody=document.querySelector('tbody'); if(!tbody)return;
   Array.from(tbody.rows).forEach(row=>{
-    row.style.display = Array.from(row.cells).some(c=> c.textContent.toLowerCase().includes(value.toLowerCase())) ? '' : 'none';
+    row.style.display=Array.from(row.cells).some(c=>c.textContent.toLowerCase().includes(value.toLowerCase()))?'':'none';
   });
 }
 
 // Modal
-function openAddForm(sheet, index=null){
-  currentSheet = sheet;
-  editingIndex = index;
-  document.getElementById('modal-title').textContent = index!==null ? 'Editar '+sheet : 'Agregar '+sheet;
+function openAddForm(sheet,index=null){
+  currentSheet=sheet;
+  editingIndex=index;
+  document.getElementById('modal-title').textContent=index!==null?'Editar '+sheet:'Agregar '+sheet;
   let html='';
-  if(sheet==='categoria'){
-    const item = index!==null ? dataStore.categoria[index] : {};
-    html += `<input type="text" id="nombre" placeholder="Nombre de Categoría" value="${item.nombre||''}">`;
-  } else if(sheet==='tienda'){
-    const item = index!==null ? dataStore.tienda[index] : {};
-    html += `<input type="text" id="codigo" placeholder="Código de Tienda" value="${item.codigo||''}">`;
-    html += `<input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
-  } else if(sheet==='inventario'){
-    const item = index!==null ? dataStore.inventario[index] : {};
-    html += `<input type="text" id="nombre" placeholder="Nombre de Item" value="${item.nombre||''}">`;
-    html += `<select id="categoria"><option value="">Selecciona Categoría</option>`;
-    dataStore.categoria.forEach(c=>{
-      html += `<option value="${c.id}" ${item.categoria==c.id?'selected':''}>${c.nombre}</option>`;
-    });
-    html += `</select>`;
-    html += `<select id="tienda"><option value="">Selecciona Tienda</option>`;
-    dataStore.tienda.forEach(t=>{
-      html += `<option value="${t.id}" ${item.tienda==t.id?'selected':''}>${t.nombre}</option>`;
-    });
-    html += `</select>`;
+  if(sheet==='Categorías'){
+    const item=index!==null?dataStore['Categorías'][index]:{};
+    html=`<input type="text" id="nombre" placeholder="Nombre de Categoría" value="${item.nombre||''}">`;
+  } else if(sheet==='Tiendas'){
+    const item=index!==null?dataStore['Tiendas'][index]:{};
+    html=`<input type="text" id="codigo" placeholder="Código de Tienda" value="${item.codigo||''}">
+          <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
+  } else if(sheet==='Inventario'){
+    const item=index!==null?dataStore['Inventario'][index]:{};
+    html=`<input type="text" id="nombre" placeholder="Nombre de Item" value="${item.nombre||''}">
+          <select id="categoria"><option value="">Selecciona Categoría</option>
+          ${dataStore['Categorías'].map(c=>`<option value="${c.id}" ${item.categoria==c.id?'selected':''}>${c.nombre}</option>`).join('')}
+          </select>
+          <select id="tienda"><option value="">Selecciona Tienda</option>
+          ${dataStore['Tiendas'].map(t=>`<option value="${t.id}" ${item.tienda==t.id?'selected':''}>${t.nombre}</option>`).join('')}
+          </select>`;
   }
-  document.getElementById('modal-form').innerHTML = html;
+  document.getElementById('modal-form').innerHTML=html;
   document.getElementById('modal').style.display='flex';
 }
-function closeModal(){
-  document.getElementById('modal').style.display='none';
-}
+function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// Save item
+// Save
 function saveItem(){
-  const form = {};
+  const form={};
   document.querySelectorAll('#modal-form input, #modal-form select').forEach(el=> form[el.id]=el.value);
+  const action=editingIndex!==null?'update':'add';
+  if(editingIndex!==null) form.idValue=dataStore[currentSheet][editingIndex].id;
 
-  const action = editingIndex!==null ? 'update' : 'add';
-  if(editingIndex!==null){
-    form.idValue = dataStore[currentSheet][editingIndex].id;
-  }
-
-  fetch(APP_SCRIPT_URL, {
+  fetch(APP_SCRIPT_URL,{
     method:'POST',
-    body: new URLSearchParams({ sheet: currentSheet, action, ...form })
+    body:new URLSearchParams({sheet:currentSheet, action, ...form})
   }).then(r=>r.json()).then(()=>{
     closeModal();
     renderTable(currentSheet);
   });
 }
 
-function editItem(i){
-  openAddForm(currentSheet,i);
-}
-
+// Edit & Delete
+function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm("¿Seguro de eliminar?")){
-    const id = dataStore[currentSheet][i].id || dataStore[currentSheet][i].codigo;
+    const item=dataStore[currentSheet][i];
+    const id=item.id||item.codigo;
     fetch(APP_SCRIPT_URL,{
       method:'POST',
-      body: new URLSearchParams({ sheet: currentSheet, action:'delete', idValue:id, codigo:id })
-    }).then(r=>r.json()).then(()=>{
-      renderTable(currentSheet);
-    });
+      body:new URLSearchParams({sheet:currentSheet, action:'delete', idValue:id, codigo:id})
+    }).then(r=>r.json()).then(()=> renderTable(currentSheet));
   }
 }
 
 // Init
-Promise.all([
-  fetchSheet('tienda'),
-  fetchSheet('categoria'),
-  fetchSheet('inventario')
-]).then(()=> nav('inventario'));
-
+Promise.all([fetchSheet('Tiendas'), fetchSheet('Categorías'), fetchSheet('Inventario')])
+.then(()=> nav('Inventario'));
 </script>
 </body>
 </html>
