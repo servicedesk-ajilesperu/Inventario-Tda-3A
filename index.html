@@ -220,13 +220,16 @@ function deleteItem(i){
   }
 }
 
-// DASHBOARD
+// DASHBOARD (modificado)
 function renderDashboard(){
-  const cardsDiv=document.getElementById('dashboard-cards'); cardsDiv.innerHTML='';
-  cardsDiv.innerHTML+=`<div class="card"><i class="fa-solid fa-store"></i><span>${dataStore.tienda.length}</span>Tiendas</div>`;
-  cardsDiv.innerHTML+=`<div class="card"><i class="fa-solid fa-tags"></i><span>${dataStore.categoria.length}</span>Categorias</div>`;
-  cardsDiv.innerHTML+=`<div class="card"><i class="fa-solid fa-computer"></i><span>${dataStore.inventario.length}</span>Inventario</div>`;
-  document.getElementById('content').innerHTML='';
+  const cardsDiv = document.getElementById('dashboard-cards');
+  cardsDiv.innerHTML = '';
+
+  cardsDiv.innerHTML += `<div class="card"><i class="fa-solid fa-store"></i><span>${dataStore.tienda.length}</span>Tiendas</div>`;
+  cardsDiv.innerHTML += `<div class="card"><i class="fa-solid fa-tags"></i><span>${dataStore.categoria.length}</span>Categorias</div>`;
+  cardsDiv.innerHTML += `<div class="card"><i class="fa-solid fa-computer"></i><span>${dataStore.inventario.length}</span>Inventario</div>`;
+
+  document.getElementById('content').innerHTML = '';
 }
 
 // NAV
