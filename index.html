@@ -110,7 +110,7 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 // ======================
 // CONFIGURACION
 // ======================
-const APP_SCRIPT_URL = 'TU_URL_DEL_SCRIPT_DEPLOY';
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
@@ -220,7 +220,7 @@ function saveItem(){
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value);
   let action=editingIndex!==null?'update':'add';
   if(editingIndex!==null) form.idValue=currentSheet==='tienda'?form.codigo:dataStore[currentSheet][editingIndex].codigo||dataStore[currentSheet][editingIndex].id;
-  
+
   fetch(APP_SCRIPT_URL,{
     method:'POST',
     body:new URLSearchParams({sheet:currentSheet,action,...form})
@@ -254,11 +254,6 @@ function renderDashboard(){
 // NAV
 // ======================
 function nav(sheet){ renderTable(sheet); }
-
-// ======================
-// INIT
-// ======================
-Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')]).then(()=>{ renderTable('dashboard'); });
 </script>
 </body>
 </html>
