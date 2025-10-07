@@ -110,7 +110,7 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 // ======================
 // CONFIGURACION
 // ======================
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
+const APP_SCRIPT_URL = 'TU_URL_DEL_SCRIPT_DEPLOY'; // Reemplazar con tu script deploy
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
@@ -128,20 +128,15 @@ document.querySelectorAll('.accordion').forEach(acc=>{
 });
 
 // ======================
-// FETCH JSONP
+// FETCH DATA
 // ======================
 function fetchSheet(sheet){
-  return new Promise((resolve,reject)=>{
-    const cb = 'cb_'+Math.random().toString(36).substring(2,15);
-    window[cb] = function(res){
-      if(res.success){ dataStore[sheet]=res.data; resolve(res.data); }
-      else reject(res.msg);
-      delete window[cb];
-    };
-    const s = document.createElement('script');
-    s.src = `${APP_SCRIPT_URL}?sheet=${sheet}&callback=${cb}`;
-    s.onerror = ()=>reject('Error cargando datos');
-    document.body.appendChild(s);
+  return fetch(APP_SCRIPT_URL,{
+    method:'POST',
+    body:new URLSearchParams({sheet:sheet,action:'get'})
+  }).then(r=>r.json()).then(res=>{
+    if(res.success){ dataStore[sheet]=res.data; return res.data; }
+    else throw new Error(res.msg);
   });
 }
 
@@ -170,9 +165,7 @@ function renderTable(sheet){
       html+=`</tbody></table>`;
     } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
     document.getElementById('content').innerHTML = html;
-  }).catch(err=>{
-    document.getElementById('content').innerHTML = `<p style="color:red;">${err}</p>`;
-  });
+  }).catch(err=>{ document.getElementById('content').innerHTML=`<p style="color:red;">${err}</p>`; });
 }
 
 // ======================
@@ -234,8 +227,10 @@ function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
     const id = currentSheet==='tienda'?dataStore[currentSheet][i].codigo:dataStore[currentSheet][i].codigo||dataStore[currentSheet][i].id;
-    fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id,codigo:id}) })
-    .then(r=>r.json()).then(()=>renderTable(currentSheet));
+    fetch(APP_SCRIPT_URL,{
+      method:'POST',
+      body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id,codigo:id})
+    }).then(r=>r.json()).then(()=>renderTable(currentSheet));
   }
 }
 
@@ -254,6 +249,12 @@ function renderDashboard(){
 // NAV
 // ======================
 function nav(sheet){ renderTable(sheet); }
+
+// ======================
+// INIT
+// ======================
+Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
+  .then(()=> renderTable('dashboard'));
 </script>
 </body>
 </html>
