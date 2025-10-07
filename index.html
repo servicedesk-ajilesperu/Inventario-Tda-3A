@@ -224,7 +224,10 @@ function saveItem(){
   fetch(APP_SCRIPT_URL,{
     method:'POST',
     body:new URLSearchParams({sheet:currentSheet,action,...form})
-  }).then(r=>r.json()).then(()=>{ closeModal(); renderTable(currentSheet); });
+  }).then(r=>r.json()).then(res=>{
+    if(res.success){ closeModal(); fetchSheet(currentSheet).then(()=>renderTable(currentSheet)); }
+    else alert('Error: '+res.msg);
+  }).catch(e=>alert('Error al guardar'));
 }
 
 // ======================
@@ -235,7 +238,10 @@ function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
     const id = currentSheet==='tienda'?dataStore[currentSheet][i].codigo:dataStore[currentSheet][i].codigo||dataStore[currentSheet][i].id;
     fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id,codigo:id}) })
-    .then(r=>r.json()).then(()=>renderTable(currentSheet));
+    .then(r=>r.json()).then(res=>{
+      if(res.success) fetchSheet(currentSheet).then(()=>renderTable(currentSheet));
+      else alert('Error: '+res.msg);
+    }).catch(e=>alert('Error al eliminar'));
   }
 }
 
