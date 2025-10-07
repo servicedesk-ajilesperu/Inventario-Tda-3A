@@ -108,7 +108,7 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 
 <script>
 // ======================
-// CONFIGURACION
+// CONFIGURACIÓN
 // ======================
 const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
 let dataStore = { inventario:[], categoria:[], tienda:[] };
@@ -123,7 +123,7 @@ document.querySelectorAll('.accordion').forEach(acc=>{
   acc.addEventListener('click', function(){
     this.classList.toggle('active');
     let panel = this.nextElementSibling;
-    panel.style.maxHeight = panel.style.maxHeight?null:panel.scrollHeight+'px';
+    panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight+'px';
   });
 });
 
@@ -196,7 +196,7 @@ function openAddForm(sheet,index=null){
   } else if(sheet==='tienda'){
     const item=index!==null?dataStore.tienda[index]:{};
     html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
-          <input type="text" id="nombre" placeholder="Nombre" value="${item.nombre||''}">`;
+          <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
   } else if(sheet==='inventario'){
     const item=index!==null?dataStore.inventario[index]:{};
     html=`<input type="text" id="nombre" placeholder="Nombre de Item" value="${item.nombre||''}">`;
@@ -220,7 +220,7 @@ function saveItem(){
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value);
   let action=editingIndex!==null?'update':'add';
   if(editingIndex!==null) form.idValue=currentSheet==='tienda'?form.codigo:dataStore[currentSheet][editingIndex].codigo||dataStore[currentSheet][editingIndex].id;
-
+  
   fetch(APP_SCRIPT_URL,{
     method:'POST',
     body:new URLSearchParams({sheet:currentSheet,action,...form})
