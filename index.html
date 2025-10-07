@@ -6,7 +6,6 @@
 <title>Inventario Tiendas 3A</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
-/* === ESTILOS === */
 body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 * { box-sizing:border-box; }
 .sidebar { width: 260px; position:fixed; height:100%; background:#ff4d00; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
@@ -199,36 +198,56 @@ function closeModal(){ document.getElementById('modal').style.display='none'; }
 
 // SAVE ITEM
 function saveItem(){
-  const form={}; document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value);
+  const form={}; 
+  document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value);
   let action=editingIndex!==null?'update':'add';
   if(editingIndex!==null) form.idValue=currentSheet==='tienda'?form.codigo:dataStore[currentSheet][editingIndex].codigo||dataStore[currentSheet][editingIndex].id;
-  fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action,...form}) })
-    .then(r=>r.json()).then(res=>{
-      if(res.success){ closeModal(); fetchSheet(currentSheet).then(()=>renderTable(currentSheet)); }
-      else alert('Error: '+res.msg);
-    }).catch(e=>alert('Error al guardar'));
+
+  fetch(APP_SCRIPT_URL,{
+    method:'POST',
+    body:new URLSearchParams({sheet:currentSheet,action,...form})
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    if(res.success){
+      closeModal();
+      fetchSheet(currentSheet).then(()=>{
+        renderTable(currentSheet);
+        renderDashboard();
+      });
+    } else alert('Error: '+res.msg);
+  })
+  .catch(e=>alert('Error al guardar'));
 }
 
-// EDIT & DELETE
-function editItem(i){ openAddForm(currentSheet,i); }
+// DELETE ITEM
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
     const id = currentSheet==='tienda'?dataStore[currentSheet][i].codigo:dataStore[currentSheet][i].codigo||dataStore[currentSheet][i].id;
-    fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id,codigo:id}) })
-      .then(r=>r.json()).then(res=>{ if(res.success) fetchSheet(currentSheet).then(()=>renderTable(currentSheet)); else alert('Error: '+res.msg); })
-      .catch(e=>alert('Error al eliminar'));
+    fetch(APP_SCRIPT_URL,{
+      method:'POST',
+      body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id,codigo:id})
+    })
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.success){
+        fetchSheet(currentSheet).then(()=>{
+          renderTable(currentSheet);
+          renderDashboard();
+        });
+      } else alert('Error: '+res.msg);
+    })
+    .catch(e=>alert('Error al eliminar'));
   }
 }
 
-// DASHBOARD (modificado)
+// DASHBOARD
 function renderDashboard(){
   const cardsDiv = document.getElementById('dashboard-cards');
   cardsDiv.innerHTML = '';
-
   cardsDiv.innerHTML += `<div class="card"><i class="fa-solid fa-store"></i><span>${dataStore.tienda.length}</span>Tiendas</div>`;
   cardsDiv.innerHTML += `<div class="card"><i class="fa-solid fa-tags"></i><span>${dataStore.categoria.length}</span>Categorias</div>`;
   cardsDiv.innerHTML += `<div class="card"><i class="fa-solid fa-computer"></i><span>${dataStore.inventario.length}</span>Inventario</div>`;
-
   document.getElementById('content').innerHTML = '';
 }
 
