@@ -6,6 +6,7 @@
 <title>Inventario Tiendas 3A</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
+/* === Estilos previos === */
 body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 * { box-sizing:border-box; }
 .sidebar { width: 260px; position:fixed; height:100%; background:#ff4d00; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
@@ -102,7 +103,7 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
     <div id="modal-form"></div>
     <div style="text-align:right; margin-top:15px;">
       <button onclick="closeModal()">Cancelar</button>
-      <button onclick="saveItemLocal()">Guardar</button>
+      <button onclick="saveItem()">Guardar</button>
     </div>
   </div>
 </div>
@@ -114,9 +115,7 @@ let currentSheet = '';
 let editingIndex = null;
 
 // Sidebar toggle
-document.getElementById('toggleSidebar').addEventListener('click',()=>{
-  document.getElementById('sidebar').classList.toggle('collapsed');
-});
+document.getElementById('toggleSidebar').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('collapsed'));
 document.querySelectorAll('.accordion').forEach(acc=>{
   acc.addEventListener('click', function(){
     this.classList.toggle('active');
@@ -216,13 +215,15 @@ function openAddForm(sheet,index=null){
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// Save local + sync
-function saveItemLocal(){
+// Save function igual a Tienda
+function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value);
+  let idValue = editingIndex!==null ? dataStore[currentSheet][editingIndex].codigo||dataStore[currentSheet][editingIndex].id : form.codigo || Date.now();
   if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
   } else {
+    form.codigo = idValue;
     dataStore[currentSheet].push(form);
   }
   closeModal();
@@ -230,8 +231,7 @@ function saveItemLocal(){
 
   // Sync
   let action = editingIndex!==null?'update':'add';
-  if(editingIndex!==null) form.idValue=currentSheet==='tienda'?form.codigo:dataStore[currentSheet][editingIndex].codigo||dataStore[currentSheet][editingIndex].id;
-  fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action,...form}) })
+  fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action,idValue,...form}) })
     .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error al sincronizar', res.msg); })
     .catch(e=>console.log('Error al sincronizar', e));
 }
@@ -267,5 +267,6 @@ function nav(sheet){ renderTable(sheet); }
 Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
   .then(()=>{ renderDashboard(); });
 </script>
+
 </body>
 </html>
