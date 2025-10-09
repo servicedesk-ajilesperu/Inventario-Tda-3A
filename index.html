@@ -116,9 +116,7 @@ let currentSheet = '';
 let editingIndex = null;
 
 // SIDEBAR
-document.getElementById('toggleSidebar').addEventListener('click',()=>{
-  document.getElementById('sidebar').classList.toggle('collapsed');
-});
+document.getElementById('toggleSidebar').addEventListener('click',()=>{ document.getElementById('sidebar').classList.toggle('collapsed'); });
 document.querySelectorAll('.accordion').forEach(acc=>{
   acc.addEventListener('click', function(){
     this.classList.toggle('active');
@@ -127,7 +125,7 @@ document.querySelectorAll('.accordion').forEach(acc=>{
   });
 });
 
-// FETCH
+// FETCH JSONP
 function fetchSheet(sheet){
   return new Promise((resolve,reject)=>{
     const cb = 'cb_'+Math.random().toString(36).substring(2,15);
@@ -145,48 +143,39 @@ function fetchSheet(sheet){
 
 // RENDER TABLE
 function renderTable(sheet){
-  document.getElementById('dashboard-cards').innerHTML = ''; // oculta dashboard
-  fetchSheet(sheet).then(data=>{
-    currentSheet = sheet;
-    document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
+  if(sheet==='dashboard'){ renderDashboard(); return; }
+  document.getElementById('dashboard-cards').innerHTML = '';
+  currentSheet = sheet;
+  document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
 
-    let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
-    if(data.length>0){
-      html += `<table><thead><tr>`;
-      Object.keys(data[0]).forEach(h=>{
-        if(currentSheet!=='inventario' && currentSheet!=='categoria' || h!=='id' && h!=='codigo'){
-          html+=`<th>${h}</th>`;
+  let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
+  const data = dataStore[sheet];
+  if(data.length>0){
+    html += `<table><thead><tr>`;
+    Object.keys(data[0]).forEach(h=>{
+      if(sheet!=='inventario' && sheet!=='categoria' || h!=='codigo') html+=`<th>${h}</th>`;
+    });
+    html += `<th>Acciones</th></tr></thead><tbody>`;
+    data.forEach((r,i)=>{
+      html+=`<tr>`;
+      Object.entries(r).forEach(([k,v])=>{
+        if(sheet==='inventario'){
+          if(k==='categoria') v = getNombre('categoria',v);
+          if(k==='tienda') v = getNombre('tienda',v);
+          if(k==='codigo') return;
         }
+        if(sheet==='categoria' && k==='codigo') return;
+        html+=`<td>${v}</td>`;
       });
-      html += `<th>Acciones</th></tr></thead><tbody>`;
-      data.forEach((r,i)=>{
-        html+=`<tr>`;
-        Object.entries(r).forEach(([k,v])=>{
-          if(currentSheet!=='inventario' && currentSheet!=='categoria' || k!=='id' && k!=='codigo'){
-            // para inventario y categoria se oculta id/codigo
-            if(currentSheet==='inventario' && k==='categoria'){
-              const cat = dataStore.categoria.find(c=>c.codigo==v||c.id==v);
-              v = cat?cat.nombre:v;
-            }
-            if(currentSheet==='inventario' && k==='tienda'){
-              const t = dataStore.tienda.find(ti=>ti.codigo==v||ti.id==v);
-              v = t?t.nombre:v;
-            }
-            html+=`<td>${v}</td>`;
-          }
-        });
-        html+=`<td class="actions">
-          <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
-          <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
-        </td>`;
-        html+=`</tr>`;
-      });
-      html+=`</tbody></table>`;
-    } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
-    document.getElementById('content').innerHTML = html;
-  }).catch(err=>{
-    document.getElementById('content').innerHTML = `<p style="color:red;">${err}</p>`;
-  });
+      html+=`<td class="actions">
+        <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
+      </td>`;
+      html+=`</tr>`;
+    });
+    html+=`</tbody></table>`;
+  } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
+  document.getElementById('content').innerHTML = html;
 }
 
 // FILTRO
@@ -196,6 +185,11 @@ function filterTable(value){
   Array.from(tbody.rows).forEach(r=>
     r.style.display = Array.from(r.cells).some(c=>c.textContent.toLowerCase().includes(value.toLowerCase())) ? '' : 'none'
   );
+}
+
+function getNombre(sheet, codigo){
+  const item = dataStore[sheet].find(e=> e.codigo===codigo || e.id===codigo);
+  return item ? item.nombre : codigo;
 }
 
 // MODAL
@@ -218,13 +212,9 @@ function openAddForm(sheet,index=null){
           <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
           <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">
           <select id="categoria"><option value="">Selecciona Categoria</option>`;
-    dataStore.categoria.forEach(c=>{
-      html+=`<option value="${c.codigo||c.id}" ${item.categoria==(c.codigo||c.id)?'selected':''}>${c.nombre}</option>`;
-    });
+    dataStore.categoria.forEach(c=>{ html+=`<option value="${c.codigo||c.id}" ${item.categoria==c.codigo?'selected':''}>${c.nombre}</option>`; });
     html+=`</select><select id="tienda"><option value="">Selecciona Tienda</option>`;
-    dataStore.tienda.forEach(t=>{
-      html+=`<option value="${t.codigo||t.id}" ${item.tienda==(t.codigo||t.id)?'selected':''}>${t.nombre}</option>`;
-    });
+    dataStore.tienda.forEach(t=>{ html+=`<option value="${t.codigo||t.id}" ${item.tienda==t.codigo?'selected':''}>${t.nombre}</option>`; });
     html+=`</select>`;
   }
   document.getElementById('modal-form').innerHTML = html;
@@ -232,13 +222,13 @@ function openAddForm(sheet,index=null){
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// SAVE ITEM
+// SAVE ITEM (Inventario igual que Tienda)
 function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value.trim());
-
   if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
 
+  // Guardado local
   if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
   } else {
@@ -248,7 +238,7 @@ function saveItem(){
   closeModal();
   renderTable(currentSheet);
 
-  // Sincroniza con App Web
+  // Sincronización App Web
   const payload = {...form};
   if(editingIndex!==null) payload.idValue = dataStore[currentSheet][editingIndex].codigo;
 
@@ -274,9 +264,8 @@ function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
     const id = currentSheet==='tienda'?dataStore[currentSheet][i].codigo:dataStore[currentSheet][i].codigo||dataStore[currentSheet][i].id;
     fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id,codigo:id}) })
-    .then(r=>r.json())
-    .then(res=>{
-      if(res.success) fetchSheet(currentSheet).then(()=>renderTable(currentSheet));
+    .then(r=>r.json()).then(res=>{
+      if(res.success) renderTable(currentSheet);
       else alert('Error: '+res.msg);
     }).catch(e=>alert('Error al eliminar'));
   }
@@ -299,7 +288,6 @@ function nav(sheet){ renderTable(sheet); }
 // INIT
 Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
   .then(()=>{ renderDashboard(); });
-
 </script>
 
 </body>
