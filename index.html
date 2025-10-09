@@ -6,7 +6,7 @@
 <title>Inventario Tiendas 3A</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
-/* === Estilos previos === */
+/* === ESTILOS === */
 body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 * { box-sizing:border-box; }
 .sidebar { width: 260px; position:fixed; height:100%; background:#ff4d00; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
@@ -114,8 +114,10 @@ let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
 
-// Sidebar toggle
-document.getElementById('toggleSidebar').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('collapsed'));
+// Sidebar
+document.getElementById('toggleSidebar').addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
 document.querySelectorAll('.accordion').forEach(acc=>{
   acc.addEventListener('click', function(){
     this.classList.toggle('active');
@@ -124,7 +126,7 @@ document.querySelectorAll('.accordion').forEach(acc=>{
   });
 });
 
-// FETCH SHEET
+// Fetch
 function fetchSheet(sheet){
   return new Promise((resolve,reject)=>{
     const cb = 'cb_'+Math.random().toString(36).substring(2,15);
@@ -140,7 +142,7 @@ function fetchSheet(sheet){
   });
 }
 
-// RENDER TABLE
+// Render Table
 function renderTable(sheet){
   if(sheet==='dashboard'){ renderDashboard(); return; }
   document.getElementById('dashboard-cards').innerHTML = '';
@@ -151,15 +153,24 @@ function renderTable(sheet){
   if(data.length>0){
     html += `<table><thead><tr>`;
     Object.keys(data[0]).forEach(h=>{
-      if((sheet==='inventario'||sheet==='categoria') && h.toLowerCase().includes('id')) return;
+      if((sheet==='inventario' || sheet==='categoria') && h.toLowerCase() === 'id') return;
       html+=`<th>${h}</th>`;
     });
     html += `<th>Acciones</th></tr></thead><tbody>`;
     data.forEach((r,i)=>{
       html+=`<tr>`;
       Object.keys(r).forEach(k=>{
-        if((sheet==='inventario'||sheet==='categoria') && k.toLowerCase().includes('id')) return;
-        html+=`<td>${r[k]}</td>`;
+        if((sheet==='inventario' || sheet==='categoria') && k.toLowerCase()==='id') return;
+        let value = r[k];
+        if(sheet==='inventario' && k==='categoria'){
+          const c = dataStore.categoria.find(c=>c.codigo===value || c.id===value);
+          value = c ? c.nombre : value;
+        }
+        if(sheet==='inventario' && k==='tienda'){
+          const t = dataStore.tienda.find(t=>t.codigo===value || t.id===value);
+          value = t ? t.nombre : value;
+        }
+        html+=`<td>${value}</td>`;
       });
       html+=`<td class="actions">
         <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
@@ -199,14 +210,15 @@ function openAddForm(sheet,index=null){
           <input type="text" id="serie" placeholder="Serie" value="${item.serie||''}">
           <input type="text" id="equipo" placeholder="Equipo" value="${item.equipo||''}">
           <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
-          <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">
-          <select id="categoria"><option value="">Selecciona Categoria</option>`;
+          <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">`;
+    html+=`<select id="categoria"><option value="">Selecciona Categoria</option>`;
     dataStore.categoria.forEach(c=>{
-      html+=`<option value="${c.codigo||c.id}" ${item.categoria==c.codigo?'selected':''}>${c.nombre}</option>`;
+      html+=`<option value="${c.codigo||c.id}" ${item.categoria==(c.codigo||c.id)?'selected':''}>${c.nombre}</option>`;
     });
-    html+=`</select><select id="tienda"><option value="">Selecciona Tienda</option>`;
+    html+=`</select>`;
+    html+=`<select id="tienda"><option value="">Selecciona Tienda</option>`;
     dataStore.tienda.forEach(t=>{
-      html+=`<option value="${t.codigo||t.id}" ${item.tienda==t.codigo?'selected':''}>${t.nombre}</option>`;
+      html+=`<option value="${t.codigo||t.id}" ${item.tienda==(t.codigo||t.id)?'selected':''}>${t.nombre}</option>`;
     });
     html+=`</select>`;
   }
@@ -215,11 +227,11 @@ function openAddForm(sheet,index=null){
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// Save function igual a Tienda
+// Save
 function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value);
-  let idValue = editingIndex!==null ? dataStore[currentSheet][editingIndex].codigo||dataStore[currentSheet][editingIndex].id : form.codigo || Date.now();
+  let idValue = editingIndex!==null ? dataStore[currentSheet][editingIndex].codigo || dataStore[currentSheet][editingIndex].id : form.codigo || Date.now();
   if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
   } else {
@@ -229,7 +241,6 @@ function saveItem(){
   closeModal();
   renderTable(currentSheet);
 
-  // Sync
   let action = editingIndex!==null?'update':'add';
   fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action,idValue,...form}) })
     .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error al sincronizar', res.msg); })
@@ -241,11 +252,9 @@ function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
     const id = currentSheet==='tienda'?dataStore[currentSheet][i].codigo:dataStore[currentSheet][i].codigo||dataStore[currentSheet][i].id;
-    dataStore[currentSheet].splice(i,1);
-    renderTable(currentSheet);
     fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id,codigo:id}) })
-      .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error al sincronizar', res.msg); })
-      .catch(e=>console.log('Error al sincronizar', e));
+      .then(r=>r.json()).then(res=>{ if(res.success) renderTable(currentSheet); else alert('Error: '+res.msg); })
+      .catch(e=>alert('Error al eliminar'));
   }
 }
 
@@ -260,7 +269,7 @@ function renderDashboard(){
   document.getElementById('content').innerHTML='';
 }
 
-// Nav
+// Navigation
 function nav(sheet){ renderTable(sheet); }
 
 // Init
