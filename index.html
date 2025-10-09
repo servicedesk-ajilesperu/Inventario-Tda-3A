@@ -64,28 +64,28 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
   <div class="menu-section">
     <button class="accordion active"><i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel" style="max-height:500px;">
-      <button onclick="renderDashboard();collapsePanels()"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
+      <button onclick="renderDashboard()"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
     </div>
   </div>
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-computer"></i><span>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
-      <button onclick="openAddForm('inventario');collapsePanels()"><i class="fa-solid fa-plus"></i><span>Agregar Inventario</span></button>
-      <button onclick="nav('inventario');collapsePanels()"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
+      <button onclick="openAddForm('inventario')"><i class="fa-solid fa-plus"></i><span>Agregar Inventario</span></button>
+      <button onclick="nav('inventario')"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
     </div>
   </div>
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorias</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
-      <button onclick="openAddForm('categoria');collapsePanels()"><i class="fa-solid fa-plus"></i><span>Agregar Categoria</span></button>
-      <button onclick="nav('categoria');collapsePanels()"><i class="fa-solid fa-table"></i><span>Ver Categorias</span></button>
+      <button onclick="openAddForm('categoria')"><i class="fa-solid fa-plus"></i><span>Agregar Categoria</span></button>
+      <button onclick="nav('categoria')"><i class="fa-solid fa-table"></i><span>Ver Categorias</span></button>
     </div>
   </div>
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-store"></i><span>Tiendas</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
-      <button onclick="openAddForm('tienda');collapsePanels()"><i class="fa-solid fa-plus"></i><span>Agregar Tienda</span></button>
-      <button onclick="nav('tienda');collapsePanels()"><i class="fa-solid fa-table"></i><span>Ver Tiendas</span></button>
+      <button onclick="openAddForm('tienda')"><i class="fa-solid fa-plus"></i><span>Agregar Tienda</span></button>
+      <button onclick="nav('tienda')"><i class="fa-solid fa-table"></i><span>Ver Tiendas</span></button>
     </div>
   </div>
 </aside>
@@ -113,7 +113,7 @@ let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
 
-// SIDEBAR
+// Sidebar toggle
 document.getElementById('toggleSidebar').addEventListener('click',()=>{
   document.getElementById('sidebar').classList.toggle('collapsed');
 });
@@ -124,11 +124,6 @@ document.querySelectorAll('.accordion').forEach(acc=>{
     panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight+'px';
   });
 });
-function collapsePanels(){
-  document.querySelectorAll('.menu-section .panel').forEach(p=>{
-    if(p.style.maxHeight && !p.previousElementSibling.contains(event.target)) p.style.maxHeight=null;
-  });
-}
 
 // FETCH SHEET
 function fetchSheet(sheet){
@@ -150,38 +145,35 @@ function fetchSheet(sheet){
 function renderTable(sheet){
   if(sheet==='dashboard'){ renderDashboard(); return; }
   document.getElementById('dashboard-cards').innerHTML = '';
-  fetchSheet(sheet).then(data=>{
-    currentSheet = sheet;
-    document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
-    let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
-    if(data.length>0){
-      html += `<table><thead><tr>`;
-      Object.keys(data[0]).forEach(h=>{
-        if((sheet==='inventario'||sheet==='categoria') && h.toLowerCase().includes('id')) return;
-        html+=`<th>${h}</th>`;
+  currentSheet = sheet;
+  document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
+  let data = dataStore[sheet];
+  let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
+  if(data.length>0){
+    html += `<table><thead><tr>`;
+    Object.keys(data[0]).forEach(h=>{
+      if((sheet==='inventario'||sheet==='categoria') && h.toLowerCase().includes('id')) return;
+      html+=`<th>${h}</th>`;
+    });
+    html += `<th>Acciones</th></tr></thead><tbody>`;
+    data.forEach((r,i)=>{
+      html+=`<tr>`;
+      Object.keys(r).forEach(k=>{
+        if((sheet==='inventario'||sheet==='categoria') && k.toLowerCase().includes('id')) return;
+        html+=`<td>${r[k]}</td>`;
       });
-      html += `<th>Acciones</th></tr></thead><tbody>`;
-      data.forEach((r,i)=>{
-        html+=`<tr>`;
-        Object.keys(r).forEach(k=>{
-          if((sheet==='inventario'||sheet==='categoria') && k.toLowerCase().includes('id')) return;
-          html+=`<td>${r[k]}</td>`;
-        });
-        html+=`<td class="actions">
-          <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
-          <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
-        </td>`;
-        html+=`</tr>`;
-      });
-      html+=`</tbody></table>`;
-    } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
-    document.getElementById('content').innerHTML = html;
-  }).catch(err=>{
-    document.getElementById('content').innerHTML = `<p style="color:red;">${err}</p>`;
-  });
+      html+=`<td class="actions">
+        <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
+      </td>`;
+      html+=`</tr>`;
+    });
+    html+=`</tbody></table>`;
+  } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
+  document.getElementById('content').innerHTML = html;
 }
 
-// FILTRO
+// Filter
 function filterTable(value){
   const tbody = document.querySelector('tbody');
   if(!tbody) return;
@@ -190,7 +182,7 @@ function filterTable(value){
   );
 }
 
-// MODAL
+// Modal
 function openAddForm(sheet,index=null){
   currentSheet=sheet; editingIndex=index;
   document.getElementById('modal-title').textContent = index!==null?'Editar '+sheet:'Agregar '+sheet;
@@ -204,12 +196,12 @@ function openAddForm(sheet,index=null){
           <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
   } else if(sheet==='inventario'){
     const item=index!==null?dataStore.inventario[index]:{};
-    html+=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
-           <input type="text" id="serie" placeholder="Serie" value="${item.serie||''}">
-           <input type="text" id="equipo" placeholder="Equipo" value="${item.equipo||''}">
-           <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
-           <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">
-           <select id="categoria"><option value="">Selecciona Categoria</option>`;
+    html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
+          <input type="text" id="serie" placeholder="Serie" value="${item.serie||''}">
+          <input type="text" id="equipo" placeholder="Equipo" value="${item.equipo||''}">
+          <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
+          <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">
+          <select id="categoria"><option value="">Selecciona Categoria</option>`;
     dataStore.categoria.forEach(c=>{
       html+=`<option value="${c.codigo||c.id}" ${item.categoria==c.codigo?'selected':''}>${c.nombre}</option>`;
     });
@@ -224,43 +216,40 @@ function openAddForm(sheet,index=null){
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// GUARDAR LOCAL Y DESPUÉS SINCRONIZAR
+// Save local + sync
 function saveItemLocal(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value);
   if(editingIndex!==null){
-    // actualizar local
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
   } else {
     dataStore[currentSheet].push(form);
   }
   closeModal();
   renderTable(currentSheet);
-  
-  // sincronizar en app web en segundo plano
+
+  // Sync
   let action = editingIndex!==null?'update':'add';
   if(editingIndex!==null) form.idValue=currentSheet==='tienda'?form.codigo:dataStore[currentSheet][editingIndex].codigo||dataStore[currentSheet][editingIndex].id;
   fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action,...form}) })
-  .then(r=>r.json()).then(res=>{
-    if(!res.success) alert('Error al sincronizar: '+res.msg);
-  }).catch(e=>console.log('Error al sincronizar', e));
+    .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error al sincronizar', res.msg); })
+    .catch(e=>console.log('Error al sincronizar', e));
 }
 
-// EDIT & DELETE
+// Edit & Delete
 function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
     const id = currentSheet==='tienda'?dataStore[currentSheet][i].codigo:dataStore[currentSheet][i].codigo||dataStore[currentSheet][i].id;
-    dataStore[currentSheet].splice(i,1); // eliminar local
+    dataStore[currentSheet].splice(i,1);
     renderTable(currentSheet);
     fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id,codigo:id}) })
-    .then(r=>r.json()).then(res=>{
-      if(!res.success) alert('Error al sincronizar: '+res.msg);
-    }).catch(e=>console.log('Error al sincronizar', e));
+      .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error al sincronizar', res.msg); })
+      .catch(e=>console.log('Error al sincronizar', e));
   }
 }
 
-// DASHBOARD
+// Dashboard
 function renderDashboard(){
   const cardsDiv=document.getElementById('dashboard-cards');
   cardsDiv.innerHTML='';
@@ -271,13 +260,12 @@ function renderDashboard(){
   document.getElementById('content').innerHTML='';
 }
 
-// NAV
+// Nav
 function nav(sheet){ renderTable(sheet); }
 
-// INIT
+// Init
 Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
   .then(()=>{ renderDashboard(); });
-
 </script>
 </body>
 </html>
