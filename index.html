@@ -65,28 +65,28 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
   <div class="menu-section">
     <button class="accordion active"><i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel" style="max-height:500px;">
-      <button onclick="renderDashboard()"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
+      <button onclick="renderDashboard();collapseSidebar()"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
     </div>
   </div>
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-computer"></i><span>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
-      <button onclick="openAddForm('inventario')"><i class="fa-solid fa-plus"></i><span>Agregar Inventario</span></button>
-      <button onclick="nav('inventario')"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
+      <button onclick="openAddForm('inventario');collapseSidebar()"><i class="fa-solid fa-plus"></i><span>Agregar Inventario</span></button>
+      <button onclick="nav('inventario');collapseSidebar()"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
     </div>
   </div>
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorias</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
-      <button onclick="openAddForm('categoria')"><i class="fa-solid fa-plus"></i><span>Agregar Categoria</span></button>
-      <button onclick="nav('categoria')"><i class="fa-solid fa-table"></i><span>Ver Categorias</span></button>
+      <button onclick="openAddForm('categoria');collapseSidebar()"><i class="fa-solid fa-plus"></i><span>Agregar Categoria</span></button>
+      <button onclick="nav('categoria');collapseSidebar()"><i class="fa-solid fa-table"></i><span>Ver Categorias</span></button>
     </div>
   </div>
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-store"></i><span>Tiendas</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
-      <button onclick="openAddForm('tienda')"><i class="fa-solid fa-plus"></i><span>Agregar Tienda</span></button>
-      <button onclick="nav('tienda')"><i class="fa-solid fa-table"></i><span>Ver Tiendas</span></button>
+      <button onclick="openAddForm('tienda');collapseSidebar()"><i class="fa-solid fa-plus"></i><span>Agregar Tienda</span></button>
+      <button onclick="nav('tienda');collapseSidebar()"><i class="fa-solid fa-table"></i><span>Ver Tiendas</span></button>
     </div>
   </div>
 </aside>
@@ -109,13 +109,12 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-// CONFIG
 const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
 
-// === SIDEBAR ===
+// SIDEBAR
 document.getElementById('toggleSidebar').addEventListener('click',()=>{
   document.getElementById('sidebar').classList.toggle('collapsed');
 });
@@ -126,8 +125,9 @@ document.querySelectorAll('.accordion').forEach(acc=>{
     panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight+'px';
   });
 });
+function collapseSidebar(){ document.getElementById('sidebar').classList.add('collapsed'); }
 
-// === FETCH JSONP ===
+// FETCH SHEET
 function fetchSheet(sheet){
   return new Promise((resolve,reject)=>{
     const cb = 'cb_'+Math.random().toString(36).substring(2,15);
@@ -143,43 +143,42 @@ function fetchSheet(sheet){
   });
 }
 
-// === RENDER TABLE ===
+// RENDER TABLE
 function renderTable(sheet){
   if(sheet==='dashboard'){ renderDashboard(); return; }
   document.getElementById('dashboard-cards').innerHTML = '';
-
-  const data = dataStore[sheet] || [];
-  currentSheet = sheet;
-  document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
-
-  let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
-  if(data.length>0){
-    html += `<table><thead><tr>`;
-    Object.keys(data[0]).forEach(h=>{
-      if(sheet!=='tienda' && h.toLowerCase().includes('id')) return; // ocultar ID
-      if(sheet==='tienda' && h.toLowerCase().includes('id')) return; // ocultar id en tiendas
-      html+=`<th>${h}</th>`;
-    });
-    html += `<th>Acciones</th></tr></thead><tbody>`;
-    data.forEach((r,i)=>{
-      html+=`<tr>`;
-      Object.entries(r).forEach(([k,v])=>{
-        if(sheet!=='tienda' && k.toLowerCase().includes('id')) return;
-        if(sheet==='tienda' && k.toLowerCase().includes('id')) return;
-        html+=`<td>${v}</td>`;
+  fetchSheet(sheet).then(data=>{
+    currentSheet = sheet;
+    document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
+    let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
+    if(data.length>0){
+      html += `<table><thead><tr>`;
+      Object.keys(data[0]).forEach(h=>{
+        if((sheet==='inventario'||sheet==='categoria') && h.toLowerCase().includes('id')) return; // ocultar id
+        html+=`<th>${h}</th>`;
       });
-      html+=`<td class="actions">
-        <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
-        <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
-      </td>`;
-      html+=`</tr>`;
-    });
-    html+=`</tbody></table>`;
-  } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
-  document.getElementById('content').innerHTML = html;
+      html += `<th>Acciones</th></tr></thead><tbody>`;
+      data.forEach((r,i)=>{
+        html+=`<tr>`;
+        Object.keys(r).forEach(k=>{
+          if((sheet==='inventario'||sheet==='categoria') && k.toLowerCase().includes('id')) return;
+          html+=`<td>${r[k]}</td>`;
+        });
+        html+=`<td class="actions">
+          <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
+        </td>`;
+        html+=`</tr>`;
+      });
+      html+=`</tbody></table>`;
+    } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
+    document.getElementById('content').innerHTML = html;
+  }).catch(err=>{
+    document.getElementById('content').innerHTML = `<p style="color:red;">${err}</p>`;
+  });
 }
 
-// === FILTRO ===
+// FILTRO
 function filterTable(value){
   const tbody = document.querySelector('tbody');
   if(!tbody) return;
@@ -188,7 +187,7 @@ function filterTable(value){
   );
 }
 
-// === MODAL ===
+// MODAL
 function openAddForm(sheet,index=null){
   currentSheet=sheet; editingIndex=index;
   document.getElementById('modal-title').textContent = index!==null?'Editar '+sheet:'Agregar '+sheet;
@@ -202,16 +201,16 @@ function openAddForm(sheet,index=null){
           <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
   } else if(sheet==='inventario'){
     const item=index!==null?dataStore.inventario[index]:{};
-    html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
-          <input type="text" id="nombre" placeholder="Nombre de Item" value="${item.nombre||''}">
-          <input type="number" id="cantidad" placeholder="Cantidad" value="${item.cantidad||''}">
-          <input type="text" id="descripcion" placeholder="Descripción" value="${item.descripcion||''}">
-          <select id="categoria"><option value="">Selecciona Categoria</option>`;
+    html+=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
+           <input type="text" id="serie" placeholder="Serie" value="${item.serie||''}">
+           <input type="text" id="equipo" placeholder="Equipo" value="${item.equipo||''}">
+           <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
+           <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">
+           <select id="categoria"><option value="">Selecciona Categoria</option>`;
     dataStore.categoria.forEach(c=>{
       html+=`<option value="${c.codigo||c.id}" ${item.categoria==c.codigo?'selected':''}>${c.nombre}</option>`;
     });
-    html+=`</select>`;
-    html+=`<select id="tienda"><option value="">Selecciona Tienda</option>`;
+    html+=`</select><select id="tienda"><option value="">Selecciona Tienda</option>`;
     dataStore.tienda.forEach(t=>{
       html+=`<option value="${t.codigo||t.id}" ${item.tienda==t.codigo?'selected':''}>${t.nombre}</option>`;
     });
@@ -222,7 +221,7 @@ function openAddForm(sheet,index=null){
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// === SAVE ITEM ===
+// SAVE ITEM
 function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value);
@@ -235,7 +234,7 @@ function saveItem(){
   }).catch(e=>alert('Error al guardar'));
 }
 
-// === EDIT & DELETE ===
+// EDIT & DELETE
 function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
@@ -248,7 +247,7 @@ function deleteItem(i){
   }
 }
 
-// === DASHBOARD ===
+// DASHBOARD
 function renderDashboard(){
   const cardsDiv=document.getElementById('dashboard-cards');
   cardsDiv.innerHTML='';
@@ -259,16 +258,12 @@ function renderDashboard(){
   document.getElementById('content').innerHTML='';
 }
 
-// === NAV ===
-function nav(sheet){
-  if(dataStore[sheet].length>0){ renderTable(sheet); }
-  else fetchSheet(sheet).then(()=>renderTable(sheet));
-}
+// NAV
+function nav(sheet){ renderTable(sheet); }
 
-// === INIT ===
+// INIT
 Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
   .then(()=>{ renderDashboard(); });
 </script>
-
 </body>
 </html>
