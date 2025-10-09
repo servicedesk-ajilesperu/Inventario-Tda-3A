@@ -109,7 +109,7 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
+const APP_SCRIPT_URL = 'TU_URL_APP_SCRIPT'; // coloca tu URL aquí
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
@@ -142,8 +142,51 @@ function fetchSheet(sheet){
   });
 }
 
-// Build form dinámico
-function buildForm(sheet,index=null){
+// Render Table
+function renderTable(sheet){
+  if(sheet==='dashboard'){ renderDashboard(); return; }
+  document.getElementById('dashboard-cards').innerHTML = '';
+  fetchSheet(sheet).then(data=>{
+    currentSheet = sheet;
+    document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
+
+    let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
+    if(data.length>0){
+      html += `<table><thead><tr>`;
+      Object.keys(data[0]).forEach(h=>{
+        if((sheet==='inventario' || sheet==='categoria') && h.toLowerCase()==='codigo') return; 
+        html+=`<th>${h}</th>`;
+      });
+      html += `<th>Acciones</th></tr></thead><tbody>`;
+      data.forEach((r,i)=>{
+        html+=`<tr>`;
+        Object.entries(r).forEach(([k,v])=>{
+          if((sheet==='inventario' || sheet==='categoria') && k.toLowerCase()==='codigo') return;
+          html+=`<td>${v}</td>`;
+        });
+        html+=`<td class="actions">
+          <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
+        </td></tr>`;
+      });
+      html+=`</tbody></table>`;
+    } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
+    document.getElementById('content').innerHTML = html;
+  });
+}
+
+// Filter
+function filterTable(value){
+  const tbody = document.querySelector('tbody');
+  if(!tbody) return;
+  Array.from(tbody.rows).forEach(r=>
+    r.style.display = Array.from(r.cells).some(c=>c.textContent.toLowerCase().includes(value.toLowerCase())) ? '' : 'none'
+  );
+}
+
+// Modal
+function openAddForm(sheet,index=null){
+  currentSheet=sheet; editingIndex=index;
   document.getElementById('modal-title').textContent = index!==null?'Editar '+sheet:'Agregar '+sheet;
   let html='';
   if(sheet==='categoria'){
@@ -162,14 +205,14 @@ function buildForm(sheet,index=null){
           <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
           <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">`;
 
-    // Combo categorías
+    // Combo Categoría
     html+=`<select id="categoria"><option value="">Selecciona Categoria</option>`;
     dataStore.categoria.forEach(c=>{
       html+=`<option value="${c.codigo}" ${item.categoria==c.codigo?'selected':''}>${c.nombre}</option>`;
     });
     html+=`</select>`;
 
-    // Combo tiendas
+    // Combo Tienda
     html+=`<select id="tienda"><option value="">Selecciona Tienda</option>`;
     dataStore.tienda.forEach(t=>{
       html+=`<option value="${t.codigo}" ${item.tienda==t.codigo?'selected':''}>${t.nombre}</option>`;
@@ -177,34 +220,17 @@ function buildForm(sheet,index=null){
     html+=`</select>`;
   }
   document.getElementById('modal-form').innerHTML = html;
-}
-
-// Modal
-function openAddForm(sheet,index=null){
-  currentSheet=sheet; editingIndex=index;
-  if(sheet==='inventario'){
-    Promise.all([fetchSheet('categoria'), fetchSheet('tienda')]).then(()=>{
-      buildForm(sheet,index);
-      document.getElementById('modal').style.display='flex';
-    });
-  } else {
-    buildForm(sheet,index);
-    document.getElementById('modal').style.display='flex';
-  }
+  document.getElementById('modal').style.display='flex';
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// Save Item
+// Save Item (local + sync)
 function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value.trim());
 
-  if(currentSheet==='inventario' && (!form.codigo || !form.categoria || !form.tienda)){ 
-    alert('Todos los campos son obligatorios en inventario');
-    return; 
-  }
+  if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
 
-  // Guardado local
   if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
   } else {
@@ -214,13 +240,11 @@ function saveItem(){
   closeModal();
   renderTable(currentSheet);
 
-  // Sincronización con AppScript
+  // Sync
   const payload = {...form, sheet: currentSheet, action: editingIndex!==null?'update':'add'};
-  if(editingIndex!==null) {
-    payload.idValue = dataStore[currentSheet][editingIndex].codigo;
-  }
+  if(editingIndex!==null) payload.idValue = dataStore[currentSheet][editingIndex].idValue;
 
-  fetch(APP_SCRIPT_URL, {
+  fetch(APP_SCRIPT_URL,{
     method:'POST',
     body:new URLSearchParams(payload)
   })
@@ -228,50 +252,19 @@ function saveItem(){
   .then(res=>{
     if(res.success){
       if(editingIndex===null && res.idValue){
-        dataStore[currentSheet][dataStore[currentSheet].length-1].codigo = res.idValue;
+        dataStore[currentSheet][dataStore[currentSheet].length-1].idValue = res.idValue;
         renderTable(currentSheet);
       }
-    } else {
-      alert('Error sincronizando con la App Web: '+res.msg);
-    }
+    } else alert('Error sincronizando con App Web: '+res.msg);
   })
-  .catch(e=>alert('Error al sincronizar con la App Web: '+e.message));
-}
-
-// Render Table
-function renderTable(sheet){
-  if(sheet==='dashboard'){ renderDashboard(); return; }
-  document.getElementById('dashboard-cards').innerHTML = '';
-  fetchSheet(sheet).then(data=>{
-    currentSheet = sheet;
-    document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
-
-    let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
-    if(data.length>0){
-      html += `<table><thead><tr>`;
-      Object.keys(data[0]).forEach(h=>{ if((sheet==='inventario' || sheet==='categoria') && h.toLowerCase()==='codigo') return; html+=`<th>${h}</th>`; });
-      html += `<th>Acciones</th></tr></thead><tbody>`;
-      data.forEach((r,i)=>{ html+=`<tr>`; Object.entries(r).forEach(([k,v])=>{ if((sheet==='inventario' || sheet==='categoria') && k.toLowerCase()==='codigo') return; html+=`<td>${v}</td>`; }); html+=`<td class="actions"><button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button><button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button></td></tr>`; });
-      html+=`</tbody></table>`;
-    } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
-    document.getElementById('content').innerHTML = html;
-  });
-}
-
-// Filter
-function filterTable(value){
-  const tbody = document.querySelector('tbody');
-  if(!tbody) return;
-  Array.from(tbody.rows).forEach(r=>
-    r.style.display = Array.from(r.cells).some(c=>c.textContent.toLowerCase().includes(value.toLowerCase())) ? '' : 'none'
-  );
+  .catch(e=>alert('Error al sincronizar con App Web: '+e.message));
 }
 
 // Edit & Delete
 function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
-    const id = dataStore[currentSheet][i].codigo;
+    const id = dataStore[currentSheet][i].idValue || dataStore[currentSheet][i].codigo;
     fetch(APP_SCRIPT_URL,{
       method:'POST',
       body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id,codigo:id})
@@ -298,9 +291,9 @@ function renderDashboard(){
 function nav(sheet){ renderTable(sheet); }
 
 // Init
-Promise.all([fetchSheet('inventario'), fetchSheet('categoria'), fetchSheet('tienda')]).then(()=>{
-  renderDashboard();
-});
+Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
+  .then(()=>{ renderDashboard(); });
 </script>
+
 </body>
 </html>
