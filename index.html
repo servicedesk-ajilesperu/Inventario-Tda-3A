@@ -148,30 +148,35 @@ function renderTable(sheet){
   if(sheet==='dashboard'){ renderDashboard(); return; }
   document.getElementById('dashboard-cards').innerHTML = ''; // oculta dashboard
 
-  fetchSheet(sheet).then(data=>{
-    currentSheet = sheet;
-    document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
+  const data = dataStore[sheet] || [];
+  currentSheet = sheet;
+  document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
 
-    let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
-    if(data.length>0){
-      html += `<table><thead><tr>`;
-      Object.keys(data[0]).forEach(h=> html+=`<th>${h}</th>`);
-      html += `<th>Acciones</th></tr></thead><tbody>`;
-      data.forEach((r,i)=>{
-        html+=`<tr>`;
-        Object.values(r).forEach(v=> html+=`<td>${v}</td>`);
-        html+=`<td class="actions">
-          <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
-          <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
-        </td>`;
-        html+=`</tr>`;
+  let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
+  if(data.length>0){
+    html += `<table><thead><tr>`;
+    Object.keys(data[0]).forEach(h=>{
+      if(sheet!=='tienda' && h.toLowerCase().includes('id')) return; // ocultar id en inventario/categorias
+      if(sheet==='tienda' && h.toLowerCase().includes('id')) return; // ocultar id en tiendas también
+      html+=`<th>${h}</th>`;
+    });
+    html += `<th>Acciones</th></tr></thead><tbody>`;
+    data.forEach((r,i)=>{
+      html+=`<tr>`;
+      Object.entries(r).forEach(([k,v])=>{
+        if(sheet!=='tienda' && k.toLowerCase().includes('id')) return;
+        if(sheet==='tienda' && k.toLowerCase().includes('id')) return;
+        html+=`<td>${v}</td>`;
       });
-      html+=`</tbody></table>`;
-    } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
-    document.getElementById('content').innerHTML = html;
-  }).catch(err=>{
-    document.getElementById('content').innerHTML = `<p style="color:red;">${err}</p>`;
-  });
+      html+=`<td class="actions">
+        <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
+      </td>`;
+      html+=`</tr>`;
+    });
+    html+=`</tbody></table>`;
+  } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
+  document.getElementById('content').innerHTML = html;
 }
 
 // FILTRO
@@ -244,15 +249,18 @@ function deleteItem(i){
 function renderDashboard(){
   const cardsDiv=document.getElementById('dashboard-cards');
   cardsDiv.innerHTML='';
-  cardsDiv.innerHTML+=`<div class="card" onclick="nav('tienda')"><i class="fa-solid fa-store"></i><span>${dataStore.tienda.length}</span>Tiendas</div>`;
-  cardsDiv.innerHTML+=`<div class="card" onclick="nav('categoria')"><i class="fa-solid fa-tags"></i><span>${dataStore.categoria.length}</span>Categorias</div>`;
   cardsDiv.innerHTML+=`<div class="card" onclick="nav('inventario')"><i class="fa-solid fa-computer"></i><span>${dataStore.inventario.length}</span>Inventario</div>`;
+  cardsDiv.innerHTML+=`<div class="card" onclick="nav('categoria')"><i class="fa-solid fa-tags"></i><span>${dataStore.categoria.length}</span>Categorias</div>`;
+  cardsDiv.innerHTML+=`<div class="card" onclick="nav('tienda')"><i class="fa-solid fa-store"></i><span>${dataStore.tienda.length}</span>Tiendas</div>`;
   document.getElementById('main-title').textContent = 'Dashboard';
   document.getElementById('content').innerHTML='';
 }
 
 // NAV
-function nav(sheet){ renderTable(sheet); }
+function nav(sheet){
+  if(dataStore[sheet].length>0){ renderTable(sheet); }
+  else fetchSheet(sheet).then(()=>renderTable(sheet));
+}
 
 // INIT
 Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
