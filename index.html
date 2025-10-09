@@ -57,16 +57,31 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </head>
 <body>
 
+<!-- === MENU LATERAL === -->
 <aside class="sidebar" id="sidebar">
-  <!-- Tu menú lateral igual que antes -->
+  <div class="brand">
+    <i class="fa-solid fa-boxes-stacked"></i> <span>Inventario 3A</span>
+    <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
+  </div>
+  <div class="menu-section">
+    <button class="accordion">Menú <i class="fa-solid fa-chevron-down"></i></button>
+    <div class="panel">
+      <button onclick="renderDashboard()"><i class="fa-solid fa-gauge"></i> <span>Dashboard</span></button>
+      <button onclick="nav('inventario')"><i class="fa-solid fa-computer"></i> <span>Inventario</span></button>
+      <button onclick="nav('categoria')"><i class="fa-solid fa-tags"></i> <span>Categorías</span></button>
+      <button onclick="nav('tienda')"><i class="fa-solid fa-store"></i> <span>Tiendas</span></button>
+    </div>
+  </div>
 </aside>
 
+<!-- === CONTENIDO PRINCIPAL === -->
 <div class="main">
   <h2 id="main-title">Dashboard</h2>
   <div class="cards" id="dashboard-cards"></div>
   <div id="content"></div>
 </div>
 
+<!-- === MODAL === -->
 <div class="modal-backdrop" id="modal">
   <div class="modal">
     <h3 id="modal-title"></h3>
@@ -79,15 +94,13 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-const APP_SCRIPT_URL = "TU_URL_APPWEB"; 
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = "";
-let editingIndex = null;
 
-// === Render tabla con ID oculto solo en inventario y categoria ===
+// === Render tabla con reglas por sheet ===
 function renderTable(sheet){
   currentSheet = sheet;
-  document.getElementById("dashboard-cards").innerHTML = ""; // ocultar dashboard
+  document.getElementById("dashboard-cards").innerHTML = "";
   document.getElementById("main-title").textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
 
   const data = dataStore[sheet] || [];
@@ -95,14 +108,18 @@ function renderTable(sheet){
   if(data.length>0){
     html += `<table><thead><tr>`;
     Object.keys(data[0]).forEach(h=>{
-      if((sheet==="inventario" || sheet==="categoria") && (h==="id" || h==="codigo")) return; 
+      // Ocultar id solo en inventario y categoría
+      if((sheet==="inventario" || sheet==="categoria") && h==="id") return;
+      // En tiendas mostrar solo código y nombre
+      if(sheet==="tienda" && !(h==="codigo" || h==="nombre")) return;
       html+=`<th>${h}</th>`;
     });
     html += `<th>Acciones</th></tr></thead><tbody>`;
     data.forEach((r,i)=>{
       html+=`<tr>`;
       Object.entries(r).forEach(([k,v])=>{
-        if((sheet==="inventario" || sheet==="categoria") && (k==="id" || k==="codigo")) return;
+        if((sheet==="inventario" || sheet==="categoria") && k==="id") return;
+        if(sheet==="tienda" && !(k==="codigo" || k==="nombre")) return;
         html+=`<td>${v}</td>`;
       });
       html+=`<td class="actions">
@@ -115,7 +132,7 @@ function renderTable(sheet){
   document.getElementById("content").innerHTML = html;
 }
 
-// === Dashboard en orden Inventario → Categorías → Tiendas ===
+// === Dashboard ===
 function renderDashboard(){
   const cardsDiv=document.getElementById("dashboard-cards");
   cardsDiv.innerHTML="";
@@ -125,7 +142,23 @@ function renderDashboard(){
   document.getElementById("content").innerHTML="";
   document.getElementById("main-title").textContent = "Dashboard";
 }
-</script>
 
+function nav(sheet){ renderTable(sheet); }
+
+// === Inicialización ===
+document.addEventListener("DOMContentLoaded", ()=>{
+  renderDashboard();
+  document.querySelectorAll('.accordion').forEach(acc=>{
+    acc.addEventListener('click',function(){
+      this.classList.toggle('active');
+      let panel=this.nextElementSibling;
+      panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight+"px";
+    });
+  });
+  document.getElementById("toggleSidebar").addEventListener("click",()=>{ 
+    document.getElementById("sidebar").classList.toggle("collapsed"); 
+  });
+});
+</script>
 </body>
 </html>
