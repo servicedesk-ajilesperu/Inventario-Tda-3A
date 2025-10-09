@@ -30,7 +30,7 @@ body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 .card i { font-size:2rem; }
 .search-bar { margin-bottom:15px; display:flex; gap:10px; }
 .search-bar input { flex-grow:1; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
-table { width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.05); display:block; overflow-x:auto; white-space:nowrap; }
+table { width:100%; border-collapse:collapse; margin-top:20px; background:white; display:block; overflow-x:auto; white-space:nowrap; box-shadow:0 2px 4px rgba(0,0,0,0.05); }
 th, td { border:1px solid #eee; padding:10px; text-align:center; font-size:0.9rem; }
 th { background:#ff4d00; color:white; font-weight:600; }
 tr:nth-child(even) { background-color:#f9f9f9; }
@@ -62,12 +62,14 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
     <i class="fa-solid fa-boxes-stacked"></i><span>Inventario 3A</span>
     <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
   </div>
+
   <div class="menu-section">
     <button class="accordion active"><i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel" style="max-height:500px;">
       <button onclick="renderDashboard()"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
     </div>
   </div>
+
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-computer"></i><span>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
@@ -75,6 +77,7 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
       <button onclick="nav('inventario')"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
     </div>
   </div>
+
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorias</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
@@ -82,6 +85,7 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
       <button onclick="nav('categoria')"><i class="fa-solid fa-table"></i><span>Ver Categorias</span></button>
     </div>
   </div>
+
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-store"></i><span>Tiendas</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
@@ -109,12 +113,13 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
+// CONFIG
 const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
 
-// Sidebar
+// SIDEBAR
 document.getElementById('toggleSidebar').addEventListener('click',()=>{
   document.getElementById('sidebar').classList.toggle('collapsed');
 });
@@ -126,7 +131,7 @@ document.querySelectorAll('.accordion').forEach(acc=>{
   });
 });
 
-// Fetch
+// FETCH JSONP
 function fetchSheet(sheet){
   return new Promise((resolve,reject)=>{
     const cb = 'cb_'+Math.random().toString(36).substring(2,15);
@@ -142,48 +147,53 @@ function fetchSheet(sheet){
   });
 }
 
-// Render Table
+// RENDER TABLE
 function renderTable(sheet){
   if(sheet==='dashboard'){ renderDashboard(); return; }
   document.getElementById('dashboard-cards').innerHTML = '';
-  currentSheet = sheet;
-  document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
-  let data = dataStore[sheet];
-  let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
-  if(data.length>0){
-    html += `<table><thead><tr>`;
-    Object.keys(data[0]).forEach(h=>{
-      if((sheet==='inventario' || sheet==='categoria') && h.toLowerCase() === 'id') return;
-      html+=`<th>${h}</th>`;
-    });
-    html += `<th>Acciones</th></tr></thead><tbody>`;
-    data.forEach((r,i)=>{
-      html+=`<tr>`;
-      Object.keys(r).forEach(k=>{
-        if((sheet==='inventario' || sheet==='categoria') && k.toLowerCase()==='id') return;
-        let value = r[k];
-        if(sheet==='inventario' && k==='categoria'){
-          const c = dataStore.categoria.find(c=>c.codigo===value || c.id===value);
-          value = c ? c.nombre : value;
-        }
-        if(sheet==='inventario' && k==='tienda'){
-          const t = dataStore.tienda.find(t=>t.codigo===value || t.id===value);
-          value = t ? t.nombre : value;
-        }
-        html+=`<td>${value}</td>`;
+
+  fetchSheet(sheet).then(data=>{
+    currentSheet = sheet;
+    document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
+
+    let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
+    if(data.length>0){
+      html += `<table><thead><tr>`;
+      Object.keys(data[0]).forEach(h=>{
+        if((sheet==='inventario'||sheet==='categoria') && h.toLowerCase()==='id') return; // ocultar id
+        html+=`<th>${h}</th>`;
       });
-      html+=`<td class="actions">
-        <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
-        <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
-      </td>`;
-      html+=`</tr>`;
-    });
-    html+=`</tbody></table>`;
-  } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
-  document.getElementById('content').innerHTML = html;
+      html += `<th>Acciones</th></tr></thead><tbody>`;
+      data.forEach((r,i)=>{
+        html+=`<tr>`;
+        Object.entries(r).forEach(([k,v])=>{
+          if((sheet==='inventario'||sheet==='categoria') && k.toLowerCase()==='id') return;
+          // mostrar nombre en lugar de codigo para inventario
+          if(sheet==='inventario' && k==='categoria'){
+            const cat = dataStore.categoria.find(c=>c.codigo===v || c.id===v);
+            v = cat ? cat.nombre : v;
+          }
+          if(sheet==='inventario' && k==='tienda'){
+            const t = dataStore.tienda.find(c=>c.codigo===v || c.id===v);
+            v = t ? t.nombre : v;
+          }
+          html+=`<td>${v}</td>`;
+        });
+        html+=`<td class="actions">
+          <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
+        </td>`;
+        html+=`</tr>`;
+      });
+      html+=`</tbody></table>`;
+    } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
+    document.getElementById('content').innerHTML = html;
+  }).catch(err=>{
+    document.getElementById('content').innerHTML = `<p style="color:red;">${err}</p>`;
+  });
 }
 
-// Filter
+// FILTRO
 function filterTable(value){
   const tbody = document.querySelector('tbody');
   if(!tbody) return;
@@ -192,11 +202,12 @@ function filterTable(value){
   );
 }
 
-// Modal
+// MODAL
 function openAddForm(sheet,index=null){
   currentSheet=sheet; editingIndex=index;
   document.getElementById('modal-title').textContent = index!==null?'Editar '+sheet:'Agregar '+sheet;
   let html='';
+
   if(sheet==='categoria'){
     const item=index!==null?dataStore.categoria[index]:{};
     html=`<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
@@ -213,12 +224,12 @@ function openAddForm(sheet,index=null){
           <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">`;
     html+=`<select id="categoria"><option value="">Selecciona Categoria</option>`;
     dataStore.categoria.forEach(c=>{
-      html+=`<option value="${c.codigo||c.id}" ${item.categoria==(c.codigo||c.id)?'selected':''}>${c.nombre}</option>`;
+      html+=`<option value="${c.codigo||c.id}" ${item.categoria===(c.codigo||c.id)?'selected':''}>${c.nombre}</option>`;
     });
     html+=`</select>`;
     html+=`<select id="tienda"><option value="">Selecciona Tienda</option>`;
     dataStore.tienda.forEach(t=>{
-      html+=`<option value="${t.codigo||t.id}" ${item.tienda==(t.codigo||t.id)?'selected':''}>${t.nombre}</option>`;
+      html+=`<option value="${t.codigo||t.id}" ${item.tienda===(t.codigo||t.id)?'selected':''}>${t.nombre}</option>`;
     });
     html+=`</select>`;
   }
@@ -227,38 +238,54 @@ function openAddForm(sheet,index=null){
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// Save
+// SAVE ITEM
 function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value);
-  let idValue = editingIndex!==null ? dataStore[currentSheet][editingIndex].codigo || dataStore[currentSheet][editingIndex].id : form.codigo || Date.now();
+
+  let idValue = editingIndex!==null ? dataStore[currentSheet][editingIndex].codigo || dataStore[currentSheet][editingIndex].id : '';
+
   if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
   } else {
-    form.codigo = idValue;
     dataStore[currentSheet].push(form);
   }
+
   closeModal();
   renderTable(currentSheet);
 
   let action = editingIndex!==null?'update':'add';
-  fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action,idValue,...form}) })
-    .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error al sincronizar', res.msg); })
-    .catch(e=>console.log('Error al sincronizar', e));
+  let postData = {...form};
+  if(idValue) postData.idValue = idValue;
+
+  fetch(APP_SCRIPT_URL,{
+    method:'POST',
+    body: new URLSearchParams({sheet:currentSheet,action,...postData})
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    if(!res.success) console.log('Error sincronizando:', res.msg);
+    else if((currentSheet==='categoria'||currentSheet==='inventario') && !idValue && res.idValue){
+      dataStore[currentSheet][dataStore[currentSheet].length-1].codigo = res.idValue;
+    }
+  })
+  .catch(e=>console.log('Error sincronizando:', e));
 }
 
-// Edit & Delete
+// EDIT & DELETE
 function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
     const id = currentSheet==='tienda'?dataStore[currentSheet][i].codigo:dataStore[currentSheet][i].codigo||dataStore[currentSheet][i].id;
     fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id,codigo:id}) })
-      .then(r=>r.json()).then(res=>{ if(res.success) renderTable(currentSheet); else alert('Error: '+res.msg); })
-      .catch(e=>alert('Error al eliminar'));
+    .then(r=>r.json()).then(res=>{
+      if(res.success) fetchSheet(currentSheet).then(()=>renderTable(currentSheet));
+      else alert('Error: '+res.msg);
+    }).catch(e=>alert('Error al eliminar'));
   }
 }
 
-// Dashboard
+// DASHBOARD
 function renderDashboard(){
   const cardsDiv=document.getElementById('dashboard-cards');
   cardsDiv.innerHTML='';
@@ -269,10 +296,10 @@ function renderDashboard(){
   document.getElementById('content').innerHTML='';
 }
 
-// Navigation
+// NAV
 function nav(sheet){ renderTable(sheet); }
 
-// Init
+// INIT
 Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
   .then(()=>{ renderDashboard(); });
 </script>
