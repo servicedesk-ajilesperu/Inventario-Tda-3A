@@ -115,7 +115,7 @@ let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
 
-// SIDEBAR
+// === SIDEBAR ===
 document.getElementById('toggleSidebar').addEventListener('click',()=>{
   document.getElementById('sidebar').classList.toggle('collapsed');
 });
@@ -127,7 +127,7 @@ document.querySelectorAll('.accordion').forEach(acc=>{
   });
 });
 
-// FETCH JSONP
+// === FETCH JSONP ===
 function fetchSheet(sheet){
   return new Promise((resolve,reject)=>{
     const cb = 'cb_'+Math.random().toString(36).substring(2,15);
@@ -143,10 +143,10 @@ function fetchSheet(sheet){
   });
 }
 
-// RENDER TABLE
+// === RENDER TABLE ===
 function renderTable(sheet){
   if(sheet==='dashboard'){ renderDashboard(); return; }
-  document.getElementById('dashboard-cards').innerHTML = ''; // oculta dashboard
+  document.getElementById('dashboard-cards').innerHTML = '';
 
   const data = dataStore[sheet] || [];
   currentSheet = sheet;
@@ -156,8 +156,8 @@ function renderTable(sheet){
   if(data.length>0){
     html += `<table><thead><tr>`;
     Object.keys(data[0]).forEach(h=>{
-      if(sheet!=='tienda' && h.toLowerCase().includes('id')) return; // ocultar id en inventario/categorias
-      if(sheet==='tienda' && h.toLowerCase().includes('id')) return; // ocultar id en tiendas también
+      if(sheet!=='tienda' && h.toLowerCase().includes('id')) return; // ocultar ID
+      if(sheet==='tienda' && h.toLowerCase().includes('id')) return; // ocultar id en tiendas
       html+=`<th>${h}</th>`;
     });
     html += `<th>Acciones</th></tr></thead><tbody>`;
@@ -179,7 +179,7 @@ function renderTable(sheet){
   document.getElementById('content').innerHTML = html;
 }
 
-// FILTRO
+// === FILTRO ===
 function filterTable(value){
   const tbody = document.querySelector('tbody');
   if(!tbody) return;
@@ -188,7 +188,7 @@ function filterTable(value){
   );
 }
 
-// MODAL
+// === MODAL ===
 function openAddForm(sheet,index=null){
   currentSheet=sheet; editingIndex=index;
   document.getElementById('modal-title').textContent = index!==null?'Editar '+sheet:'Agregar '+sheet;
@@ -202,8 +202,11 @@ function openAddForm(sheet,index=null){
           <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
   } else if(sheet==='inventario'){
     const item=index!==null?dataStore.inventario[index]:{};
-    html=`<input type="text" id="nombre" placeholder="Nombre de Item" value="${item.nombre||''}">`;
-    html+=`<select id="categoria"><option value="">Selecciona Categoria</option>`;
+    html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
+          <input type="text" id="nombre" placeholder="Nombre de Item" value="${item.nombre||''}">
+          <input type="number" id="cantidad" placeholder="Cantidad" value="${item.cantidad||''}">
+          <input type="text" id="descripcion" placeholder="Descripción" value="${item.descripcion||''}">
+          <select id="categoria"><option value="">Selecciona Categoria</option>`;
     dataStore.categoria.forEach(c=>{
       html+=`<option value="${c.codigo||c.id}" ${item.categoria==c.codigo?'selected':''}>${c.nombre}</option>`;
     });
@@ -219,7 +222,7 @@ function openAddForm(sheet,index=null){
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// SAVE ITEM
+// === SAVE ITEM ===
 function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value);
@@ -232,7 +235,7 @@ function saveItem(){
   }).catch(e=>alert('Error al guardar'));
 }
 
-// EDIT & DELETE
+// === EDIT & DELETE ===
 function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
@@ -245,7 +248,7 @@ function deleteItem(i){
   }
 }
 
-// DASHBOARD
+// === DASHBOARD ===
 function renderDashboard(){
   const cardsDiv=document.getElementById('dashboard-cards');
   cardsDiv.innerHTML='';
@@ -256,13 +259,13 @@ function renderDashboard(){
   document.getElementById('content').innerHTML='';
 }
 
-// NAV
+// === NAV ===
 function nav(sheet){
   if(dataStore[sheet].length>0){ renderTable(sheet); }
   else fetchSheet(sheet).then(()=>renderTable(sheet));
 }
 
-// INIT
+// === INIT ===
 Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
   .then(()=>{ renderDashboard(); });
 </script>
