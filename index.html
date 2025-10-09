@@ -6,6 +6,7 @@
 <title>Inventario Tiendas 3A</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
+/* === ESTILOS === */
 body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 * { box-sizing:border-box; }
 .sidebar { width: 260px; position:fixed; height:100%; background:#ff4d00; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
@@ -38,7 +39,7 @@ tr:nth-child(even) { background-color:#f9f9f9; }
 .btn-edit { background:#ffb86b; color:white; }
 .btn-del { background:#d9534f; color:white; }
 .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:50; }
-.modal { background:white; padding:25px; border-radius:12px; width:500px; max-width:95%; box-shadow:0 10px 20px rgba(0,0,0,0.2); }
+.modal { background:white; padding:25px; border-radius:12px; width:450px; max-width:95%; box-shadow:0 10px 20px rgba(0,0,0,0.2); }
 input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:100%; margin-bottom:12px; font-size:1rem; }
 .modal button { padding:8px 15px; border-radius:6px; cursor:pointer; border:none; font-weight:600; transition:0.1s; }
 .modal button:last-child { background:#ff4d00; color:white; }
@@ -61,14 +62,12 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
     <i class="fa-solid fa-boxes-stacked"></i><span>Inventario 3A</span>
     <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
   </div>
-
   <div class="menu-section">
     <button class="accordion active"><i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel" style="max-height:500px;">
       <button onclick="renderDashboard()"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
     </div>
   </div>
-
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-computer"></i><span>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
@@ -76,7 +75,6 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
       <button onclick="nav('inventario')"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
     </div>
   </div>
-
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorias</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
@@ -84,7 +82,6 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
       <button onclick="nav('categoria')"><i class="fa-solid fa-table"></i><span>Ver Categorias</span></button>
     </div>
   </div>
-
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-store"></i><span>Tiendas</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
@@ -112,13 +109,16 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
+// CONFIG
 const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
 
 // SIDEBAR
-document.getElementById('toggleSidebar').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('collapsed'));
+document.getElementById('toggleSidebar').addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
 document.querySelectorAll('.accordion').forEach(acc=>{
   acc.addEventListener('click', function(){
     this.classList.toggle('active');
@@ -145,7 +145,7 @@ function fetchSheet(sheet){
 
 // RENDER TABLE
 function renderTable(sheet){
-  document.getElementById('dashboard-cards').innerHTML=''; // oculta dashboard
+  document.getElementById('dashboard-cards').innerHTML = ''; // oculta dashboard
   fetchSheet(sheet).then(data=>{
     currentSheet = sheet;
     document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
@@ -154,24 +154,26 @@ function renderTable(sheet){
     if(data.length>0){
       html += `<table><thead><tr>`;
       Object.keys(data[0]).forEach(h=>{
-        if((sheet==='inventario'||sheet==='categoria') && h.toLowerCase()==='id') return; // ocultar ID
-        html+=`<th>${h}</th>`;
+        if(currentSheet!=='inventario' && currentSheet!=='categoria' || h!=='id' && h!=='codigo'){
+          html+=`<th>${h}</th>`;
+        }
       });
       html += `<th>Acciones</th></tr></thead><tbody>`;
       data.forEach((r,i)=>{
         html+=`<tr>`;
-        Object.keys(r).forEach(k=>{
-          if((sheet==='inventario'||sheet==='categoria') && k.toLowerCase()==='id') return; 
-          let val = r[k];
-          if(k==='categoria'){ 
-            const cat = dataStore.categoria.find(c=>c.codigo===val||c.id===val); 
-            val = cat?cat.nombre:val; 
+        Object.entries(r).forEach(([k,v])=>{
+          if(currentSheet!=='inventario' && currentSheet!=='categoria' || k!=='id' && k!=='codigo'){
+            // para inventario y categoria se oculta id/codigo
+            if(currentSheet==='inventario' && k==='categoria'){
+              const cat = dataStore.categoria.find(c=>c.codigo==v||c.id==v);
+              v = cat?cat.nombre:v;
+            }
+            if(currentSheet==='inventario' && k==='tienda'){
+              const t = dataStore.tienda.find(ti=>ti.codigo==v||ti.id==v);
+              v = t?t.nombre:v;
+            }
+            html+=`<td>${v}</td>`;
           }
-          if(k==='tienda'){ 
-            const t = dataStore.tienda.find(ti=>ti.codigo===val||ti.id===val); 
-            val = t?t.nombre:val; 
-          }
-          html+=`<td>${val}</td>`;
         });
         html+=`<td class="actions">
           <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
@@ -201,7 +203,6 @@ function openAddForm(sheet,index=null){
   currentSheet=sheet; editingIndex=index;
   document.getElementById('modal-title').textContent = index!==null?'Editar '+sheet:'Agregar '+sheet;
   let html='';
-
   if(sheet==='categoria'){
     const item=index!==null?dataStore.categoria[index]:{};
     html=`<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
@@ -217,25 +218,28 @@ function openAddForm(sheet,index=null){
           <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
           <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">
           <select id="categoria"><option value="">Selecciona Categoria</option>`;
-    dataStore.categoria.forEach(c=> html+=`<option value="${c.codigo||c.id}" ${item.categoria==c.codigo?'selected':''}>${c.nombre}</option>`);
+    dataStore.categoria.forEach(c=>{
+      html+=`<option value="${c.codigo||c.id}" ${item.categoria==(c.codigo||c.id)?'selected':''}>${c.nombre}</option>`;
+    });
     html+=`</select><select id="tienda"><option value="">Selecciona Tienda</option>`;
-    dataStore.tienda.forEach(t=> html+=`<option value="${t.codigo||t.id}" ${item.tienda==t.codigo?'selected':''}>${t.nombre}</option>`);
+    dataStore.tienda.forEach(t=>{
+      html+=`<option value="${t.codigo||t.id}" ${item.tienda==(t.codigo||t.id)?'selected':''}>${t.nombre}</option>`;
+    });
     html+=`</select>`;
   }
-
   document.getElementById('modal-form').innerHTML = html;
   document.getElementById('modal').style.display='flex';
 }
-
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
 // SAVE ITEM
 function saveItem(){
-  const form = {};
+  const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value.trim());
-  if(currentSheet==='inventario' && (!form.codigo || !form.equipo)){ alert('Código y Equipo son obligatorios'); return; }
 
-  if(editingIndex !== null){
+  if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
+
+  if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
   } else {
     dataStore[currentSheet].push(form);
@@ -244,18 +248,22 @@ function saveItem(){
   closeModal();
   renderTable(currentSheet);
 
-  const postData = {...form};
-  if(editingIndex!==null) postData.idValue = dataStore[currentSheet][editingIndex].codigo;
+  // Sincroniza con App Web
+  const payload = {...form};
+  if(editingIndex!==null) payload.idValue = dataStore[currentSheet][editingIndex].codigo;
 
-  fetch(APP_SCRIPT_URL,{
+  fetch(APP_SCRIPT_URL, {
     method:'POST',
-    body: new URLSearchParams({sheet:currentSheet, action: editingIndex!==null?'update':'add', ...postData})
+    body: new URLSearchParams({sheet: currentSheet, action: editingIndex!==null?'update':'add', ...payload})
   })
   .then(r=>r.json())
   .then(res=>{
-    if(res.success && editingIndex===null && res.idValue){
-      dataStore[currentSheet][dataStore[currentSheet].length-1].codigo = res.idValue;
-    } else if(!res.success){ alert('Error sincronizando: '+res.msg); }
+    if(res.success){
+      if(editingIndex===null && res.idValue){
+        dataStore[currentSheet][dataStore[currentSheet].length-1].codigo = res.idValue;
+        renderTable(currentSheet);
+      }
+    } else alert('Error sincronizando con la App Web: '+res.msg);
   })
   .catch(e=>alert('Error al sincronizar con la App Web'));
 }
@@ -266,8 +274,9 @@ function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
     const id = currentSheet==='tienda'?dataStore[currentSheet][i].codigo:dataStore[currentSheet][i].codigo||dataStore[currentSheet][i].id;
     fetch(APP_SCRIPT_URL,{ method:'POST', body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id,codigo:id}) })
-    .then(r=>r.json()).then(res=>{
-      if(res.success) dataStore[currentSheet].splice(i,1), renderTable(currentSheet);
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.success) fetchSheet(currentSheet).then(()=>renderTable(currentSheet));
       else alert('Error: '+res.msg);
     }).catch(e=>alert('Error al eliminar'));
   }
@@ -290,6 +299,7 @@ function nav(sheet){ renderTable(sheet); }
 // INIT
 Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
   .then(()=>{ renderDashboard(); });
+
 </script>
 
 </body>
