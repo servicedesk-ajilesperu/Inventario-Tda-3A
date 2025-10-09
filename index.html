@@ -38,6 +38,14 @@ tr:nth-child(even) { background-color:#f9f9f9; }
 .actions button:hover { opacity:0.8; }
 .btn-edit { background:#ffb86b; color:white; }
 .btn-del { background:#d9534f; color:white; }
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:50; }
+.modal { background:white; padding:25px; border-radius:12px; width:450px; max-width:95%; box-shadow:0 10px 20px rgba(0,0,0,0.2); }
+input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:100%; margin-bottom:12px; font-size:1rem; }
+.modal button { padding:8px 15px; border-radius:6px; cursor:pointer; border:none; font-weight:600; transition:0.1s; }
+.modal button:last-child { background:#ff4d00; color:white; }
+.modal button:last-child:hover { background:#cc3c00; }
+.modal button:first-child { background:#eee; color:#333; margin-right:10px; }
+.modal button:first-child:hover { background:#ddd; }
 @media(max-width:768px){
   .cards { flex-direction:column; }
   .card { min-width:100%; }
@@ -73,50 +81,48 @@ tr:nth-child(even) { background-color:#f9f9f9; }
   <div id="content"></div>
 </div>
 
+<!-- === MODAL === -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <h3 id="modal-title"></h3>
+    <div id="modal-form"></div>
+    <div style="text-align:right; margin-top:15px;">
+      <button onclick="closeModal()">Cancelar</button>
+      <button onclick="saveItem()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <script>
-const APP_SCRIPT_URL = "https://script.google.com/macros/s/YOUR_DEPLOY_CODE/exec";
+const APP_SCRIPT_URL = "TU_URL_APPWEB"; 
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = "";
+let editingIndex = null;
 
-// === Fetch inicial ===
-async function fetchSheet(sheet){
-  try{
-    const res = await fetch(`${APP_SCRIPT_URL}?sheet=${sheet}&action=read`);
-    const json = await res.json();
-    if(json.success){
-      dataStore[sheet] = json.data;
-      return json.data;
-    }
-    return [];
-  }catch(e){ console.error(e); return []; }
-}
-
-// === Render tabla usando dataStore (rápido) ===
+// === Render tabla (oculta ID en inventario y categoría) ===
 function renderTable(sheet){
   currentSheet = sheet;
-  document.getElementById("dashboard-cards").innerHTML = "";
+  document.getElementById("dashboard-cards").innerHTML = ""; 
   document.getElementById("main-title").textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
 
-  let data = dataStore[sheet] || [];
+  const data = dataStore[sheet] || [];
   let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
   if(data.length>0){
     html += `<table><thead><tr>`;
     Object.keys(data[0]).forEach(h=>{
-      if((sheet==="inventario" || sheet==="categoria") && h==="id") return;
-      if(sheet==="tienda" && !(h==="codigo" || h==="nombre")) return;
+      if((sheet==="inventario" || sheet==="categoria") && (h==="id" || h==="codigo")) return; 
       html+=`<th>${h}</th>`;
     });
-    html+=`<th>Acciones</th></tr></thead><tbody>`;
+    html += `<th>Acciones</th></tr></thead><tbody>`;
     data.forEach((r,i)=>{
       html+=`<tr>`;
       Object.entries(r).forEach(([k,v])=>{
-        if((sheet==="inventario" || sheet==="categoria") && k==="id") return;
-        if(sheet==="tienda" && !(k==="codigo" || k==="nombre")) return;
+        if((sheet==="inventario" || sheet==="categoria") && (k==="id" || k==="codigo")) return;
         html+=`<td>${v}</td>`;
       });
       html+=`<td class="actions">
-        <button class="btn-edit"><i class="fa-solid fa-pen"></i></button>
-        <button class="btn-del"><i class="fa-solid fa-trash"></i></button>
+        <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
       </td></tr>`;
     });
     html+=`</tbody></table>`;
@@ -124,7 +130,7 @@ function renderTable(sheet){
   document.getElementById("content").innerHTML = html;
 }
 
-// === Dashboard ===
+// === Dashboard (orden Inventario → Categorías → Tiendas) ===
 function renderDashboard(){
   const cardsDiv=document.getElementById("dashboard-cards");
   cardsDiv.innerHTML="";
@@ -132,35 +138,25 @@ function renderDashboard(){
   cardsDiv.innerHTML+=`<div class="card" onclick="nav('categoria')"><i class="fa-solid fa-tags"></i><span>${dataStore.categoria.length}</span>Categorías</div>`;
   cardsDiv.innerHTML+=`<div class="card" onclick="nav('tienda')"><i class="fa-solid fa-store"></i><span>${dataStore.tienda.length}</span>Tiendas</div>`;
   document.getElementById("content").innerHTML="";
-  document.getElementById("main-title").textContent="Dashboard";
+  document.getElementById("main-title").textContent = "Dashboard";
 }
 
-// === Buscar ===
-function filterTable(value){
-  const tbody=document.querySelector("tbody");
-  if(!tbody) return;
-  Array.from(tbody.rows).forEach(r=>{
-    r.style.display = Array.from(r.cells).some(c=>c.textContent.toLowerCase().includes(value.toLowerCase())) ? "" : "none";
-  });
-}
-
-// === Navegación ===
+// === Navegación rápida ===
 function nav(sheet){ renderTable(sheet); }
 
-// === Init ===
-Promise.all([fetchSheet("inventario"),fetchSheet("categoria"),fetchSheet("tienda")])
-  .then(()=>renderDashboard());
-
-// === Sidebar ===
-document.querySelectorAll('.accordion').forEach(acc=>{
-  acc.addEventListener('click',function(){
-    this.classList.toggle('active');
-    let panel=this.nextElementSibling;
-    panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight+"px";
+// === Carga inicial ===
+document.addEventListener("DOMContentLoaded", ()=>{
+  renderDashboard();
+  document.querySelectorAll('.accordion').forEach(acc=>{
+    acc.addEventListener('click',function(){
+      this.classList.toggle('active');
+      let panel=this.nextElementSibling;
+      panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight+"px";
+    });
   });
-});
-document.getElementById("toggleSidebar").addEventListener("click",()=>{ 
-  document.getElementById("sidebar").classList.toggle("collapsed"); 
+  document.getElementById("toggleSidebar").addEventListener("click",()=>{ 
+    document.getElementById("sidebar").classList.toggle("collapsed"); 
+  });
 });
 </script>
 </body>
