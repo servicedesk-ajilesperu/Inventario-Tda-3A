@@ -109,7 +109,7 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec'; // reemplaza con tu URL de App Web
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
@@ -144,35 +144,38 @@ function fetchSheet(sheet){
 
 // Render Table
 function renderTable(sheet){
-  if(sheet==='dashboard'){ renderDashboard(); return; }
+  currentSheet = sheet;
+  document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
   document.getElementById('dashboard-cards').innerHTML = '';
-  fetchSheet(sheet).then(data=>{
-    currentSheet = sheet;
-    document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
 
-    let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
-    if(data.length>0){
-      html += `<table><thead><tr>`;
-      Object.keys(data[0]).forEach(h=>{
-        if(h.toLowerCase()=='id') return; // ocultar id en tabla
-        html+=`<th>${h}</th>`;
+  let data = dataStore[sheet] || [];
+  let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
+  if(data.length>0){
+    html += `<table><thead><tr>`;
+    Object.keys(data[0]).forEach(h=>{
+      if(h.toLowerCase()==='id') return; // ocultar id
+      html+=`<th>${h}</th>`;
+    });
+    html += `<th>Acciones</th></tr></thead><tbody>`;
+    data.forEach((r,i)=>{
+      html+=`<tr>`;
+      Object.entries(r).forEach(([k,v])=>{
+        if(k.toLowerCase()==='id') return;
+        html+=`<td>${v}</td>`;
       });
-      html += `<th>Acciones</th></tr></thead><tbody>`;
-      data.forEach((r,i)=>{
-        html+=`<tr>`;
-        Object.entries(r).forEach(([k,v])=>{
-          if(k.toLowerCase()=='id') return; // ocultar id
-          html+=`<td>${v}</td>`;
-        });
-        html+=`<td class="actions">
-          <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
-          <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
-        </td></tr>`;
-      });
-      html+=`</tbody></table>`;
-    } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
-    document.getElementById('content').innerHTML = html;
-  });
+      html+=`<td class="actions">
+        <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
+      </td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
+  document.getElementById('content').innerHTML = html;
+
+  // Refrescar desde App Web (opcional)
+  fetchSheet(sheet).then(freshData=>{
+    dataStore[sheet] = freshData;
+  }).catch(()=>{});
 }
 
 // Filter
@@ -191,12 +194,10 @@ function openAddForm(sheet,index=null){
   let html='';
   if(sheet==='categoria'){
     const item=index!==null?dataStore.categoria[index]:{};
-    html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
-          <input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
+    html=`<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
   } else if(sheet==='tienda'){
     const item=index!==null?dataStore.tienda[index]:{};
-    html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
-          <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
+    html=`<input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
   } else if(sheet==='inventario'){
     const item=index!==null?dataStore.inventario[index]:{};
     html=`<input type="text" id="Codigo" placeholder="Código" value="${item.Codigo||''}">
@@ -206,16 +207,16 @@ function openAddForm(sheet,index=null){
           <input type="text" id="Modelo" placeholder="Modelo" value="${item.Modelo||''}">`;
 
     // Categoria
-    html+=`<label>Categoria</label><select id="Categoria"><option value="">Selecciona Categoria</option>`;
+    html+=`<select id="Categoria"><option value="">Selecciona Categoria</option>`;
     dataStore.categoria.forEach(c=>{
-      html+=`<option value="${c.nombre}" ${item.Categoria==c.nombre?'selected':''}>${c.nombre}</option>`;
+      html+=`<option value="${c.nombre}" ${item.Categoria===c.nombre?'selected':''}>${c.nombre}</option>`;
     });
     html+=`</select>`;
 
     // Tienda
-    html+=`<label>Tienda</label><select id="Tienda"><option value="">Selecciona Tienda</option>`;
+    html+=`<select id="Tienda"><option value="">Selecciona Tienda</option>`;
     dataStore.tienda.forEach(t=>{
-      html+=`<option value="${t.nombre}" ${item.Tienda==t.nombre?'selected':''}>${t.nombre}</option>`;
+      html+=`<option value="${t.nombre}" ${item.Tienda===t.nombre?'selected':''}>${t.nombre}</option>`;
     });
     html+=`</select>`;
   }
@@ -228,7 +229,6 @@ function closeModal(){ document.getElementById('modal').style.display='none'; }
 function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value.trim());
-
   if(currentSheet==='inventario' && !form.Codigo){ alert('El código es obligatorio'); return; }
 
   // ID correlativo
@@ -238,7 +238,6 @@ function saveItem(){
     form.id = dataStore.inventario[editingIndex].id;
   }
 
-  // Guardado local
   if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
   } else {
@@ -246,40 +245,39 @@ function saveItem(){
   }
 
   closeModal();
-  renderTable(currentSheet);
+  renderTable(currentSheet); // Mostrar en vivo
 
-  // Sincronización App Web
+  // Sincronización en segundo plano
   const payload = {...form, sheet: currentSheet, action: editingIndex!==null?'update':'add'};
   if(editingIndex!==null) payload.idValue = dataStore[currentSheet][editingIndex].id;
 
   fetch(APP_SCRIPT_URL,{
     method:'POST',
     body:new URLSearchParams(payload)
-  })
-  .then(r=>r.json())
-  .then(res=>{
-    if(!res.success) alert('Error sincronizando con la App Web: '+res.msg);
-  }).catch(e=>alert('Error al sincronizar con la App Web: '+e.message));
+  }).then(r=>r.json()).then(res=>{
+    if(!res.success) console.warn('Error sincronizando App Web: '+res.msg);
+  }).catch(e=>console.warn('Error sincronizando App Web: '+e.message));
 }
 
 // Edit & Delete
 function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
-    const id = dataStore.inventario[i].id;
-    dataStore.inventario.splice(i,1);
-
-    // Reestructurar correlativo
-    dataStore.inventario.forEach((item,index)=>{ item.id = String(index+1); });
+    const id = dataStore[currentSheet][i].id;
+    dataStore[currentSheet].splice(i,1); // eliminar local
+    // Reestructurar IDs
+    if(currentSheet==='inventario'){
+      dataStore.inventario.forEach((x,index)=>x.id=String(index+1));
+    }
     renderTable(currentSheet);
 
-    // Sincronizar toda la hoja
-    dataStore.inventario.forEach(item=>{
-      fetch(APP_SCRIPT_URL,{
-        method:'POST',
-        body:new URLSearchParams({...item, sheet: currentSheet, action:'update', idValue:item.id})
-      }).then(r=>r.json());
-    });
+    // Sincronizar eliminación
+    fetch(APP_SCRIPT_URL,{
+      method:'POST',
+      body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id})
+    }).then(r=>r.json()).then(res=>{
+      if(!res.success) console.warn('Error eliminando en App Web: '+res.msg);
+    }).catch(e=>console.warn('Error eliminando en App Web: '+e.message));
   }
 }
 
