@@ -109,12 +109,12 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec'; // Reemplazar con tu URL de App Script
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
 
-// Sidebar toggle
+// Sidebar
 document.getElementById('toggleSidebar').addEventListener('click',()=>{ 
   document.getElementById('sidebar').classList.toggle('collapsed'); 
 });
@@ -126,7 +126,7 @@ document.querySelectorAll('.accordion').forEach(acc=>{
   });
 });
 
-// Fetch data
+// Fetch Sheet
 function fetchSheet(sheet){
   return new Promise((resolve,reject)=>{
     const cb = 'cb_'+Math.random().toString(36).substring(2,15);
@@ -142,34 +142,35 @@ function fetchSheet(sheet){
   });
 }
 
-// Render table
+// Render Table
 function renderTable(sheet){
-  currentSheet = sheet;
-  document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
+  if(sheet==='dashboard'){ renderDashboard(); return; }
   document.getElementById('dashboard-cards').innerHTML = '';
-  let data = dataStore[sheet] || [];
-  let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
-  if(data.length>0){
-    html += `<table><thead><tr>`;
-    Object.keys(data[0]).forEach(h=>{
-      if(h.toLowerCase()==='id') return; 
-      html+=`<th>${h}</th>`;
-    });
-    html += `<th>Acciones</th></tr></thead><tbody>`;
-    data.forEach((r,i)=>{
-      html+=`<tr>`;
-      Object.entries(r).forEach(([k,v])=>{
-        if(k.toLowerCase()==='id') return;
-        html+=`<td>${v}</td>`;
+  fetchSheet(sheet).then(data=>{
+    currentSheet = sheet;
+    document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
+
+    let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
+    if(data.length>0){
+      html += `<table><thead><tr>`;
+      Object.keys(data[0]).forEach(h=>{
+        html+=`<th>${h}</th>`;
       });
-      html+=`<td class="actions">
-        <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
-        <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
-      </td></tr>`;
-    });
-    html+=`</tbody></table>`;
-  } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
-  document.getElementById('content').innerHTML = html;
+      html += `<th>Acciones</th></tr></thead><tbody>`;
+      data.forEach((r,i)=>{
+        html+=`<tr>`;
+        Object.entries(r).forEach(([k,v])=>{
+          html+=`<td>${v}</td>`;
+        });
+        html+=`<td class="actions">
+          <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
+        </td></tr>`;
+      });
+      html+=`</tbody></table>`;
+    } else html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
+    document.getElementById('content').innerHTML = html;
+  });
 }
 
 // Filter
@@ -181,53 +182,64 @@ function filterTable(value){
   );
 }
 
-// Open modal
+// Modal
 function openAddForm(sheet,index=null){
-  currentSheet=sheet; editingIndex=index;
-  document.getElementById('modal-title').textContent = index!==null?'Editar '+sheet:'Agregar '+sheet;
-  let html='';
+  currentSheet = sheet;
+  editingIndex = index;
+  document.getElementById('modal-title').textContent = index !== null ? 'Editar '+sheet : 'Agregar '+sheet;
+  let html = '';
+
   if(sheet==='categoria'){
-    const item=index!==null?dataStore.categoria[index]:{};
-    html=`<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
+    const item = index!==null ? dataStore.categoria[index] : {};
+    html += `<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
   } else if(sheet==='tienda'){
-    const item=index!==null?dataStore.tienda[index]:{};
-    html=`<input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
+    const item = index!==null ? dataStore.tienda[index] : {};
+    html += `<input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
   } else if(sheet==='inventario'){
-    const item=index!==null?dataStore.inventario[index]:{};
-    html=`<input type="text" id="Codigo" placeholder="Código" value="${item.Codigo||''}">
-          <input type="text" id="Serie" placeholder="Serie" value="${item.Serie||''}">
-          <input type="text" id="Equipo" placeholder="Equipo" value="${item.Equipo||''}">
-          <input type="text" id="Marca" placeholder="Marca" value="${item.Marca||''}">
-          <input type="text" id="Modelo" placeholder="Modelo" value="${item.Modelo||''}">`;
+    const item = index!==null ? dataStore.inventario[index] : {};
 
-    html+=`<select id="Categoria"><option value="">Selecciona Categoria</option>`;
-    dataStore.categoria.forEach(c=>{
-      html+=`<option value="${c.nombre}" ${item.Categoria===c.nombre?'selected':''}>${c.nombre}</option>`;
-    });
-    html+=`</select>`;
+    html += `
+      <input type="text" id="Codigo" placeholder="Código" value="${item.Codigo||''}">
+      <input type="text" id="Serie" placeholder="Serie" value="${item.Serie||''}">
+      <input type="text" id="Equipo" placeholder="Equipo" value="${item.Equipo||''}">
+      <input type="text" id="Marca" placeholder="Marca" value="${item.Marca||''}">
+      <input type="text" id="Modelo" placeholder="Modelo" value="${item.Modelo||''}">
+    `;
 
-    html+=`<select id="Tienda"><option value="">Selecciona Tienda</option>`;
-    dataStore.tienda.forEach(t=>{
-      html+=`<option value="${t.nombre}" ${item.Tienda===t.nombre?'selected':''}>${t.nombre}</option>`;
+    // Combo Categoria (solo nombre)
+    html += `<select id="Categoria"><option value="">Selecciona Categoria</option>`;
+    dataStore.categoria.forEach(c => {
+      const selected = item.Categoria === c.nombre ? 'selected' : '';
+      html += `<option value="${c.nombre}" ${selected}>${c.nombre}</option>`;
     });
-    html+=`</select>`;
+    html += `</select>`;
+
+    // Combo Tienda (solo nombre)
+    html += `<select id="Tienda"><option value="">Selecciona Tienda</option>`;
+    dataStore.tienda.forEach(t => {
+      const selected = item.Tienda === t.nombre ? 'selected' : '';
+      html += `<option value="${t.nombre}" ${selected}>${t.nombre}</option>`;
+    });
+    html += `</select>`;
   }
+
   document.getElementById('modal-form').innerHTML = html;
-  document.getElementById('modal').style.display='flex';
+  document.getElementById('modal').style.display = 'flex';
 }
+
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// Save item
+// Save Item
 function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value.trim());
-  if(currentSheet==='inventario' && !form.Codigo){ alert('El código es obligatorio'); return; }
 
-  // ID correlativo
+  // Generar ID correlativo para inventario
   if(currentSheet==='inventario' && editingIndex===null){
-    form.id = String(dataStore.inventario.length>0? Math.max(...dataStore.inventario.map(x=>parseInt(x.id)))+1 :1);
+    const lastId = dataStore.inventario.length ? Math.max(...dataStore.inventario.map(d=>Number(d.id))) : 0;
+    form.id = (lastId + 1).toString();
   } else if(currentSheet==='inventario' && editingIndex!==null){
-    form.id = dataStore.inventario[editingIndex].id;
+    form.id = dataStore.inventario[editingIndex].id; // mantener id al editar
   }
 
   if(editingIndex!==null){
@@ -239,39 +251,41 @@ function saveItem(){
   closeModal();
   renderTable(currentSheet);
 
+  // Sincronización con App Web
   const payload = {...form, sheet: currentSheet, action: editingIndex!==null?'update':'add'};
   if(editingIndex!==null) payload.idValue = form.id;
 
-  fetch(APP_SCRIPT_URL,{
+  fetch(APP_SCRIPT_URL, {
     method:'POST',
     body:new URLSearchParams(payload)
-  }).then(r=>r.json()).then(res=>{
-    if(!res.success) console.warn('Error sincronizando App Web: '+res.msg);
-  }).catch(e=>console.warn('Error sincronizando App Web: '+e.message));
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    if(!res.success) alert('Error sincronizando: '+res.msg);
+  })
+  .catch(e=>alert('Error al sincronizar: '+e.message));
 }
 
 // Edit & Delete
 function editItem(i){ openAddForm(currentSheet,i); }
+
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
     const id = dataStore[currentSheet][i].id;
-    dataStore[currentSheet].splice(i,1);
-
-    // Reestructurar ID correlativo
+    dataStore[currentSheet].splice(i,1); // eliminar local
+    // Reestructurar IDs correlativos para inventario
     if(currentSheet==='inventario'){
-      dataStore.inventario.forEach((x,index)=>x.id=String(index+1));
-      // Sincronizar todos
-      dataStore.inventario.forEach(item=>{
-        fetch(APP_SCRIPT_URL,{
-          method:'POST',
-          body:new URLSearchParams({...item, sheet:'inventario', action:'update', idValue:item.id})
-        }).then(r=>r.json()).then(res=>{
-          if(!res.success) console.warn('Error sincronizando App Web: '+res.msg);
-        }).catch(e=>console.warn('Error sincronizando App Web: '+e.message));
-      });
+      dataStore.inventario.forEach((d,index)=> d.id=(index+1).toString());
     }
-
     renderTable(currentSheet);
+
+    fetch(APP_SCRIPT_URL,{
+      method:'POST',
+      body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id})
+    })
+    .then(r=>r.json()).then(res=>{
+      if(!res.success) alert('Error al eliminar en App Web: '+res.msg);
+    });
   }
 }
 
@@ -292,7 +306,6 @@ function nav(sheet){ renderTable(sheet); }
 // Init
 Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
   .then(()=>{ renderDashboard(); });
-
 </script>
 </body>
 </html>
