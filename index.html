@@ -109,7 +109,7 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-const APP_SCRIPT_URL = 'TU_URL_REAL_AQUI'; // <-- pon tu URL publicada de Apps Script
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec'; // <-- pon tu URL publicada de Apps Script
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
@@ -283,3 +283,4 @@ Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario
 </script>
 </body>
 </html>
+
