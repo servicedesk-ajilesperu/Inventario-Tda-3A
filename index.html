@@ -109,7 +109,7 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec'; // <-- pon tu URL publicada de Apps Script
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
@@ -153,11 +153,17 @@ function renderTable(sheet){
     let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
     if(data.length>0){
       html += `<table><thead><tr>`;
-      Object.keys(data[0]).forEach(h=>{ html+=`<th>${h}</th>`; });
+      Object.keys(data[0]).forEach(h=>{
+        if(h.toLowerCase()=='id') return; // ocultar id en tabla
+        html+=`<th>${h}</th>`;
+      });
       html += `<th>Acciones</th></tr></thead><tbody>`;
       data.forEach((r,i)=>{
         html+=`<tr>`;
-        Object.values(r).forEach(v=>{ html+=`<td>${v}</td>`; });
+        Object.entries(r).forEach(([k,v])=>{
+          if(k.toLowerCase()=='id') return; // ocultar id
+          html+=`<td>${v}</td>`;
+        });
         html+=`<td class="actions">
           <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
           <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
@@ -183,31 +189,35 @@ function openAddForm(sheet,index=null){
   currentSheet=sheet; editingIndex=index;
   document.getElementById('modal-title').textContent = index!==null?'Editar '+sheet:'Agregar '+sheet;
   let html='';
-  if(sheet==='inventario'){
+  if(sheet==='categoria'){
+    const item=index!==null?dataStore.categoria[index]:{};
+    html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
+          <input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
+  } else if(sheet==='tienda'){
+    const item=index!==null?dataStore.tienda[index]:{};
+    html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
+          <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
+  } else if(sheet==='inventario'){
     const item=index!==null?dataStore.inventario[index]:{};
-    html=`<input type="text" id="Codigo" placeholder="Código Inventario" value="${item.Codigo||''}">
+    html=`<input type="text" id="Codigo" placeholder="Código" value="${item.Codigo||''}">
           <input type="text" id="Serie" placeholder="Serie" value="${item.Serie||''}">
           <input type="text" id="Equipo" placeholder="Equipo" value="${item.Equipo||''}">
           <input type="text" id="Marca" placeholder="Marca" value="${item.Marca||''}">
           <input type="text" id="Modelo" placeholder="Modelo" value="${item.Modelo||''}">`;
-    html+=`<select id="Categoria"><option value="">Selecciona Categoria</option>`;
+
+    // Categoria
+    html+=`<label>Categoria</label><select id="Categoria"><option value="">Selecciona Categoria</option>`;
     dataStore.categoria.forEach(c=>{
-      html+=`<option value="${c.Codigo}" ${item.Categoria==c.Codigo?'selected':''}>${c.Nombre}</option>`;
+      html+=`<option value="${c.nombre}" ${item.Categoria==c.nombre?'selected':''}>${c.nombre}</option>`;
     });
     html+=`</select>`;
-    html+=`<select id="Tienda"><option value="">Selecciona Tienda</option>`;
+
+    // Tienda
+    html+=`<label>Tienda</label><select id="Tienda"><option value="">Selecciona Tienda</option>`;
     dataStore.tienda.forEach(t=>{
-      html+=`<option value="${t.Codigo}" ${item.Tienda==t.Codigo?'selected':''}>${t.Nombre}</option>`;
+      html+=`<option value="${t.nombre}" ${item.Tienda==t.nombre?'selected':''}>${t.nombre}</option>`;
     });
     html+=`</select>`;
-  } else if(sheet==='categoria'){
-    const item=index!==null?dataStore.categoria[index]:{};
-    html=`<input type="text" id="Codigo" placeholder="Código" value="${item.Codigo||''}">
-          <input type="text" id="Nombre" placeholder="Nombre de Categoria" value="${item.Nombre||''}">`;
-  } else if(sheet==='tienda'){
-    const item=index!==null?dataStore.tienda[index]:{};
-    html=`<input type="text" id="Codigo" placeholder="Código" value="${item.Codigo||''}">
-          <input type="text" id="Nombre" placeholder="Nombre de Tienda" value="${item.Nombre||''}">`;
   }
   document.getElementById('modal-form').innerHTML = html;
   document.getElementById('modal').style.display='flex';
@@ -219,6 +229,15 @@ function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value.trim());
 
+  if(currentSheet==='inventario' && !form.Codigo){ alert('El código es obligatorio'); return; }
+
+  // ID correlativo
+  if(currentSheet==='inventario' && editingIndex===null){
+    form.id = String(dataStore.inventario.length>0? Math.max(...dataStore.inventario.map(x=>parseInt(x.id)))+1 :1);
+  } else if(currentSheet==='inventario' && editingIndex!==null){
+    form.id = dataStore.inventario[editingIndex].id;
+  }
+
   // Guardado local
   if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
@@ -229,36 +248,37 @@ function saveItem(){
   closeModal();
   renderTable(currentSheet);
 
-  // Sincronización
+  // Sincronización App Web
   const payload = {...form, sheet: currentSheet, action: editingIndex!==null?'update':'add'};
-  if(editingIndex!==null) {
-    payload.idValue = dataStore[currentSheet][editingIndex].id; // se mantiene el id original
-  }
+  if(editingIndex!==null) payload.idValue = dataStore[currentSheet][editingIndex].id;
 
-  fetch(APP_SCRIPT_URL, {
+  fetch(APP_SCRIPT_URL,{
     method:'POST',
     body:new URLSearchParams(payload)
   })
   .then(r=>r.json())
   .then(res=>{
-    if(!res.success){ alert('Error: '+res.msg); }
-    else { fetchSheet(currentSheet).then(()=>renderTable(currentSheet)); }
-  })
-  .catch(e=>alert('Error al sincronizar: '+e.message));
+    if(!res.success) alert('Error sincronizando con la App Web: '+res.msg);
+  }).catch(e=>alert('Error al sincronizar con la App Web: '+e.message));
 }
 
 // Edit & Delete
 function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
-    const id = dataStore[currentSheet][i].id;
-    fetch(APP_SCRIPT_URL,{
-      method:'POST',
-      body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id})
-    })
-    .then(r=>r.json()).then(res=>{
-      if(res.success) fetchSheet(currentSheet).then(()=>renderTable(currentSheet));
-      else alert('Error: '+res.msg);
+    const id = dataStore.inventario[i].id;
+    dataStore.inventario.splice(i,1);
+
+    // Reestructurar correlativo
+    dataStore.inventario.forEach((item,index)=>{ item.id = String(index+1); });
+    renderTable(currentSheet);
+
+    // Sincronizar toda la hoja
+    dataStore.inventario.forEach(item=>{
+      fetch(APP_SCRIPT_URL,{
+        method:'POST',
+        body:new URLSearchParams({...item, sheet: currentSheet, action:'update', idValue:item.id})
+      }).then(r=>r.json());
     });
   }
 }
@@ -283,4 +303,3 @@ Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario
 </script>
 </body>
 </html>
-
