@@ -221,7 +221,6 @@ function saveItem(){
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value.trim());
 
   if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
-  if((currentSheet==='categoria'||currentSheet==='tienda') && !form.nombre){ alert('El nombre es obligatorio'); return; }
 
   // Generar id correlativo oculto
   if(editingIndex===null){
@@ -257,37 +256,36 @@ function saveItem(){
 
 // Edit & Delete
 function editItem(i){ openAddForm(currentSheet,i); }
+
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
-    const id = dataStore[currentSheet][i].id;
+    const oldId = dataStore[currentSheet][i].id;
+    // Eliminar local
     dataStore[currentSheet].splice(i,1);
-
-    // Reestructurar ID correlativo local
-    dataStore[currentSheet].forEach((d, idx) => d.id = idx + 1);
-
+    // Reestructurar correlativo local
+    dataStore[currentSheet].forEach((item,index)=> item.id = index+1);
     renderTable(currentSheet);
 
-    // Sincronización en App Web
+    // Eliminar en App Web
     fetch(APP_SCRIPT_URL,{
       method:'POST',
-      body:new URLSearchParams({sheet: currentSheet, action:'delete', idValue:id})
+      body:new URLSearchParams({sheet: currentSheet, action:'delete', idValue: oldId})
     })
     .then(r=>r.json())
     .then(res=>{
       if(!res.success) alert('Error eliminando App Web: '+res.msg);
       else {
-        // Reestructurar IDs en App Web
-        dataStore[currentSheet].forEach((item, index) => {
-          fetch(APP_SCRIPT_URL, {
+        // Actualizar todos los IDs restantes en App Web
+        dataStore[currentSheet].forEach(item=>{
+          fetch(APP_SCRIPT_URL,{
             method:'POST',
             body:new URLSearchParams({
               sheet: currentSheet,
               action:'update',
-              idValue: item.id, // antiguo id
-              id: index + 1    // nuevo id correlativo
+              idValue: item.id,
+              id: item.id
             })
           });
-          item.id = index + 1; // actualizar localmente también
         });
       }
     })
