@@ -222,14 +222,12 @@ function saveItem(){
 
   if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
 
-  // Generar id correlativo oculto
   if(editingIndex===null){
     form.id = dataStore[currentSheet].length>0 ? Math.max(...dataStore[currentSheet].map(d=>Number(d.id)))+1 : 1;
   } else {
     form.id = dataStore[currentSheet][editingIndex].id;
   }
 
-  // Guardado local en vivo
   if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
   } else {
@@ -239,7 +237,6 @@ function saveItem(){
   closeModal();
   renderTable(currentSheet);
 
-  // Sincronización en segundo plano
   const payload = {...form, sheet: currentSheet, action: editingIndex!==null?'update':'add'};
   if(editingIndex!==null) payload.idValue = form.id;
 
@@ -258,38 +255,51 @@ function saveItem(){
 function editItem(i){ openAddForm(currentSheet,i); }
 
 function deleteItem(i){
-  if(confirm('¿Seguro de eliminar?')){
-    const oldId = dataStore[currentSheet][i].id;
-    // Eliminar local
-    dataStore[currentSheet].splice(i,1);
-    // Reestructurar correlativo local
-    dataStore[currentSheet].forEach((item,index)=> item.id = index+1);
+  if(currentSheet !== 'categoria') return; // Solo Categoria
+
+  if(confirm('¿Seguro de eliminar este registro?')){
+    const oldId = dataStore.categoria[i].id;
+    dataStore.categoria.splice(i,1);
+    dataStore.categoria.forEach((item,idx)=>item.id=idx+1);
     renderTable(currentSheet);
 
     // Eliminar en App Web
     fetch(APP_SCRIPT_URL,{
       method:'POST',
-      body:new URLSearchParams({sheet: currentSheet, action:'delete', idValue: oldId})
+      body:new URLSearchParams({sheet:'categoria', action:'delete', idValue: oldId})
     })
     .then(r=>r.json())
     .then(res=>{
-      if(!res.success) alert('Error eliminando App Web: '+res.msg);
-      else {
-        // Actualizar todos los IDs restantes en App Web
-        dataStore[currentSheet].forEach(item=>{
-          fetch(APP_SCRIPT_URL,{
-            method:'POST',
-            body:new URLSearchParams({
-              sheet: currentSheet,
-              action:'update',
-              idValue: item.id,
-              id: item.id
-            })
+      if(res.success){
+        // Reestructurar IDs en App Web
+        fetch(`${APP_SCRIPT_URL}?sheet=categoria&callback=cb`)
+          .then(r=>r.text())
+          .then(txt=>{
+            const json = JSON.parse(txt.match(/\((.*)\)/)[1]);
+            if(json.success){
+              const data = json.data;
+              data.forEach((row,idx)=>{
+                const newId = idx + 1;
+                if(Number(row.id) !== newId){
+                  fetch(APP_SCRIPT_URL,{
+                    method:'POST',
+                    body:new URLSearchParams({
+                      sheet:'categoria',
+                      action:'update',
+                      idValue: row.id,
+                      id: newId,
+                      nombre: row.nombre || ''
+                    })
+                  });
+                }
+              });
+            }
           });
-        });
+      } else {
+        alert('Error eliminando App Web: '+res.msg);
       }
     })
-    .catch(e=>console.log('Error sincronizando App Web: '+e.message));
+    .catch(e=>console.log('Error:',e.message));
   }
 }
 
