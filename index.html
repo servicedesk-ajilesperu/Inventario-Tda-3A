@@ -126,58 +126,13 @@ document.querySelectorAll('.accordion').forEach(acc=>{
   });
 });
 
-// Helper: build params to send to Apps Script with multiple possible header-name variants
-function buildSheetParams(form, sheet, action, idValue){
-  const params = { sheet, action };
-  if(idValue !== undefined) {
-    params.idValue = String(idValue);
-    params.id = String(idValue); // also send id
-  }
-
-  if(sheet==='inventario'){
-    // send both capitalized and lowercase keys to match possible header names
-    params.Codigo = form.codigo || '';
-    params.codigo = form.codigo || '';
-    params.Serie = form.serie || '';
-    params.Serie = form.serie || '';
-    params.serie = form.serie || '';
-    params.Equipo = form.equipo || '';
-    params.equipo = form.equipo || '';
-    params.Marca = form.marca || '';
-    params.marca = form.marca || '';
-    params.Modelo = form.modelo || '';
-    params.modelo = form.modelo || '';
-    params.Categoria = form.categoria || '';
-    params.categoria = form.categoria || '';
-    params.Tienda = form.tienda || '';
-    params.tienda = form.tienda || '';
-    // include id too (both forms)
-    if(form.id!==undefined){ params.id = String(form.id); params.ID = String(form.id); }
-  } else if(sheet==='categoria'){
-    params.nombre = form.nombre || '';
-    params.Nombre = form.nombre || '';
-    if(form.id!==undefined){ params.id = String(form.id); params.ID = String(form.id); }
-  } else if(sheet==='tienda'){
-    params.codigo = form.codigo || form.codigoTienda || '';
-    params.Codigo = form.codigo || form.codigoTienda || '';
-    params.nombre = form.nombre || '';
-    params.Nombre = form.nombre || '';
-    if(form.id!==undefined){ params.id = String(form.id); params.ID = String(form.id); }
-  } else {
-    // Generic pass-through
-    Object.entries(form).forEach(([k,v])=> params[k]=v);
-  }
-
-  return params;
-}
-
-// Fetch Sheet (JSONP)
+// Fetch Sheet
 function fetchSheet(sheet){
   return new Promise((resolve,reject)=>{
     const cb = 'cb_'+Math.random().toString(36).substring(2,15);
     window[cb] = function(res){
-      if(res && res.success){ dataStore[sheet]=res.data; resolve(res.data); }
-      else reject((res && res.msg) || 'Error cargando datos');
+      if(res.success){ dataStore[sheet]=res.data; resolve(res.data); }
+      else reject(res.msg);
       delete window[cb];
     };
     const s = document.createElement('script');
@@ -192,11 +147,10 @@ function renderTable(sheet){
   currentSheet=sheet;
   document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
   document.getElementById('dashboard-cards').innerHTML='';
-  const data = dataStore[sheet] || [];
+  const data = dataStore[sheet];
   let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
   if(data.length>0){
     html += `<table><thead><tr>`;
-    // use keys from first item but hide id column
     Object.keys(data[0]).forEach(h=>{
       if(h.toLowerCase()!=='id') html+=`<th>${h}</th>`;
     });
@@ -236,26 +190,21 @@ function openAddForm(sheet,index=null){
     html=`<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
   } else if(sheet==='tienda'){
     const item=index!==null?dataStore.tienda[index]:{};
-    // tienda headers: codigo, nombre (user said codigo is text)
-    html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
-          <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
+    html=`<input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
   } else if(sheet==='inventario'){
     const item=index!==null?dataStore.inventario[index]:{};
-    // dataStore keys come from JSONP as lowercased in doGet, so use lowercased properties
     html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
           <input type="text" id="serie" placeholder="Serie" value="${item.serie||''}">
           <input type="text" id="equipo" placeholder="Equipo" value="${item.equipo||''}">
           <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
           <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">`;
-
     html+=`<select id="categoria"><option value="">Selecciona Categoria</option>`;
-    (dataStore.categoria||[]).forEach(c=>{
+    dataStore.categoria.forEach(c=>{
       html+=`<option value="${c.nombre}" ${item.categoria===c.nombre?'selected':''}>${c.nombre}</option>`;
     });
     html+=`</select>`;
-
     html+=`<select id="tienda"><option value="">Selecciona Tienda</option>`;
-    (dataStore.tienda||[]).forEach(t=>{
+    dataStore.tienda.forEach(t=>{
       html+=`<option value="${t.nombre}" ${item.tienda===t.nombre?'selected':''}>${t.nombre}</option>`;
     });
     html+=`</select>`;
@@ -265,102 +214,76 @@ function openAddForm(sheet,index=null){
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// Save Item (local immediate, then sync)
+// Save Item
 function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value.trim());
 
   if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
 
-  // Generar id correlativo oculto (number)
-  if(currentSheet==='inventario'){
+  // === ID correlativo oculto ===
+  if(currentSheet==='inventario' || currentSheet==='categoria'){
     if(editingIndex===null){
-      form.id = dataStore.inventario && dataStore.inventario.length>0 ? Math.max(...dataStore.inventario.map(d=>Number(d.id||0)))+1 : 1;
+      form.id = dataStore[currentSheet].length>0 ? Math.max(...dataStore[currentSheet].map(d=>Number(d.id)))+1 : 1;
     } else {
-      form.id = dataStore.inventario[editingIndex].id;
-    }
-  } else {
-    // for categoria/tienda, if editing keep id, else not necessary
-    if(editingIndex!==null && dataStore[currentSheet] && dataStore[currentSheet][editingIndex]) {
       form.id = dataStore[currentSheet][editingIndex].id;
     }
   }
 
-  // Guardado local en vivo
+  // Guardado local
   if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
   } else {
-    if(!dataStore[currentSheet]) dataStore[currentSheet]=[];
     dataStore[currentSheet].push(form);
   }
 
   closeModal();
   renderTable(currentSheet);
 
-  // --- Sincronización en segundo plano con Apps Script ---
-  // Build params with variants of header names to match sheet headers
-  const action = editingIndex!==null ? 'update' : 'add';
-  const params = buildSheetParams(form, currentSheet, action, form.id);
+  // Sincronización con App Web
+  const payload = {...form, sheet: currentSheet, action: editingIndex!==null?'update':'add'};
+  if(editingIndex!==null) payload.idValue = form.id;
 
-  fetch(APP_SCRIPT_URL, {
+  fetch(APP_SCRIPT_URL,{
     method:'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams(params)
+    body:new URLSearchParams(payload)
   })
-  .then(async r=>{
-    const text = await r.text();
-    try {
-      const res = JSON.parse(text);
-      if(!res.success) console.warn('Error sincronizando App Web:', res.msg);
-      else console.log('Sincronizado App Web:', res.msg||'ok');
-    } catch(e){
-      // si la respuesta no es JSON, mostrarla en consola
-      console.log('Respuesta App Web (no JSON):', text);
-    }
+  .then(r=>r.json())
+  .then(res=>{
+    if(!res.success) alert('Error sincronizando App Web: '+res.msg);
   })
-  .catch(e=>console.error('Error sincronizando App Web:', e.message));
+  .catch(e=>console.log('Error sincronizando App Web: '+e.message));
 }
 
 // Edit & Delete
 function editItem(i){ openAddForm(currentSheet,i); }
-
 function deleteItem(i){
-  if(!confirm('¿Seguro de eliminar?')) return;
-  const id = dataStore[currentSheet][i].id;
-  dataStore[currentSheet].splice(i,1);
-  // reestructurar id correlativo en inventario
-  if(currentSheet==='inventario'){
-    dataStore.inventario.forEach((d,idx)=> d.id = idx+1);
-  }
-  renderTable(currentSheet);
-
-  // Sync delete - send multiple id variants
-  const params = { sheet: currentSheet, action:'delete', idValue: String(id), id: String(id) };
-  fetch(APP_SCRIPT_URL, {
-    method:'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams(params)
-  })
-  .then(async r=>{
-    const text = await r.text();
-    try {
-      const res = JSON.parse(text);
-      if(!res.success) console.warn('Error eliminando App Web:', res.msg);
-      else console.log('Eliminado App Web:', res.msg||'ok');
-    } catch(e){
-      console.log('Respuesta App Web (delete):', text);
+  if(confirm('¿Seguro de eliminar?')){
+    const id = dataStore[currentSheet][i].id;
+    dataStore[currentSheet].splice(i,1);
+    if(currentSheet==='inventario' || currentSheet==='categoria'){
+      dataStore[currentSheet].forEach((d,idx)=>d.id=idx+1);
     }
-  })
-  .catch(e=>console.error('Error sincronizando App Web (delete):', e.message));
+    renderTable(currentSheet);
+
+    fetch(APP_SCRIPT_URL,{
+      method:'POST',
+      body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id})
+    })
+    .then(r=>r.json())
+    .then(res=>{
+      if(!res.success) alert('Error eliminando App Web: '+res.msg);
+    }).catch(e=>console.log('Error sincronizando App Web: '+e.message));
+  }
 }
 
 // Dashboard
 function renderDashboard(){
   const cardsDiv=document.getElementById('dashboard-cards');
   cardsDiv.innerHTML='';
-  cardsDiv.innerHTML+=`<div class="card" onclick="nav('inventario')"><i class="fa-solid fa-computer"></i><span>${(dataStore.inventario||[]).length}</span>Inventario</div>`;
-  cardsDiv.innerHTML+=`<div class="card" onclick="nav('categoria')"><i class="fa-solid fa-tags"></i><span>${(dataStore.categoria||[]).length}</span>Categorias</div>`;
-  cardsDiv.innerHTML+=`<div class="card" onclick="nav('tienda')"><i class="fa-solid fa-store"></i><span>${(dataStore.tienda||[]).length}</span>Tiendas</div>`;
+  cardsDiv.innerHTML+=`<div class="card" onclick="nav('inventario')"><i class="fa-solid fa-computer"></i><span>${dataStore.inventario.length}</span>Inventario</div>`;
+  cardsDiv.innerHTML+=`<div class="card" onclick="nav('categoria')"><i class="fa-solid fa-tags"></i><span>${dataStore.categoria.length}</span>Categorias</div>`;
+  cardsDiv.innerHTML+=`<div class="card" onclick="nav('tienda')"><i class="fa-solid fa-store"></i><span>${dataStore.tienda.length}</span>Tiendas</div>`;
   document.getElementById('main-title').textContent = 'Dashboard';
   document.getElementById('content').innerHTML='';
 }
@@ -368,15 +291,9 @@ function renderDashboard(){
 // Nav
 function nav(sheet){ renderTable(sheet); }
 
-// Init: load sheets (tienda,categoria,inventario) into local store then render dashboard
+// Init
 Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
-  .then(()=>{ renderDashboard(); })
-  .catch(e=>{
-    console.error('Error inicializando datos:', e);
-    // aún si falla, intentar mostrar lo que haya
-    renderTable('inventario');
-    renderDashboard();
-  });
+  .then(()=>{ renderDashboard(); });
 </script>
 </body>
 </html>
