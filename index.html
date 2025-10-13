@@ -114,7 +114,7 @@ let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
 
-// Sidebar toggle
+// Sidebar
 document.getElementById('toggleSidebar').addEventListener('click',()=>{ 
   document.getElementById('sidebar').classList.toggle('collapsed'); 
 });
@@ -126,7 +126,7 @@ document.querySelectorAll('.accordion').forEach(acc=>{
   });
 });
 
-// Fetch sheet
+// Fetch Sheet
 function fetchSheet(sheet){
   return new Promise((resolve,reject)=>{
     const cb = 'cb_'+Math.random().toString(36).substring(2,15);
@@ -142,7 +142,7 @@ function fetchSheet(sheet){
   });
 }
 
-// Render table
+// Render Table
 function renderTable(sheet){
   currentSheet=sheet;
   document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
@@ -170,7 +170,7 @@ function renderTable(sheet){
   document.getElementById('content').innerHTML = html;
 }
 
-// Filter table
+// Filter Table
 function filterTable(value){
   const tbody = document.querySelector('tbody');
   if(!tbody) return;
@@ -179,15 +179,18 @@ function filterTable(value){
   );
 }
 
-// Open form
+// Modal Form
 function openAddForm(sheet,index=null){
   currentSheet=sheet;
   editingIndex=index;
   document.getElementById('modal-title').textContent = index!==null?'Editar '+sheet:'Agregar '+sheet;
   let html='';
-  if(sheet==='categoria' || sheet==='tienda'){
-    const item=index!==null?dataStore[sheet][index]:{};
-    html=`<input type="text" id="nombre" placeholder="Nombre" value="${item.nombre||''}">`;
+  if(sheet==='categoria'){
+    const item=index!==null?dataStore.categoria[index]:{};
+    html=`<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
+  } else if(sheet==='tienda'){
+    const item=index!==null?dataStore.tienda[index]:{};
+    html=`<input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
   } else if(sheet==='inventario'){
     const item=index!==null?dataStore.inventario[index]:{};
     html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
@@ -212,12 +215,13 @@ function openAddForm(sheet,index=null){
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// Save item
+// Save Item
 function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value.trim());
 
   if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
+  if((currentSheet==='categoria'||currentSheet==='tienda') && !form.nombre){ alert('El nombre es obligatorio'); return; }
 
   // Generar id correlativo oculto
   if(editingIndex===null){
@@ -256,25 +260,38 @@ function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
     const id = dataStore[currentSheet][i].id;
-
-    // Eliminar local
     dataStore[currentSheet].splice(i,1);
 
-    // Reestructurar ID correlativo para Inventario, Categoría y Tienda
+    // Reestructurar ID correlativo local
     dataStore[currentSheet].forEach((d, idx) => d.id = idx + 1);
 
-    // Renderizar tabla en vivo
     renderTable(currentSheet);
 
-    // Sincronizar con App Web
+    // Sincronización en App Web
     fetch(APP_SCRIPT_URL,{
       method:'POST',
-      body:new URLSearchParams({sheet:currentSheet,action:'delete',idValue:id})
+      body:new URLSearchParams({sheet: currentSheet, action:'delete', idValue:id})
     })
     .then(r=>r.json())
     .then(res=>{
       if(!res.success) alert('Error eliminando App Web: '+res.msg);
-    }).catch(e=>console.log('Error sincronizando App Web: '+e.message));
+      else {
+        // Reestructurar IDs en App Web
+        dataStore[currentSheet].forEach((item, index) => {
+          fetch(APP_SCRIPT_URL, {
+            method:'POST',
+            body:new URLSearchParams({
+              sheet: currentSheet,
+              action:'update',
+              idValue: item.id, // antiguo id
+              id: index + 1    // nuevo id correlativo
+            })
+          });
+          item.id = index + 1; // actualizar localmente también
+        });
+      }
+    })
+    .catch(e=>console.log('Error sincronizando App Web: '+e.message));
   }
 }
 
@@ -289,7 +306,7 @@ function renderDashboard(){
   document.getElementById('content').innerHTML='';
 }
 
-// Navigation
+// Nav
 function nav(sheet){ renderTable(sheet); }
 
 // Init
