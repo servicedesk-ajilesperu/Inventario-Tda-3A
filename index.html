@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -190,10 +192,7 @@ function openAddForm(sheet,index=null){
     html=`<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
   } else if(sheet==='tienda'){
     const item=index!==null?dataStore.tienda[index]:{};
-    html=`
-      <input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
-      <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">
-    `;
+    html=`<input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
   } else if(sheet==='inventario'){
     const item=index!==null?dataStore.inventario[index]:{};
     html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
@@ -222,14 +221,6 @@ function closeModal(){ document.getElementById('modal').style.display='none'; }
 function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value.trim());
-
-  // Validación de Tienda
-  if(currentSheet==='tienda'){
-    if(!form.codigo){ alert('El código es obligatorio'); return; }
-    if(!form.nombre){ alert('El nombre es obligatorio'); return; }
-    const duplicado = dataStore.tienda.some((t,idx)=>t.codigo === form.codigo && idx !== editingIndex);
-    if(duplicado){ alert('El código ya existe en otra tienda'); return; }
-  }
 
   if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
 
@@ -266,22 +257,24 @@ function saveItem(){
 function editItem(i){ openAddForm(currentSheet,i); }
 
 function deleteItem(i){
-  if(currentSheet !== 'categoria' && currentSheet !== 'tienda') return;
+  if(currentSheet !== 'categoria') return; // Solo Categoria
 
   if(confirm('¿Seguro de eliminar este registro?')){
-    const oldId = dataStore[currentSheet][i].id;
-    dataStore[currentSheet].splice(i,1);
-    dataStore[currentSheet].forEach((item,idx)=>item.id = idx+1);
+    const oldId = dataStore.categoria[i].id;
+    dataStore.categoria.splice(i,1);
+    dataStore.categoria.forEach((item,idx)=>item.id=idx+1);
     renderTable(currentSheet);
 
+    // Eliminar en App Web
     fetch(APP_SCRIPT_URL,{
       method:'POST',
-      body:new URLSearchParams({sheet: currentSheet, action:'delete', idValue: oldId})
+      body:new URLSearchParams({sheet:'categoria', action:'delete', idValue: oldId})
     })
     .then(r=>r.json())
     .then(res=>{
       if(res.success){
-        fetch(`${APP_SCRIPT_URL}?sheet=${currentSheet}&callback=cb`)
+        // Reestructurar IDs en App Web
+        fetch(`${APP_SCRIPT_URL}?sheet=categoria&callback=cb`)
           .then(r=>r.text())
           .then(txt=>{
             const json = JSON.parse(txt.match(/\((.*)\)/)[1]);
@@ -290,57 +283,46 @@ function deleteItem(i){
               data.forEach((row,idx)=>{
                 const newId = idx + 1;
                 if(Number(row.id) !== newId){
-                  const params = {
-                    sheet: currentSheet,
-                    action: 'update',
-                    idValue: row.id,
-                    id: newId
-                  };
-                  if(currentSheet === 'tienda'){
-                    params.codigo = row.codigo || '';
-                    params.nombre = row.nombre || '';
-                  } else if(currentSheet === 'categoria'){
-                    params.nombre = row.nombre || '';
-                  }
                   fetch(APP_SCRIPT_URL,{
                     method:'POST',
-                    body:new URLSearchParams(params)
+                    body:new URLSearchParams({
+                      sheet:'categoria',
+                      action:'update',
+                      idValue: row.id,
+                      id: newId,
+                      nombre: row.nombre || ''
+                    })
                   });
                 }
               });
             }
           });
       } else {
-        alert('Error eliminando en App Web: '+res.msg);
+        alert('Error eliminando App Web: '+res.msg);
       }
     })
-    .catch(e=>console.log('Error:', e.message));
+    .catch(e=>console.log('Error:',e.message));
   }
 }
 
 // Dashboard
 function renderDashboard(){
-  document.getElementById('main-title').textContent='Dashboard';
+  const cardsDiv=document.getElementById('dashboard-cards');
+  cardsDiv.innerHTML='';
+  cardsDiv.innerHTML+=`<div class="card" onclick="nav('inventario')"><i class="fa-solid fa-computer"></i><span>${dataStore.inventario.length}</span>Inventario</div>`;
+  cardsDiv.innerHTML+=`<div class="card" onclick="nav('categoria')"><i class="fa-solid fa-tags"></i><span>${dataStore.categoria.length}</span>Categorias</div>`;
+  cardsDiv.innerHTML+=`<div class="card" onclick="nav('tienda')"><i class="fa-solid fa-store"></i><span>${dataStore.tienda.length}</span>Tiendas</div>`;
+  document.getElementById('main-title').textContent = 'Dashboard';
   document.getElementById('content').innerHTML='';
-  const cards=document.getElementById('dashboard-cards');
-  cards.innerHTML=`
-    <div class="card" onclick="nav('inventario')"><i class="fa-solid fa-box"></i><span>${dataStore.inventario.length}</span><div>Inventario</div></div>
-    <div class="card" onclick="nav('categoria')"><i class="fa-solid fa-tags"></i><span>${dataStore.categoria.length}</span><div>Categorías</div></div>
-    <div class="card" onclick="nav('tienda')"><i class="fa-solid fa-store"></i><span>${dataStore.tienda.length}</span><div>Tiendas</div></div>
-  `;
 }
 
+// Nav
 function nav(sheet){ renderTable(sheet); }
 
-// Inicialización
-Promise.all([
-  fetchSheet('inventario'),
-  fetchSheet('categoria'),
-  fetchSheet('tienda')
-]).then(()=>renderDashboard()).catch(err=>{
-  console.error(err);
-  alert('Error cargando datos');
-});
+// Init
+Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
+  .then(()=>{ renderDashboard(); });
 </script>
 </body>
 </html>
+
