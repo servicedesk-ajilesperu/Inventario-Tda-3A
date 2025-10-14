@@ -151,14 +151,13 @@ function renderTable(sheet){
   let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
   if(data.length>0){
     html += `<table><thead><tr>`;
-    Object.keys(data[0]).forEach(h=>{
-      if(h.toLowerCase()!=='id') html+=`<th>${h}</th>`;
-    });
+    // MOSTRAR TODOS LOS CAMPOS, INCLUIDO ID
+    Object.keys(data[0]).forEach(h=> html+=`<th>${h}</th>`);
     html += `<th>Acciones</th></tr></thead><tbody>`;
     data.forEach((r,i)=>{
       html+=`<tr>`;
       Object.entries(r).forEach(([k,v])=>{
-        if(k.toLowerCase()!=='id') html+=`<td>${v}</td>`;
+        html+=`<td>${v}</td>`;
       });
       html+=`<td class="actions">
         <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
@@ -259,47 +258,40 @@ function saveItem(){
 // Edit
 function editItem(i){ openAddForm(currentSheet,i); }
 
-// Delete mejorado
+// Delete
 function deleteItem(i){
   if(!confirm('¿Seguro de eliminar este registro?')) return;
 
   const sheet = currentSheet;
-  const deletedItem = dataStore[sheet][i];
+  const delId = dataStore[sheet][i].id;
 
-  // 1. Eliminar localmente
+  // Eliminar localmente
   dataStore[sheet].splice(i,1);
 
-  // 2. Enviar DELETE a App Web
-  fetch(APP_SCRIPT_URL, {
-    method:'POST',
-    body: new URLSearchParams({
-      sheet,
-      action: 'delete',
-      idValue: deletedItem.id
-    })
-  })
-  .then(r => r.json())
-  .then(res => {
-    if(!res.success) console.log('Error eliminando en App Web:', res.msg);
-  })
-  .catch(e => console.log('Error eliminando en App Web:', e.message));
-
-  // 3. Reestructurar IDs locales y actualizar App Web
+  // Reestructurar IDs localmente
   dataStore[sheet].forEach((item, idx) => {
     item.oldId = item.id;
-    item.id = idx + 1;
+    item.id = idx+1;
   });
 
   renderTable(sheet);
 
+  // Eliminar en App Web
+  fetch(APP_SCRIPT_URL, { 
+    method:'POST', 
+    body: new URLSearchParams({ sheet, action:'delete', idValue:delId }) 
+  })
+  .then(r=>r.json())
+  .then(res=>{ if(!res.success) console.log('Error eliminando App Web:', res.msg); })
+  .catch(e=>console.log('Error eliminando App Web:', e.message));
+
+  // Reestructurar IDs restantes en App Web
   dataStore[sheet].forEach(item=>{
     const payload = {...item, sheet, action:'update', idValue:item.oldId};
     delete payload.oldId;
     fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams(payload) })
       .then(r=>r.json())
-      .then(res=>{
-        if(!res.success) console.log('Error reestructurando App Web:', res.msg);
-      })
+      .then(res=>{ if(!res.success) console.log('Error reestructurando App Web:', res.msg); })
       .catch(e=>console.log('Error reestructurando App Web:', e.message));
   });
 }
