@@ -185,16 +185,13 @@ function openAddForm(sheet,index=null){
   editingIndex=index;
   document.getElementById('modal-title').textContent = index!==null?'Editar '+sheet:'Agregar '+sheet;
   let html='';
-
   if(sheet==='categoria'){
     const item=index!==null?dataStore.categoria[index]:{};
     html=`<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
-    
   } else if(sheet==='tienda'){
     const item=index!==null?dataStore.tienda[index]:{};
     html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
           <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
-          
   } else if(sheet==='inventario'){
     const item=index!==null?dataStore.inventario[index]:{};
     html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
@@ -214,11 +211,9 @@ function openAddForm(sheet,index=null){
     });
     html+=`</select>`;
   }
-
   document.getElementById('modal-form').innerHTML = html;
   document.getElementById('modal').style.display='flex';
 }
-
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
 // Save Item
@@ -227,7 +222,7 @@ function saveItem(){
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value.trim());
 
   if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
-  if(currentSheet==='tienda' && !form.codigo){ alert('El código de la tienda es obligatorio'); return; }
+  if(currentSheet==='tienda' && !form.codigo){ alert('El código es obligatorio'); return; }
 
   if(editingIndex===null){
     form.id = dataStore[currentSheet].length>0 ? Math.max(...dataStore[currentSheet].map(d=>Number(d.id)))+1 : 1;
@@ -264,10 +259,13 @@ function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
     const oldId = dataStore[currentSheet][i].id;
+    // Eliminar local
     dataStore[currentSheet].splice(i,1);
+    // Reestructurar correlativo local para cualquier sheet
     dataStore[currentSheet].forEach((item,index)=> item.id = index+1);
     renderTable(currentSheet);
 
+    // Eliminar en App Web
     fetch(APP_SCRIPT_URL,{
       method:'POST',
       body:new URLSearchParams({sheet: currentSheet, action:'delete', idValue: oldId})
@@ -276,6 +274,7 @@ function deleteItem(i){
     .then(res=>{
       if(!res.success) alert('Error eliminando App Web: '+res.msg);
       else {
+        // Actualizar todos los IDs restantes en App Web
         dataStore[currentSheet].forEach(item=>{
           fetch(APP_SCRIPT_URL,{
             method:'POST',
