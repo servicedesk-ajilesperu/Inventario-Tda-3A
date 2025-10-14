@@ -6,6 +6,7 @@
 <title>Inventario Tiendas 3A</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
+/* === ESTILOS === */
 body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 * { box-sizing:border-box; }
 .sidebar { width:260px; position:fixed; height:100%; background:#ff4d00; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
@@ -204,7 +205,6 @@ function openAddForm(sheet,index=null){
       html+=`<option value="${c.nombre}" ${item.categoria===c.nombre?'selected':''}>${c.nombre}</option>`;
     });
     html+=`</select>`;
-
     html+=`<select id="tienda"><option value="">Selecciona Tienda</option>`;
     dataStore.tienda.forEach(t=>{
       html+=`<option value="${t.nombre}" ${item.tienda===t.nombre?'selected':''}>${t.nombre}</option>`;
@@ -229,7 +229,14 @@ function saveItem(){
     if(exists){ alert('El código ya existe'); return; }
   }
 
-  // ID correlativo para todas las hojas
+  if(currentSheet==='inventario'){
+    if(form.codigo){
+      const exists = dataStore.inventario.some((t,i)=>i!==editingIndex && t.codigo===form.codigo);
+      if(exists){ alert('El Código ya existe en Inventario'); return; }
+    }
+  }
+
+  // ID correlativo
   if(editingIndex===null){
     form.id = dataStore[currentSheet].length>0 ? Math.max(...dataStore[currentSheet].map(d=>Number(d.id)))+1 : 1;
   } else {
@@ -246,8 +253,20 @@ function saveItem(){
   renderTable(currentSheet);
 
   // Enviar a App Web
-  const payload = {...form, sheet: currentSheet, action: editingIndex!==null?'update':'add'};
-  if(editingIndex!==null) payload.idValue = form.id;
+  const payload = {
+    sheet: currentSheet,
+    action: editingIndex!==null?'update':'add',
+    idValue: editingIndex!==null ? form.id : undefined,
+    id: form.id,
+    codigo: form.codigo || '',
+    serie: form.serie || '',
+    equipo: form.equipo || '',
+    marca: form.marca || '',
+    modelo: form.modelo || '',
+    categoria: form.categoria || '',
+    tienda: form.tienda || '',
+    nombre: form.nombre || ''
+  };
 
   fetch(APP_SCRIPT_URL, {
     method:'POST',
@@ -264,7 +283,8 @@ function saveItem(){
 function editItem(i){ openAddForm(currentSheet,i); }
 
 function deleteItem(i){
-  if(!['categoria','tienda','inventario'].includes(currentSheet)) return;
+  if(currentSheet !== 'categoria' && currentSheet !== 'tienda') return;
+
   if(confirm('¿Seguro de eliminar este registro?')){
     const oldId = dataStore[currentSheet][i].id;
     dataStore[currentSheet].splice(i,1);
@@ -273,42 +293,11 @@ function deleteItem(i){
 
     fetch(APP_SCRIPT_URL,{
       method:'POST',
-      body:new URLSearchParams({sheet:currentSheet, action:'delete', idValue: oldId})
+      body:new URLSearchParams({sheet: currentSheet, action:'delete', idValue: oldId})
     })
     .then(r=>r.json())
     .then(res=>{
-      if(res.success){
-        fetch(`${APP_SCRIPT_URL}?sheet=${currentSheet}&callback=cb`)
-          .then(r=>r.text())
-          .then(txt=>{
-            const json = JSON.parse(txt.match(/\((.*)\)/)[1]);
-            if(json.success){
-              const data = json.data;
-              data.forEach((row,idx)=>{
-                const newId = idx + 1;
-                if(Number(row.id)!==newId){
-                  fetch(APP_SCRIPT_URL,{
-                    method:'POST',
-                    body:new URLSearchParams({
-                      sheet:currentSheet,
-                      action:'update',
-                      idValue: row.id,
-                      id: newId,
-                      nombre: row.nombre || '',
-                      codigo: row.codigo || '',
-                      serie: row.serie || '',
-                      equipo: row.equipo || '',
-                      marca: row.marca || '',
-                      modelo: row.modelo || '',
-                      categoria: row.categoria || '',
-                      tienda: row.tienda || ''
-                    })
-                  });
-                }
-              });
-            }
-          });
-      } else alert('Error eliminando App Web: '+res.msg);
+      if(!res.success) alert('Error eliminando App Web: '+res.msg);
     })
     .catch(e=>console.log('Error:',e.message));
   }
