@@ -109,7 +109,7 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
@@ -147,6 +147,7 @@ function renderTable(sheet){
   currentSheet=sheet;
   document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
   document.getElementById('dashboard-cards').innerHTML='';
+
   const data = dataStore[sheet];
   let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
   if(data.length>0){
@@ -185,12 +186,13 @@ function openAddForm(sheet,index=null){
   editingIndex=index;
   document.getElementById('modal-title').textContent = index!==null?'Editar '+sheet:'Agregar '+sheet;
   let html='';
+
   if(sheet==='categoria'){
     const item=index!==null?dataStore.categoria[index]:{};
     html=`<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
   } else if(sheet==='tienda'){
     const item=index!==null?dataStore.tienda[index]:{};
-    html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
+    html=`<input type="text" id="codigo" placeholder="Código de Tienda" value="${item.codigo||''}">
           <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
   } else if(sheet==='inventario'){
     const item=index!==null?dataStore.inventario[index]:{};
@@ -199,7 +201,6 @@ function openAddForm(sheet,index=null){
           <input type="text" id="equipo" placeholder="Equipo" value="${item.equipo||''}">
           <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
           <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">`;
-
     html+=`<select id="categoria"><option value="">Selecciona Categoria</option>`;
     dataStore.categoria.forEach(c=>{
       html+=`<option value="${c.nombre}" ${item.categoria===c.nombre?'selected':''}>${c.nombre}</option>`;
@@ -223,14 +224,27 @@ function saveItem(){
 
   if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
 
-  if(currentSheet==='tienda' && !form.codigo){ alert('El código es obligatorio'); return; }
+  // Validaciones duplicados
+  if(currentSheet==='categoria'){
+    const dup = dataStore.categoria.some((c,i)=> c.nombre.toLowerCase()===form.nombre.toLowerCase() && i!==editingIndex);
+    if(dup){ alert('Esta categoría ya existe'); return; }
+  }
+  if(currentSheet==='tienda'){
+    if(!form.codigo || !form.nombre){ alert('Código y Nombre son obligatorios'); return; }
+    const dupCodigo = dataStore.tienda.some((t,i)=> t.codigo===form.codigo && i!==editingIndex);
+    const dupNombre = dataStore.tienda.some((t,i)=> t.nombre.toLowerCase()===form.nombre.toLowerCase() && i!==editingIndex);
+    if(dupCodigo){ alert('Este código ya existe'); return; }
+    if(dupNombre){ alert('Este nombre de tienda ya existe'); return; }
+  }
 
+  // Generar id correlativo oculto
   if(editingIndex===null){
     form.id = dataStore[currentSheet].length>0 ? Math.max(...dataStore[currentSheet].map(d=>Number(d.id)))+1 : 1;
   } else {
     form.id = dataStore[currentSheet][editingIndex].id;
   }
 
+  // Guardado local en vivo
   if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
   } else {
@@ -240,6 +254,7 @@ function saveItem(){
   closeModal();
   renderTable(currentSheet);
 
+  // Sincronización en segundo plano
   const payload = {...form, sheet: currentSheet, action: editingIndex!==null?'update':'add'};
   if(editingIndex!==null) payload.idValue = form.id;
 
@@ -258,12 +273,13 @@ function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
     const oldId = dataStore[currentSheet][i].id;
+    // Eliminar local
     dataStore[currentSheet].splice(i,1);
     // Reestructurar correlativo local
-    dataStore[currentSheet].forEach((item,index)=> item.id = index+1);
+    dataStore[currentSheet].forEach((item,index)=> item.id=index+1);
     renderTable(currentSheet);
 
-    // Sincronizar toda la tabla con la App Web
+    // Eliminar en App Web
     fetch(APP_SCRIPT_URL,{
       method:'POST',
       body:new URLSearchParams({sheet: currentSheet, action:'delete', idValue: oldId})
@@ -272,23 +288,11 @@ function deleteItem(i){
     .then(res=>{
       if(!res.success) alert('Error eliminando App Web: '+res.msg);
       else {
+        // Actualizar todos los IDs restantes en App Web
         dataStore[currentSheet].forEach(item=>{
           fetch(APP_SCRIPT_URL,{
             method:'POST',
-            body:new URLSearchParams({
-              sheet: currentSheet,
-              action:'update',
-              idValue: item.id,
-              id: item.id,
-              codigo: item.codigo || '',
-              nombre: item.nombre || '',
-              equipo: item.equipo || '',
-              serie: item.serie || '',
-              marca: item.marca || '',
-              modelo: item.modelo || '',
-              categoria: item.categoria || '',
-              tienda: item.tienda || ''
-            })
+            body:new URLSearchParams({sheet: currentSheet, action:'update', idValue:item.id, id:item.id})
           });
         });
       }
