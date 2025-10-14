@@ -222,6 +222,7 @@ function saveItem(){
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value.trim());
 
   if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
+
   if(currentSheet==='tienda' && !form.codigo){ alert('El código es obligatorio'); return; }
 
   if(editingIndex===null){
@@ -247,9 +248,7 @@ function saveItem(){
     body:new URLSearchParams(payload)
   })
   .then(r=>r.json())
-  .then(res=>{
-    if(!res.success) alert('Error sincronizando App Web: '+res.msg);
-  })
+  .then(res=>{ if(!res.success) alert('Error sincronizando App Web: '+res.msg); })
   .catch(e=>console.log('Error sincronizando App Web: '+e.message));
 }
 
@@ -259,13 +258,12 @@ function editItem(i){ openAddForm(currentSheet,i); }
 function deleteItem(i){
   if(confirm('¿Seguro de eliminar?')){
     const oldId = dataStore[currentSheet][i].id;
-    // Eliminar local
     dataStore[currentSheet].splice(i,1);
-    // Reestructurar correlativo local para cualquier sheet
+    // Reestructurar correlativo local
     dataStore[currentSheet].forEach((item,index)=> item.id = index+1);
     renderTable(currentSheet);
 
-    // Eliminar en App Web
+    // Sincronizar toda la tabla con la App Web
     fetch(APP_SCRIPT_URL,{
       method:'POST',
       body:new URLSearchParams({sheet: currentSheet, action:'delete', idValue: oldId})
@@ -274,7 +272,6 @@ function deleteItem(i){
     .then(res=>{
       if(!res.success) alert('Error eliminando App Web: '+res.msg);
       else {
-        // Actualizar todos los IDs restantes en App Web
         dataStore[currentSheet].forEach(item=>{
           fetch(APP_SCRIPT_URL,{
             method:'POST',
@@ -282,7 +279,15 @@ function deleteItem(i){
               sheet: currentSheet,
               action:'update',
               idValue: item.id,
-              id: item.id
+              id: item.id,
+              codigo: item.codigo || '',
+              nombre: item.nombre || '',
+              equipo: item.equipo || '',
+              serie: item.serie || '',
+              marca: item.marca || '',
+              modelo: item.modelo || '',
+              categoria: item.categoria || '',
+              tienda: item.tienda || ''
             })
           });
         });
