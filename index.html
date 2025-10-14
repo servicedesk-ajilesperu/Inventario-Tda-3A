@@ -253,7 +253,7 @@ function saveItem(){
   .then(res=>{
     if(!res.success) alert('Error sincronizando App Web: '+res.msg);
   })
-  .catch(e=>console.log('Error sincronizando App Web: '+e.message));
+  .catch(e=>console.log('Error sincronizando App Web:', e.message));
 }
 
 // Edit
@@ -264,20 +264,34 @@ function deleteItem(i){
   if(!confirm('¿Seguro de eliminar este registro?')) return;
 
   const sheet = currentSheet;
+  const deletedItem = dataStore[sheet][i];
 
-  // Eliminar localmente
-  const oldId = dataStore[sheet][i].id;
+  // 1. Eliminar localmente
   dataStore[sheet].splice(i,1);
 
-  // Reestructurar IDs localmente
+  // 2. Enviar DELETE a App Web
+  fetch(APP_SCRIPT_URL, {
+    method:'POST',
+    body: new URLSearchParams({
+      sheet,
+      action: 'delete',
+      idValue: deletedItem.id
+    })
+  })
+  .then(r => r.json())
+  .then(res => {
+    if(!res.success) console.log('Error eliminando en App Web:', res.msg);
+  })
+  .catch(e => console.log('Error eliminando en App Web:', e.message));
+
+  // 3. Reestructurar IDs locales y actualizar App Web
   dataStore[sheet].forEach((item, idx) => {
     item.oldId = item.id;
-    item.id = idx+1;
+    item.id = idx + 1;
   });
 
   renderTable(sheet);
 
-  // Actualizar App Web
   dataStore[sheet].forEach(item=>{
     const payload = {...item, sheet, action:'update', idValue:item.oldId};
     delete payload.oldId;
@@ -309,3 +323,4 @@ Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario
   .then(()=>{ renderDashboard(); });
 </script>
 </body>
+</html>
