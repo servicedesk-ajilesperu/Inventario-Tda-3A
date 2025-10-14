@@ -6,7 +6,6 @@
 <title>Inventario Tiendas 3A</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
-/* === ESTILOS === */
 body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 * { box-sizing:border-box; }
 .sidebar { width:260px; position:fixed; height:100%; background:#ff4d00; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
@@ -152,13 +151,13 @@ function renderTable(sheet){
   if(data.length>0){
     html += `<table><thead><tr>`;
     Object.keys(data[0]).forEach(h=>{
-      if(h.toLowerCase()!=='id') html+=`<th>${h}</th>`; // id oculto
+      if(h.toLowerCase()!=='id') html+=`<th>${h}</th>`;
     });
     html += `<th>Acciones</th></tr></thead><tbody>`;
     data.forEach((r,i)=>{
       html+=`<tr>`;
       Object.entries(r).forEach(([k,v])=>{
-        if(k.toLowerCase()!=='id') html+=`<td>${v}</td>`; // id oculto
+        if(k.toLowerCase()!=='id') html+=`<td>${v}</td>`;
       });
       html+=`<td class="actions">
         <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
@@ -190,7 +189,7 @@ function openAddForm(sheet,index=null){
     html=`<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
   } else if(sheet==='tienda'){
     const item=index!==null?dataStore.tienda[index]:{};
-    html=`<input type="text" id="codigo" placeholder="Código de Tienda" value="${item.codigo||''}">
+    html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
           <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
   } else if(sheet==='inventario'){
     const item=index!==null?dataStore.inventario[index]:{};
@@ -199,7 +198,6 @@ function openAddForm(sheet,index=null){
           <input type="text" id="equipo" placeholder="Equipo" value="${item.equipo||''}">
           <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
           <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">`;
-
     html+=`<select id="categoria"><option value="">Selecciona Categoria</option>`;
     dataStore.categoria.forEach(c=>{
       html+=`<option value="${c.nombre}" ${item.categoria===c.nombre?'selected':''}>${c.nombre}</option>`;
@@ -230,6 +228,7 @@ function saveItem(){
   }
   if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
 
+  // ID correlativo igual que categoria
   if(editingIndex===null){
     form.id = dataStore[currentSheet].length>0 ? Math.max(...dataStore[currentSheet].map(d=>Number(d.id)))+1 : 1;
   } else {
@@ -263,24 +262,25 @@ function saveItem(){
 function editItem(i){ openAddForm(currentSheet,i); }
 
 function deleteItem(i){
-  if(currentSheet !== 'categoria') return; // Solo Categoria
+  if(currentSheet!=='categoria' && currentSheet!=='tienda') return; // Solo Categoria y Tienda
 
   if(confirm('¿Seguro de eliminar este registro?')){
-    const oldId = dataStore.categoria[i].id;
-    dataStore.categoria.splice(i,1);
-    dataStore.categoria.forEach((item,idx)=>item.id=idx+1);
+    const oldId = dataStore[currentSheet][i].id;
+    dataStore[currentSheet].splice(i,1);
+    // Reestructurar IDs correlativos
+    dataStore[currentSheet].forEach((item,idx)=>item.id=idx+1);
     renderTable(currentSheet);
 
     // Eliminar en App Web
     fetch(APP_SCRIPT_URL,{
       method:'POST',
-      body:new URLSearchParams({sheet:'categoria', action:'delete', idValue: oldId})
+      body:new URLSearchParams({sheet:currentSheet, action:'delete', idValue: oldId})
     })
     .then(r=>r.json())
     .then(res=>{
       if(res.success){
         // Reestructurar IDs en App Web
-        fetch(`${APP_SCRIPT_URL}?sheet=categoria&callback=cb`)
+        fetch(`${APP_SCRIPT_URL}?sheet=${currentSheet}&callback=cb`)
           .then(r=>r.text())
           .then(txt=>{
             const json = JSON.parse(txt.match(/\((.*)\)/)[1]);
@@ -288,15 +288,16 @@ function deleteItem(i){
               const data = json.data;
               data.forEach((row,idx)=>{
                 const newId = idx + 1;
-                if(Number(row.id) !== newId){
+                if(Number(row.id)!==newId){
                   fetch(APP_SCRIPT_URL,{
                     method:'POST',
                     body:new URLSearchParams({
-                      sheet:'categoria',
+                      sheet:currentSheet,
                       action:'update',
                       idValue: row.id,
                       id: newId,
-                      nombre: row.nombre || ''
+                      nombre: row.nombre || '',
+                      codigo: row.codigo || ''
                     })
                   });
                 }
