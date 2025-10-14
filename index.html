@@ -223,17 +223,19 @@ function saveItem(){
   if(currentSheet==='tienda'){
     if(!form.codigo){ alert('El código es obligatorio'); return; }
     if(!form.nombre){ alert('El nombre es obligatorio'); return; }
+
     const exists = dataStore.tienda.some((t,i)=>i!==editingIndex && t.codigo===form.codigo);
     if(exists){ alert('El código ya existe'); return; }
-  }
-  if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
 
-  // ID correlativo igual que categoria
-  if(editingIndex===null){
-    form.id = dataStore[currentSheet].length>0 ? Math.max(...dataStore[currentSheet].map(d=>Number(d.id)))+1 : 1;
-  } else {
-    form.id = dataStore[currentSheet][editingIndex].id;
+    // ID correlativo
+    if(editingIndex===null){
+        form.id = dataStore.tienda.length>0 ? Math.max(...dataStore.tienda.map(d=>Number(d.id)))+1 : 1;
+    } else {
+        form.id = dataStore.tienda[editingIndex].id;
+    }
   }
+
+  if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
 
   if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
