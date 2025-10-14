@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -116,7 +114,7 @@ let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
 
-// Sidebar
+// Sidebar toggle
 document.getElementById('toggleSidebar').addEventListener('click',()=>{ 
   document.getElementById('sidebar').classList.toggle('collapsed'); 
 });
@@ -154,13 +152,13 @@ function renderTable(sheet){
   if(data.length>0){
     html += `<table><thead><tr>`;
     Object.keys(data[0]).forEach(h=>{
-      if(h.toLowerCase()!=='id') html+=`<th>${h}</th>`;
+      if(h.toLowerCase()!=='id') html+=`<th>${h}</th>`; // id oculto
     });
     html += `<th>Acciones</th></tr></thead><tbody>`;
     data.forEach((r,i)=>{
       html+=`<tr>`;
       Object.entries(r).forEach(([k,v])=>{
-        if(k.toLowerCase()!=='id') html+=`<td>${v}</td>`;
+        if(k.toLowerCase()!=='id') html+=`<td>${v}</td>`; // id oculto
       });
       html+=`<td class="actions">
         <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
@@ -192,7 +190,8 @@ function openAddForm(sheet,index=null){
     html=`<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
   } else if(sheet==='tienda'){
     const item=index!==null?dataStore.tienda[index]:{};
-    html=`<input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
+    html=`<input type="text" id="codigo" placeholder="Código de Tienda" value="${item.codigo||''}">
+          <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
   } else if(sheet==='inventario'){
     const item=index!==null?dataStore.inventario[index]:{};
     html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
@@ -222,6 +221,13 @@ function saveItem(){
   const form={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> form[el.id]=el.value.trim());
 
+  // Validaciones
+  if(currentSheet==='tienda'){
+    if(!form.codigo){ alert('El código es obligatorio'); return; }
+    if(!form.nombre){ alert('El nombre es obligatorio'); return; }
+    const exists = dataStore.tienda.some((t,i)=>i!==editingIndex && t.codigo===form.codigo);
+    if(exists){ alert('El código ya existe'); return; }
+  }
   if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
 
   if(editingIndex===null){
@@ -325,4 +331,3 @@ Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario
 </script>
 </body>
 </html>
-
