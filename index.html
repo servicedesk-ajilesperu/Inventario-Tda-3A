@@ -226,16 +226,18 @@ function saveItem(){
 
     const exists = dataStore.tienda.some((t,i)=>i!==editingIndex && t.codigo===form.codigo);
     if(exists){ alert('El código ya existe'); return; }
-
-    // ID correlativo
-    if(editingIndex===null){
-        form.id = dataStore.tienda.length>0 ? Math.max(...dataStore.tienda.map(d=>Number(d.id)))+1 : 1;
-    } else {
-        form.id = dataStore.tienda[editingIndex].id;
-    }
   }
 
-  if(currentSheet==='inventario' && !form.codigo){ alert('El código es obligatorio'); return; }
+  if(currentSheet==='inventario'){
+    // Código opcional, no obligatorio
+  }
+
+  // ID correlativo para todas las hojas
+  if(editingIndex===null){
+    form.id = dataStore[currentSheet].length>0 ? Math.max(...dataStore[currentSheet].map(d=>Number(d.id)))+1 : 1;
+  } else {
+    form.id = dataStore[currentSheet][editingIndex].id;
+  }
 
   if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...form};
@@ -246,6 +248,7 @@ function saveItem(){
   closeModal();
   renderTable(currentSheet);
 
+  // Enviar a App Web
   const payload = {...form, sheet: currentSheet, action: editingIndex!==null?'update':'add'};
   if(editingIndex!==null) payload.idValue = form.id;
 
@@ -264,7 +267,7 @@ function saveItem(){
 function editItem(i){ openAddForm(currentSheet,i); }
 
 function deleteItem(i){
-  if(currentSheet!=='categoria' && currentSheet!=='tienda') return;
+  if(currentSheet!=='categoria' && currentSheet!=='tienda' && currentSheet!=='inventario') return;
 
   if(confirm('¿Seguro de eliminar este registro?')){
     const oldId = dataStore[currentSheet][i].id;
@@ -296,7 +299,13 @@ function deleteItem(i){
                       idValue: row.id,
                       id: newId,
                       nombre: row.nombre || '',
-                      codigo: row.codigo || ''
+                      codigo: row.codigo || '',
+                      serie: row.serie || '',
+                      equipo: row.equipo || '',
+                      marca: row.marca || '',
+                      modelo: row.modelo || '',
+                      categoria: row.categoria || '',
+                      tienda: row.tienda || ''
                     })
                   });
                 }
