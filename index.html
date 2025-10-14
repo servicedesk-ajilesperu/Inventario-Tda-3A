@@ -198,11 +198,13 @@ function openAddForm(sheet,index=null){
           <input type="text" id="equipo" placeholder="Equipo" value="${item.equipo||''}">
           <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
           <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">`;
+
     html+=`<select id="categoria"><option value="">Selecciona Categoria</option>`;
     dataStore.categoria.forEach(c=>{
       html+=`<option value="${c.nombre}" ${item.categoria===c.nombre?'selected':''}>${c.nombre}</option>`;
     });
     html+=`</select>`;
+
     html+=`<select id="tienda"><option value="">Selecciona Tienda</option>`;
     dataStore.tienda.forEach(t=>{
       html+=`<option value="${t.nombre}" ${item.tienda===t.nombre?'selected':''}>${t.nombre}</option>`;
@@ -223,13 +225,8 @@ function saveItem(){
   if(currentSheet==='tienda'){
     if(!form.codigo){ alert('El código es obligatorio'); return; }
     if(!form.nombre){ alert('El nombre es obligatorio'); return; }
-
     const exists = dataStore.tienda.some((t,i)=>i!==editingIndex && t.codigo===form.codigo);
     if(exists){ alert('El código ya existe'); return; }
-  }
-
-  if(currentSheet==='inventario'){
-    // Código opcional, no obligatorio
   }
 
   // ID correlativo para todas las hojas
@@ -267,8 +264,7 @@ function saveItem(){
 function editItem(i){ openAddForm(currentSheet,i); }
 
 function deleteItem(i){
-  if(currentSheet!=='categoria' && currentSheet!=='tienda' && currentSheet!=='inventario') return;
-
+  if(!['categoria','tienda','inventario'].includes(currentSheet)) return;
   if(confirm('¿Seguro de eliminar este registro?')){
     const oldId = dataStore[currentSheet][i].id;
     dataStore[currentSheet].splice(i,1);
@@ -312,9 +308,7 @@ function deleteItem(i){
               });
             }
           });
-      } else {
-        alert('Error eliminando App Web: '+res.msg);
-      }
+      } else alert('Error eliminando App Web: '+res.msg);
     })
     .catch(e=>console.log('Error:',e.message));
   }
