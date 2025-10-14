@@ -113,7 +113,7 @@ let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
 
-// Sidebar toggle
+// Sidebar
 document.getElementById('toggleSidebar').addEventListener('click',()=>{ 
   document.getElementById('sidebar').classList.toggle('collapsed'); 
 });
@@ -262,16 +262,14 @@ function saveItem(){
 function editItem(i){ openAddForm(currentSheet,i); }
 
 function deleteItem(i){
-  if(currentSheet!=='categoria' && currentSheet!=='tienda') return; // Solo Categoria y Tienda
+  if(currentSheet!=='categoria' && currentSheet!=='tienda') return;
 
   if(confirm('¿Seguro de eliminar este registro?')){
     const oldId = dataStore[currentSheet][i].id;
     dataStore[currentSheet].splice(i,1);
-    // Reestructurar IDs correlativos
     dataStore[currentSheet].forEach((item,idx)=>item.id=idx+1);
     renderTable(currentSheet);
 
-    // Eliminar en App Web
     fetch(APP_SCRIPT_URL,{
       method:'POST',
       body:new URLSearchParams({sheet:currentSheet, action:'delete', idValue: oldId})
@@ -279,7 +277,6 @@ function deleteItem(i){
     .then(r=>r.json())
     .then(res=>{
       if(res.success){
-        // Reestructurar IDs en App Web
         fetch(`${APP_SCRIPT_URL}?sheet=${currentSheet}&callback=cb`)
           .then(r=>r.text())
           .then(txt=>{
