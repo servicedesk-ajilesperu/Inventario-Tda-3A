@@ -149,7 +149,6 @@ function fetchSheet(sheet){
   });
 }
 
-// Headers
 function getHeadersForSheet(sheet, sampleRow){
   if(sheet==='tienda') return ['id','codigo','nombre'];
   if(sheet==='categoria') return ['id','nombre'];
@@ -161,7 +160,6 @@ function getHeadersForSheet(sheet, sampleRow){
   return Object.keys(sampleRow || {}).filter(k=>k.toLowerCase()!=='oldid');
 }
 
-// Render Table
 function renderTable(sheet){
   currentSheet=sheet;
   document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
@@ -191,7 +189,6 @@ function renderTable(sheet){
   document.getElementById('content').innerHTML = html;
 }
 
-// Filter
 function filterTable(value){
   const tbody = document.querySelector('tbody');
   if(!tbody) return;
@@ -200,7 +197,6 @@ function filterTable(value){
   );
 }
 
-// Modal Form
 function openAddForm(sheet,index=null){
   currentSheet=sheet;
   editingIndex=index;
@@ -237,7 +233,6 @@ function openAddForm(sheet,index=null){
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// Save Item
 function saveItem(){
   const formRaw = {};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> formRaw[el.id]=el.value.trim());
@@ -290,49 +285,58 @@ function saveItem(){
     .catch(e=>console.log('Error sincronizando App Web:', e.message));
 }
 
-// Edit
 function editItem(i){ openAddForm(currentSheet,i); }
 
-// Delete - TIENDAS con reestructuración de IDs
+// === ELIMINAR TIENDAS CON REESTRUCTURA APP WEB ===
 function deleteItem(i){
   if(!confirm('¿Seguro de eliminar este registro?')) return;
   const sheet = currentSheet;
+  const delId = dataStore[sheet][i].id;
 
-  if(sheet !== 'tienda'){
+  // eliminar primero en App Web
+  fetch(APP_SCRIPT_URL, { 
+    method:'POST', 
+    body: new URLSearchParams({ sheet, action:'delete', idValue: delId }) 
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    if(!res.success){
+      alert('Error eliminando en App Web: '+res.msg);
+      return;
+    }
+
+    // eliminar local
     dataStore[sheet].splice(i,1);
+
+    // reestructurar ids locales
+    const prevIds = dataStore[sheet].map(item => item.id);
+    dataStore[sheet].forEach((item, idx) => item.id = idx + 1);
+
     renderTable(sheet);
-    return;
-  }
 
-  // eliminar local
-  dataStore[sheet].splice(i,1);
+    // actualizar App Web con nuevos IDs
+    dataStore[sheet].forEach((item, idx)=>{
+      const payload = {
+        sheet,
+        action: 'update',
+        idValue: prevIds[idx],
+        id: item.id,
+        codigo: item.codigo,
+        nombre: item.nombre
+      };
+      fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams(payload) })
+        .then(r=>r.json())
+        .then(res=>{ if(!res.success) console.log('Error reestructurando App Web:', res.msg); })
+        .catch(e=>console.log('Error reestructurando App Web:', e.message));
+    });
 
-  // guardar ids antiguos
-  const prevIds = dataStore[sheet].map(item => item.id);
-
-  // reestructurar ids locales
-  dataStore[sheet].forEach((item, idx) => item.id = idx + 1);
-
-  renderTable(sheet);
-
-  // actualizar App Web con nuevos ids
-  dataStore[sheet].forEach((item, idx)=>{
-    const payload = {
-      sheet,
-      action: 'update',
-      idValue: prevIds[idx],
-      id: item.id,
-      codigo: item.codigo,
-      nombre: item.nombre
-    };
-    fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams(payload) })
-      .then(r=>r.json())
-      .then(res=>{ if(!res.success) console.log('Error reestructurando App Web:', res.msg); })
-      .catch(e=>console.log('Error reestructurando App Web:', e.message));
+  })
+  .catch(e=>{
+    console.log('Error eliminando App Web:', e.message);
+    alert('Error eliminando en App Web');
   });
 }
 
-// Dashboard
 function renderDashboard(){
   const cardsDiv=document.getElementById('dashboard-cards');
   cardsDiv.innerHTML='';
@@ -343,10 +347,8 @@ function renderDashboard(){
   document.getElementById('content').innerHTML='';
 }
 
-// Nav
 function nav(sheet){ renderTable(sheet); }
 
-// Init
 Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
   .then(()=>{ renderDashboard(); })
   .catch(err=>{ console.log('Error inicializando:', err); });
