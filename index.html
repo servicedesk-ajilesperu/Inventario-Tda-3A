@@ -114,7 +114,7 @@ let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
 
-// Sidebar toggle & accordion
+// Sidebar
 document.getElementById('toggleSidebar').addEventListener('click',()=>{ 
   document.getElementById('sidebar').classList.toggle('collapsed'); 
 });
@@ -126,15 +126,17 @@ document.querySelectorAll('.accordion').forEach(acc=>{
   });
 });
 
-// Fetch sheet and normalize rows (ensure numeric id, remove oldId)
+// Fetch Sheet — garantizando id numérico y sin exponer oldId
 function fetchSheet(sheet){
   return new Promise((resolve,reject)=>{
     const cb = 'cb_'+Math.random().toString(36).substring(2,15);
     window[cb] = function(res){
       if(res.success){
+        // normalizar cada fila: aseguramos que exista id numérico y eliminamos oldId si viene
         dataStore[sheet] = res.data.map((r,i)=>{
           const copy = {...r};
-          copy.id = (copy.id || copy.id === 0) ? Number(copy.id) : (i+1);
+          // si viene id como string lo convertimos a número, si no existe, le ponemos índice+1
+          copy.id = copy.id ? Number(copy.id) : (i+1);
           if(copy.oldId) delete copy.oldId;
           return copy;
         });
@@ -149,19 +151,21 @@ function fetchSheet(sheet){
   });
 }
 
-// Header order per sheet
+// Determina encabezados en orden esperado por hoja
 function getHeadersForSheet(sheet, sampleRow){
   if(sheet==='tienda') return ['id','codigo','nombre'];
   if(sheet==='categoria') return ['id','nombre'];
-  if(sheet==='inventario'){
+  if(sheet==='inventario') {
+    // si sampleRow contiene campos extra, preservarlos, pero ponemos el orden base primero:
     const base = ['id','codigo','serie','equipo','marca','modelo','categoria','tienda'];
     const extras = Object.keys(sampleRow || {}).filter(k => !base.includes(k) && k.toLowerCase()!=='oldid');
     return base.concat(extras);
   }
+  // fallback: todas las keys excepto oldId, manteniendo su orden natural
   return Object.keys(sampleRow || {}).filter(k=>k.toLowerCase()!=='oldid');
 }
 
-// Render table (hide oldId and show id first)
+// Render Table (oculta oldId y muestra id en la primera columna según pedido)
 function renderTable(sheet){
   currentSheet=sheet;
   document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
@@ -176,6 +180,7 @@ function renderTable(sheet){
     data.forEach((r,i)=>{
       html+=`<tr>`;
       headers.forEach(k=>{
+        // si no existe la propiedad la mostramos vacía
         const v = (r[k] !== undefined && r[k] !== null) ? r[k] : '';
         html+=`<td>${v}</td>`;
       });
@@ -191,7 +196,7 @@ function renderTable(sheet){
   document.getElementById('content').innerHTML = html;
 }
 
-// Filter
+// Filter Table
 function filterTable(value){
   const tbody = document.querySelector('tbody');
   if(!tbody) return;
@@ -200,7 +205,7 @@ function filterTable(value){
   );
 }
 
-// Open modal form (preserve current inventory and category form layout)
+// Modal Form
 function openAddForm(sheet,index=null){
   currentSheet=sheet;
   editingIndex=index;
@@ -237,23 +242,25 @@ function openAddForm(sheet,index=null){
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// Save item (build object in correct order per sheet; sync to App Web)
+// Save Item — construye el objeto en el orden correcto para la vista
 function saveItem(){
   const formRaw = {};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> formRaw[el.id]=el.value.trim());
 
-  // validations
   if(currentSheet==='tienda' && (!formRaw.codigo || !formRaw.nombre)){ alert('Codigo y Nombre son obligatorios'); return; }
   if(currentSheet==='inventario' && formRaw.codigo){
     if(dataStore.inventario.some((d,i)=>i!==editingIndex && d.codigo===formRaw.codigo)){ alert('El código ya existe'); return; }
   }
 
-  // determine id
-  const newId = (editingIndex===null)
-    ? (dataStore[currentSheet].length>0 ? Math.max(...dataStore[currentSheet].map(d=>Number(d.id)))+1 : 1)
-    : dataStore[currentSheet][editingIndex].id;
+  // determinar id
+  let newId;
+  if(editingIndex===null){
+    newId = dataStore[currentSheet].length>0 ? Math.max(...dataStore[currentSheet].map(d=>Number(d.id)))+1 : 1;
+  } else {
+    newId = dataStore[currentSheet][editingIndex].id;
+  }
 
-  // build newItem respecting field order
+  // construir objeto con campos en el orden esperado por la vista (y por claridad)
   let newItem = {};
   if(currentSheet==='tienda'){
     newItem = { id:newId, codigo: formRaw.codigo||'', nombre: formRaw.nombre||'' };
@@ -271,10 +278,11 @@ function saveItem(){
       tienda: formRaw.tienda||''
     };
   } else {
+    // fallback: usar formRaw y asegurar id
     newItem = { id:newId, ...formRaw };
   }
 
-  // save local
+  // guardar local
   if(editingIndex!==null){
     dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...newItem};
   } else {
@@ -283,16 +291,10 @@ function saveItem(){
 
   closeModal();
   renderTable(currentSheet);
-  renderDashboard();
 
-  // sync to App Web (send all fields explicitly)
-  const payload = new FormData();
-  payload.append('sheet', currentSheet);
-  payload.append('action', editingIndex!==null ? 'update' : 'add');
-  payload.append('idValue', newItem.id);
-  Object.keys(newItem).forEach(k => payload.append(k, newItem[k] ?? ''));
-
-  fetch(APP_SCRIPT_URL, { method:'POST', body: payload })
+  // sincronizar con App Web (se envía payload con campos explícitos)
+  const payload = {...newItem, sheet: currentSheet, action: editingIndex!==null ? 'update' : 'add', idValue: newItem.id};
+  fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams(payload) })
     .then(r=>r.json())
     .then(res=>{ if(!res.success) alert('Error sincronizando App Web: '+res.msg); })
     .catch(e=>console.log('Error sincronizando App Web:', e.message));
@@ -301,38 +303,35 @@ function saveItem(){
 // Edit
 function editItem(i){ openAddForm(currentSheet,i); }
 
-// Delete: delete remote, reindex local and update remote rows (same as Tienda)
+// Delete (elimina remoto y reestructura local mostrando id correcto)
 function deleteItem(i){
   if(!confirm('¿Seguro de eliminar este registro?')) return;
   const sheet = currentSheet;
   const delId = dataStore[sheet][i].id;
 
-  // remove local
+  // eliminar local
   dataStore[sheet].splice(i,1);
 
-  // collect previous ids of remaining rows (they still have their old ids)
-  const prevIds = dataStore[sheet].map(it => it.id);
-
-  // reassign local ids sequentially
-  dataStore[sheet].forEach((it, idx) => it.id = idx + 1);
-
-  // update view & dashboard
+  // reestructurar ids locales (y actualizar vista)
+  const prevIds = [];
+  dataStore[sheet].forEach((it, idx)=>{
+    prevIds.push({ prevId: it.id, idx });
+    it.id = idx + 1;
+  });
   renderTable(sheet);
-  renderDashboard();
 
-  // delete on App Web
+  // eliminar en App Web
   fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams({ sheet, action:'delete', idValue: delId }) })
     .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error eliminando App Web:', res.msg); })
     .catch(e=>console.log('Error eliminando App Web:', e.message));
 
-  // update remaining rows on App Web so their ids match new numbering (if your server requires it)
-  dataStore[sheet].forEach((it, idx) => {
-    const prevId = prevIds[idx]; // previous id of this row before renumbering
-    const payloadObj = {...it, sheet, action:'update', idValue: prevId !== undefined ? prevId : it.id};
-    // send all fields explicitly
-    const payload = new FormData();
-    Object.keys(payloadObj).forEach(k => payload.append(k, payloadObj[k] ?? ''));
-    fetch(APP_SCRIPT_URL, { method:'POST', body: payload })
+  // (opcional) actualizar registros remotos para mantener la nueva numeración si tu App Script lo requiere
+  // enviamos updates con idValue = prevId para indicarle al servidor cuál fila actualizar
+  dataStore[sheet].forEach((it, idx)=>{
+    const prev = prevIds.find(p=>p.idx===idx);
+    const idValue = prev ? prev.prevId : it.id;
+    const payload = {...it, sheet, action:'update', idValue};
+    fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams(payload) })
       .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error reestructurando App Web:', res.msg); })
       .catch(e=>console.log('Error reestructurando App Web:', e.message));
   });
@@ -352,7 +351,7 @@ function renderDashboard(){
 // Nav
 function nav(sheet){ renderTable(sheet); }
 
-// Init: fetch all sheets and render dashboard
+// Init: cargar todas las hojas y mostrar dashboard
 Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
   .then(()=>{ renderDashboard(); })
   .catch(err=>{ console.log('Error inicializando:', err); });
