@@ -132,7 +132,6 @@ function fetchSheet(sheet){
     const cb = 'cb_'+Math.random().toString(36).substring(2,15);
     window[cb] = function(res){
       if(res.success){
-        // map rows: ensure id numeric and remove oldId
         dataStore[sheet] = res.data.map((r,i)=>{
           const copy = {...r};
           copy.id = (copy.id || copy.id === 0) ? Number(copy.id) : (i+1);
@@ -156,14 +155,13 @@ function getHeadersForSheet(sheet, sampleRow){
   if(sheet==='categoria') return ['id','nombre'];
   if(sheet==='inventario'){
     const base = ['id','codigo','serie','equipo','marca','modelo','categoria','tienda'];
-    // preserve any extra keys from sampleRow (excluding oldId)
     const extras = Object.keys(sampleRow || {}).filter(k => !base.includes(k) && k.toLowerCase()!=='oldid');
     return base.concat(extras);
   }
   return Object.keys(sampleRow || {}).filter(k=>k.toLowerCase()!=='oldid');
 }
 
-// Render table (hide oldId if present)
+// Render table (hide oldId and show id first)
 function renderTable(sheet){
   currentSheet=sheet;
   document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
@@ -285,11 +283,16 @@ function saveItem(){
 
   closeModal();
   renderTable(currentSheet);
-  renderDashboard(); // update counts immediately
+  renderDashboard();
 
-  // sync to App Web
-  const payload = {...newItem, sheet: currentSheet, action: editingIndex!==null ? 'update' : 'add', idValue: newItem.id};
-  fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams(payload) })
+  // sync to App Web (send all fields explicitly)
+  const payload = new FormData();
+  payload.append('sheet', currentSheet);
+  payload.append('action', editingIndex!==null ? 'update' : 'add');
+  payload.append('idValue', newItem.id);
+  Object.keys(newItem).forEach(k => payload.append(k, newItem[k] ?? ''));
+
+  fetch(APP_SCRIPT_URL, { method:'POST', body: payload })
     .then(r=>r.json())
     .then(res=>{ if(!res.success) alert('Error sincronizando App Web: '+res.msg); })
     .catch(e=>console.log('Error sincronizando App Web:', e.message));
@@ -298,7 +301,7 @@ function saveItem(){
 // Edit
 function editItem(i){ openAddForm(currentSheet,i); }
 
-// Delete: delete remote, reindex local and update remote rows (same behavior as tienda)
+// Delete: delete remote, reindex local and update remote rows (same as Tienda)
 function deleteItem(i){
   if(!confirm('¿Seguro de eliminar este registro?')) return;
   const sheet = currentSheet;
@@ -307,13 +310,8 @@ function deleteItem(i){
   // remove local
   dataStore[sheet].splice(i,1);
 
-  // keep prev id mapping for updating remote rows (prevId -> row index)
-  const prevIds = [];
-  // before reassigning, collect previous ids of remaining rows
-  // Note: after splice, dataStore[sheet] contains remaining rows with their old ids
-  dataStore[sheet].forEach((it, idx) => {
-    prevIds.push(it.id); // previous id before reassign
-  });
+  // collect previous ids of remaining rows (they still have their old ids)
+  const prevIds = dataStore[sheet].map(it => it.id);
 
   // reassign local ids sequentially
   dataStore[sheet].forEach((it, idx) => it.id = idx + 1);
@@ -324,18 +322,18 @@ function deleteItem(i){
 
   // delete on App Web
   fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams({ sheet, action:'delete', idValue: delId }) })
-    .then(r=>r.json())
-    .then(res=>{ if(!res.success) console.log('Error eliminando App Web:', res.msg); })
+    .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error eliminando App Web:', res.msg); })
     .catch(e=>console.log('Error eliminando App Web:', e.message));
 
   // update remaining rows on App Web so their ids match new numbering (if your server requires it)
-  // For each remaining row, send update with idValue = previous id (so server knows which to update)
   dataStore[sheet].forEach((it, idx) => {
-    const prevId = prevIds[idx]; // previous id of this row (before renumbering)
-    const payload = {...it, sheet, action:'update', idValue: prevId !== undefined ? prevId : it.id};
-    fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams(payload) })
-      .then(r=>r.json())
-      .then(res=>{ if(!res.success) console.log('Error reestructurando App Web:', res.msg); })
+    const prevId = prevIds[idx]; // previous id of this row before renumbering
+    const payloadObj = {...it, sheet, action:'update', idValue: prevId !== undefined ? prevId : it.id};
+    // send all fields explicitly
+    const payload = new FormData();
+    Object.keys(payloadObj).forEach(k => payload.append(k, payloadObj[k] ?? ''));
+    fetch(APP_SCRIPT_URL, { method:'POST', body: payload })
+      .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error reestructurando App Web:', res.msg); })
       .catch(e=>console.log('Error reestructurando App Web:', e.message));
   });
 }
