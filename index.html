@@ -287,34 +287,27 @@ function saveItem(){
 
 function editItem(i){ openAddForm(currentSheet,i); }
 
-// === ELIMINAR TIENDAS CON REESTRUCTURA APP WEB ===
+// === ELIMINAR TIENDAS CON RENDER INSTANTÁNEO ===
 function deleteItem(i){
   if(!confirm('¿Seguro de eliminar este registro?')) return;
   const sheet = currentSheet;
   const delId = dataStore[sheet][i].id;
 
-  // eliminar primero en App Web
+  // 1️⃣ ELIMINACIÓN LOCAL INMEDIATA
+  dataStore[sheet].splice(i,1);
+  const prevIds = dataStore[sheet].map(item => item.id);
+  dataStore[sheet].forEach((item, idx) => item.id = idx + 1);
+  renderTable(sheet);
+
+  // 2️⃣ SINCRONIZAR CON APP WEB EN SEGUNDO PLANO
   fetch(APP_SCRIPT_URL, { 
     method:'POST', 
     body: new URLSearchParams({ sheet, action:'delete', idValue: delId }) 
   })
   .then(r=>r.json())
   .then(res=>{
-    if(!res.success){
-      alert('Error eliminando en App Web: '+res.msg);
-      return;
-    }
-
-    // eliminar local
-    dataStore[sheet].splice(i,1);
-
-    // reestructurar ids locales
-    const prevIds = dataStore[sheet].map(item => item.id);
-    dataStore[sheet].forEach((item, idx) => item.id = idx + 1);
-
-    renderTable(sheet);
-
-    // actualizar App Web con nuevos IDs
+    if(!res.success){ console.log('Error eliminando App Web:', res.msg); return; }
+    // actualizar IDs en App Web
     dataStore[sheet].forEach((item, idx)=>{
       const payload = {
         sheet,
@@ -325,16 +318,11 @@ function deleteItem(i){
         nombre: item.nombre
       };
       fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams(payload) })
-        .then(r=>r.json())
-        .then(res=>{ if(!res.success) console.log('Error reestructurando App Web:', res.msg); })
+        .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error reestructurando App Web:', res.msg); })
         .catch(e=>console.log('Error reestructurando App Web:', e.message));
     });
-
   })
-  .catch(e=>{
-    console.log('Error eliminando App Web:', e.message);
-    alert('Error eliminando en App Web');
-  });
+  .catch(e=>console.log('Error eliminando App Web:', e.message));
 }
 
 function renderDashboard(){
@@ -349,6 +337,7 @@ function renderDashboard(){
 
 function nav(sheet){ renderTable(sheet); }
 
+// Init
 Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
   .then(()=>{ renderDashboard(); })
   .catch(err=>{ console.log('Error inicializando:', err); });
