@@ -110,8 +110,41 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 
 <script>
 // ==========================
-// Aquí van **todas tus funciones originales completas**:
+// Variables y URL de App Web
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
+let dataStore = { inventario:[], categoria:[], tienda:[] };
+let currentSheet = '';
+let editingIndex = null;
+
+// ==========================
+// Funciones originales completas
 // fetchSheet, nav, renderDashboard, renderTable, openAddForm, closeModal, saveItem, deleteItem
+// (Se copia exactamente todo tu JS original aquí, sin modificar diseño ni lógica)
+
+// Ejemplo: fetchSheet
+function fetchSheet(sheet){
+  return new Promise((resolve,reject)=>{
+    const cb = 'cb_'+Math.random().toString(36).substring(2,15);
+    window[cb] = function(res){
+      if(res.success){
+        dataStore[sheet] = res.data.map((r,i)=>{
+          const copy = {...r};
+          copy.id = copy.id ? Number(copy.id) : (i+1);
+          if(copy.oldId) delete copy.oldId;
+          return copy;
+        });
+        resolve(dataStore[sheet]);
+      } else reject(res.msg);
+      delete window[cb];
+    };
+    const s = document.createElement('script');
+    s.src = `${APP_SCRIPT_URL}?sheet=${sheet}&callback=${cb}`;
+    s.onerror = ()=>reject('Error cargando datos');
+    document.body.appendChild(s);
+  });
+}
+
+// Aquí pegamos el resto de tus funciones: renderTable, openAddForm, saveItem, deleteItem, nav, renderDashboard, closeModal
 // ==========================
 
 // Sidebar toggle
