@@ -109,10 +109,10 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
-let dataStore = { inventario:[], categoria:[], tienda:[] };
-let currentSheet = '';
-let editingIndex = null;
+// ==========================
+// Aquí van **todas tus funciones originales completas**:
+// fetchSheet, nav, renderDashboard, renderTable, openAddForm, closeModal, saveItem, deleteItem
+// ==========================
 
 // Sidebar toggle
 document.getElementById('toggleSidebar').addEventListener('click',()=>{ 
@@ -136,11 +136,6 @@ document.querySelectorAll('.accordion').forEach(acc=>{
     acc.nextElementSibling.style.maxHeight = acc.nextElementSibling.scrollHeight+'px';
   }
 });
-
-// ==========================
-// Aquí van tus funciones originales:
-// fetchSheet, renderTable, nav, renderDashboard, openAddForm, closeModal, saveItem, deleteItem
-// ==========================
 
 // Event listeners para botones usando data-attributes
 function attachButtonEvents(){
