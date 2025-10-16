@@ -9,7 +9,7 @@
 body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 * { box-sizing:border-box; }
 
-.sidebar { width:260px; position:fixed; height:100%; background:#2738F5; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
+.sidebar { width:260px; position:fixed; height:100%; background:#27A3F5; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
 .sidebar.collapsed { width:60px; padding:20px 5px; }
 .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.2rem; position:relative; margin-bottom:10px; }
 #toggleSidebar { position:absolute; right:0; top:0; background:#1f2dcc; color:white; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; }
@@ -27,10 +27,10 @@ body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 .sidebar.collapsed ~ .main { margin-left:60px; }
 
 .cards { display:flex; gap:20px; margin-top:20px; flex-wrap:wrap; }
-.card { flex:1; min-width:150px; background:white; color:#2738F5; padding:20px; border-radius:12px; text-align:center; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.1); transition:0.2s; }
+.card { flex:1; min-width:150px; background:white; color:#ff4d00; padding:20px; border-radius:12px; text-align:center; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.1); transition:0.2s; }
 .card:hover { transform:translateY(-3px); box-shadow:0 6px 12px rgba(0,0,0,0.15); }
-.card span { font-weight:700; font-size:1.3rem; display:block; margin-top:5px; }
-.card i { font-size:2rem; }
+.card span { font-weight:700; font-size:1.3rem; display:block; margin-top:5px; color:#ff4d00; }
+.card i { font-size:2rem; color:#ff4d00; }
 
 .search-bar { margin-bottom:15px; display:flex; gap:10px; }
 .search-bar input { flex-grow:1; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
@@ -283,7 +283,6 @@ function deleteItem(i){
   const sheet = currentSheet;
   const delId = dataStore[sheet][i].id;
   dataStore[sheet].splice(i,1);
-  dataStore[sheet].forEach((it, idx)=> it.id=idx+1);
   renderTable(sheet);
   fetch(APP_SCRIPT_URL,{method:'POST',body:new URLSearchParams({sheet,action:'delete',idValue:delId})})
     .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error eliminando en App Web:',res.msg); })
