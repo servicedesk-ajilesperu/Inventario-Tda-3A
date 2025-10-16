@@ -9,7 +9,8 @@
 body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 * { box-sizing:border-box; }
 
-.sidebar { width:260px; position:fixed; height:100%; background:#27A3F5; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
+/* Sidebar */
+.sidebar { width:260px; position:fixed; height:100%; background:#2738F5; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
 .sidebar.collapsed { width:60px; padding:20px 5px; }
 .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.2rem; position:relative; margin-bottom:10px; }
 #toggleSidebar { position:absolute; right:0; top:0; background:#1f2dcc; color:white; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; }
@@ -37,7 +38,8 @@ body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 
 table { width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.05); display:block; overflow-x:auto; white-space:nowrap; }
 th, td { border:1px solid #eee; padding:10px; text-align:center; font-size:0.9rem; }
-th { background:#2738F5; color:white; font-weight:600; }
+/* Cabecera de tabla con color naranja */
+th { background:#ff4d00; color:white; font-weight:600; }
 tr:nth-child(even) { background-color:#f9f9f9; }
 
 .actions button { margin:0 2px; padding:6px; border-radius:50%; border:none; cursor:pointer; width:32px; height:32px; transition:0.1s; background:#2738F5; color:white; }
@@ -283,6 +285,7 @@ function deleteItem(i){
   const sheet = currentSheet;
   const delId = dataStore[sheet][i].id;
   dataStore[sheet].splice(i,1);
+  dataStore[sheet].forEach((it, idx)=> it.id=idx+1);
   renderTable(sheet);
   fetch(APP_SCRIPT_URL,{method:'POST',body:new URLSearchParams({sheet,action:'delete',idValue:delId})})
     .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error eliminando en App Web:',res.msg); })
