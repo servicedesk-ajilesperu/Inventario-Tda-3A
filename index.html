@@ -40,10 +40,8 @@ th, td { border:1px solid #eee; padding:10px; text-align:center; font-size:0.9re
 th { background:#2738F5; color:white; font-weight:600; }
 tr:nth-child(even) { background-color:#f9f9f9; }
 
-.actions button { margin:0 2px; padding:6px; border-radius:50%; border:none; cursor:pointer; width:32px; height:32px; transition:0.1s; }
+.actions button { margin:0 2px; padding:6px; border-radius:50%; border:none; cursor:pointer; width:32px; height:32px; transition:0.1s; background:#2738F5; color:white; }
 .actions button:hover { opacity:0.8; }
-.btn-edit { background:#ffb86b; color:white; }
-.btn-del { background:#d9534f; color:white; }
 
 .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:50; }
 .modal { background:white; padding:25px; border-radius:12px; width:450px; max-width:95%; box-shadow:0 10px 20px rgba(0,0,0,0.2); }
@@ -67,7 +65,9 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 
 <aside class="sidebar" id="sidebar">
   <div class="brand">
-    <i class="fa-solid fa-boxes-stacked"></i><span>Inventario 3A</span>
+    <a href="index.html" style="display:flex; align-items:center; gap:10px; color:white; text-decoration:none;">
+      <i class="fa-solid fa-boxes-stacked"></i><span>Inventario 3A</span>
+    </a>
     <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
   </div>
 
@@ -127,7 +127,6 @@ let dataStore = { 'inventario-ofc':[], 'categotia-ofc':[], 'oficinas':[] };
 let currentSheet = '';
 let editingIndex = null;
 
-// Sidebar
 document.getElementById('toggleSidebar').addEventListener('click',()=>{ 
   document.getElementById('sidebar').classList.toggle('collapsed'); 
 });
@@ -139,7 +138,6 @@ document.querySelectorAll('.accordion').forEach(acc=>{
   });
 });
 
-// Fetch Sheet
 function fetchSheet(sheet){
   return new Promise((resolve,reject)=>{
     const cb = 'cb_'+Math.random().toString(36).substring(2,15);
@@ -162,7 +160,6 @@ function fetchSheet(sheet){
   });
 }
 
-// Render Table
 function renderTable(sheet){
   currentSheet=sheet;
   document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
@@ -192,7 +189,6 @@ function renderTable(sheet){
   document.getElementById('content').innerHTML = html;
 }
 
-// Filter Table
 function filterTable(value){
   const tbody = document.querySelector('tbody');
   if(!tbody) return;
@@ -201,7 +197,6 @@ function filterTable(value){
   );
 }
 
-// Modal Form
 function openAddForm(sheet,index=null){
   currentSheet=sheet;
   editingIndex=index;
@@ -220,7 +215,9 @@ function openAddForm(sheet,index=null){
       <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
       <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">
       <input type="text" id="imei" placeholder="IMEI" value="${item.imei||''}">
-      <input type="text" id="numero" placeholder="Número" value="${item.numero||''}">
+      <input type="text" id="numero" placeholder="Número" value="${item.numero||''}" 
+             maxlength="9" pattern="[0-9]{9}" title="Debe contener exactamente 9 dígitos"
+             oninput="this.value=this.value.replace(/[^0-9]/g,'');">
       <input type="text" id="serie_cargador" placeholder="Serie Cargador" value="${item['serie cargador']||''}">
       <input type="text" id="modelo_cargador" placeholder="Modelo Cargador" value="${item['modelo cargador']||''}">`;
 
@@ -240,7 +237,6 @@ function openAddForm(sheet,index=null){
 }
 function closeModal(){ document.getElementById('modal').style.display='none'; }
 
-// Save Item
 function saveItem(){
   const formRaw={};
   document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> formRaw[el.id]=el.value.trim());
@@ -274,9 +270,8 @@ function saveItem(){
   closeModal();
   renderTable(currentSheet);
 
-  // sincronización con App Web
   const payload = { sheet:currentSheet, action: editingIndex!==null?'update':'add', idValue:newId, ...newItem };
-  fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams(payload) })
+  fetch(APP_SCRIPT_URL, { method:'POST', body:new URLSearchParams(payload) })
     .then(r=>r.json()).then(res=>{ if(!res.success) alert('Error sincronizando App Web: '+res.msg); })
     .catch(e=>console.log('Error sincronizando App Web:', e.message));
 }
@@ -307,7 +302,6 @@ function renderDashboard(){
 
 function nav(sheet){ renderTable(sheet); }
 
-// Init
 Promise.all([fetchSheet('inventario-ofc'),fetchSheet('categotia-ofc'),fetchSheet('oficinas')])
   .then(()=> renderDashboard())
   .catch(err=>console.error('Error inicializando:',err));
