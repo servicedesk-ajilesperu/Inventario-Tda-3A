@@ -109,44 +109,297 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-// ==========================
-// Variables
 const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
 
-// ==========================
-// Funciones completas (copiar exactamente tu JS original desde fetchSheet hasta deleteItem)
-// Esto incluye: fetchSheet, nav, renderDashboard, renderTable, openAddForm, closeModal, saveItem, deleteItem
-
-// Sidebar toggle
+// Sidebar
 document.getElementById('toggleSidebar').addEventListener('click',()=>{ 
   document.getElementById('sidebar').classList.toggle('collapsed'); 
 });
-
-// Accordion con cierre automático
 document.querySelectorAll('.accordion').forEach(acc=>{
   acc.addEventListener('click', function(){
-    document.querySelectorAll('.accordion').forEach(other=>{
-      if(other!==acc){
-        other.classList.remove('active');
-        other.nextElementSibling.style.maxHeight = null;
-      }
-    });
-    acc.classList.toggle('active');
-    const panel = acc.nextElementSibling;
-    panel.style.maxHeight = acc.classList.contains('active') ? panel.scrollHeight+'px' : null;
+    this.classList.toggle('active');
+    let panel = this.nextElementSibling;
+    panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight+'px';
   });
-  if(acc.classList.contains('active')){
-    acc.nextElementSibling.style.maxHeight = acc.nextElementSibling.scrollHeight+'px';
-  }
 });
 
-// Inicialización
-Promise.all([fetchSheet('tienda'), fetchSheet('categoria'), fetchSheet('inventario')])
+// Fetch Sheet — garantizando id numérico y sin exponer oldId
+function fetchSheet(sheet){
+  return new Promise((resolve,reject)=>{
+    const cb = 'cb_'+Math.random().toString(36).substring(2,15);
+    window[cb] = function(res){
+      if(res.success){
+        dataStore[sheet] = res.data.map((r,i)=>{
+          const copy = {...r};
+          copy.id = copy.id ? Number(copy.id) : (i+1);
+          if(copy.oldId) delete copy.oldId;
+          return copy;
+        });
+        resolve(dataStore[sheet]);
+      } else reject(res.msg);
+      delete window[cb];
+    };
+    const s = document.createElement('script');
+    s.src = `${APP_SCRIPT_URL}?sheet=${sheet}&callback=${cb}`;
+    s.onerror = ()=>reject('Error cargando datos');
+    document.body.appendChild(s);
+  });
+}
+
+// Determina encabezados en orden esperado por hoja
+function getHeadersForSheet(sheet, sampleRow){
+  if(sheet==='tienda') return ['id','codigo','nombre'];
+  if(sheet==='categoria') return ['id','nombre'];
+  if(sheet==='inventario') {
+    const base = ['id','codigo','serie','equipo','marca','modelo','categoria','tienda'];
+    const extras = Object.keys(sampleRow || {}).filter(k => !base.includes(k) && k.toLowerCase()!=='oldid');
+    return base.concat(extras);
+  }
+  return Object.keys(sampleRow || {}).filter(k=>k.toLowerCase()!=='oldid');
+}
+
+// Render Table (oculta oldId y muestra id en la primera columna según pedido)
+function renderTable(sheet){
+  currentSheet=sheet;
+  document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
+  document.getElementById('dashboard-cards').innerHTML='';
+  const data = dataStore[sheet] || [];
+  let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
+  if(data.length>0){
+    const headers = getHeadersForSheet(sheet, data[0]).filter(h=>h.toLowerCase()!=='oldid');
+    html += `<table><thead><tr>`;
+    headers.forEach(h=> html+=`<th>${h}</th>`);
+    html += `<th>Acciones</th></tr></thead><tbody>`;
+    data.forEach((r,i)=>{
+      html+=`<tr>`;
+      headers.forEach(k=>{
+        // si no existe la propiedad la mostramos vacía
+        const v = (r[k] !== undefined && r[k] !== null) ? r[k] : '';
+        html+=`<td>${v}</td>`;
+      });
+      html+=`<td class="actions">
+        <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
+      </td></tr>`;
+    });
+    html+=`</tbody></table>`;
+  } else {
+    html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
+  }
+  document.getElementById('content').innerHTML = html;
+}
+
+// Filter Table
+function filterTable(value){
+  const tbody = document.querySelector('tbody');
+  if(!tbody) return;
+  Array.from(tbody.rows).forEach(r=>
+    r.style.display = Array.from(r.cells).some(c=>c.textContent.toLowerCase().includes(value.toLowerCase())) ? '' : 'none'
+  );
+}
+
+// Modal Form
+function openAddForm(sheet,index=null){
+  currentSheet=sheet;
+  editingIndex=index;
+  document.getElementById('modal-title').textContent = index!==null?'Editar '+sheet:'Agregar '+sheet;
+  let html='';
+  if(sheet==='categoria'){
+    const item=index!==null?dataStore.categoria[index]:{};
+    html=`<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
+  } else if(sheet==='tienda'){
+    const item=index!==null?dataStore.tienda[index]:{};
+    html=`<input type="text" id="codigo" placeholder="Codigo de Tienda" value="${item.codigo||''}">
+          <input type="text" id="nombre" placeholder="Nombre de Tienda" value="${item.nombre||''}">`;
+  } else if(sheet==='inventario'){
+    const item=index!==null?dataStore.inventario[index]:{};
+    html=`<input type="text" id="codigo" placeholder="Código" value="${item.codigo||''}">
+          <input type="text" id="serie" placeholder="Serie" value="${item.serie||''}">
+          <input type="text" id="equipo" placeholder="Equipo" value="${item.equipo||''}">
+          <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
+          <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">`;
+
+    html+=`<select id="categoria"><option value="">Selecciona Categoria</option>`;
+    dataStore.categoria.forEach(c=>{
+      html+=`<option value="${c.nombre}" ${item.categoria===c.nombre?'selected':''}>${c.nombre}</option>`;
+    });
+    html+=`</select>`;
+    html+=`<select id="tienda"><option value="">Selecciona Tienda</option>`;
+    dataStore.tienda.forEach(t=>{
+      html+=`<option value="${t.nombre}" ${item.tienda===t.nombre?'selected':''}>${t.nombre}</option>`;
+    });
+    html+=`</select>`;
+  }
+  document.getElementById('modal-form').innerHTML = html;
+  document.getElementById('modal').style.display='flex';
+}
+function closeModal(){ document.getElementById('modal').style.display='none'; }
+
+// Save Item — construye el objeto en el orden correcto para la vista
+function saveItem(){
+  const formRaw = {};
+  document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> formRaw[el.id]=el.value.trim());
+
+  // validaciones: solo validar codigo duplicado al agregar
+  if(currentSheet==='tienda' && (!formRaw.codigo || !formRaw.nombre)){ alert('Codigo y Nombre son obligatorios'); return; }
+  if(currentSheet==='inventario' && editingIndex===null && formRaw.codigo){
+    if(dataStore.inventario.some(d=>d.codigo===formRaw.codigo)){ alert('El código ya existe'); return; }
+  }
+
+  // determinar id
+  let newId;
+  if(editingIndex===null){
+    newId = dataStore[currentSheet].length>0 ? Math.max(...dataStore[currentSheet].map(d=>Number(d.id)))+1 : 1;
+  } else {
+    newId = dataStore[currentSheet][editingIndex].id;
+  }
+
+  // construir objeto con campos en el orden esperado por la vista (y por claridad)
+  let newItem = {};
+  if(currentSheet==='tienda'){
+    newItem = { id:newId, codigo: formRaw.codigo||'', nombre: formRaw.nombre||'' };
+  } else if(currentSheet==='categoria'){
+    newItem = { id:newId, nombre: formRaw.nombre||'' };
+  } else if(currentSheet==='inventario'){
+    newItem = {
+      id: newId,
+      codigo: formRaw.codigo||'',
+      serie: formRaw.serie||'',
+      equipo: formRaw.equipo||'',
+      marca: formRaw.marca||'',
+      modelo: formRaw.modelo||'',
+      categoria: formRaw.categoria||'',
+      tienda: formRaw.tienda||''
+    };
+  } else {
+    newItem = { id:newId, ...formRaw };
+  }
+
+  // guardar local
+  if(editingIndex!==null){
+    dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...newItem};
+  } else {
+    dataStore[currentSheet].push(newItem);
+  }
+
+  closeModal();
+  renderTable(currentSheet);
+
+  // sincronizar con App Web — enviar todos los campos explícitos para evitar columnas vacías
+  let payload;
+  if(currentSheet==='tienda'){
+    payload = { sheet:currentSheet, action: editingIndex!==null ? 'update' : 'add', idValue: newItem.id, id:newItem.id, codigo:newItem.codigo, nombre:newItem.nombre };
+  } else if(currentSheet==='categoria'){
+    payload = { sheet:currentSheet, action: editingIndex!==null ? 'update' : 'add', idValue: newItem.id, id:newItem.id, nombre:newItem.nombre };
+  } else if(currentSheet==='inventario'){
+    payload = { sheet:currentSheet, action: editingIndex!==null ? 'update' : 'add', idValue: newItem.id,
+                id:newItem.id, codigo:newItem.codigo, serie:newItem.serie, equipo:newItem.equipo, marca:newItem.marca, modelo:newItem.modelo, categoria:newItem.categoria, tienda:newItem.tienda };
+  } else {
+    payload = { sheet:currentSheet, action: editingIndex!==null ? 'update' : 'add', idValue: newItem.id, ...newItem };
+  }
+
+  fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams(payload) })
+    .then(r=>r.json())
+    .then(res=>{ if(!res.success) alert('Error sincronizando App Web: '+res.msg); })
+    .catch(e=>console.log('Error sincronizando App Web:', e.message));
+}
+
+// Edit
+function editItem(i){ openAddForm(currentSheet,i); }
+
+// Delete (corregido: evita duplicados — elimina remoto, reestructura local y actualiza remotos usando IDs originales)
+function deleteItem(i){
+  if(!confirm('¿Seguro de eliminar este registro?')) return;
+  const sheet = currentSheet;
+
+  // guardar id que vamos a eliminar y los ids originales de los que quedarán
+  const delId = dataStore[sheet][i].id;
+  const remainingOriginalIds = dataStore[sheet].filter((_, idx)=> idx !== i).map(it => it.id);
+
+  // eliminar localmente y reestructurar ids locales
+  dataStore[sheet].splice(i,1);
+  dataStore[sheet].forEach((it, idx)=> it.id = idx+1);
+
+  // render inmediato
+  renderTable(sheet);
+
+  // eliminar en App Web usando delId
+  fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams({ sheet, action:'delete', idValue: delId }) })
+    .then(r=>r.json())
+    .then(res=>{
+      if(!res.success){
+        console.log('Error eliminando en App Web:', res.msg);
+        // no retornamos — igual intentamos reestructurar en remoto para intentar sincronizar
+      }
+      // ahora actualizamos cada registro restante en App Web usando su ID original (remainingOriginalIds)
+      // así el servidor identifica la fila antigua para sobreescribir con el nuevo id y datos
+      dataStore[sheet].forEach((it, idx)=>{
+        const oldId = remainingOriginalIds[idx]; // puede ser undefined si no existía
+        // construir payload explícito por sheet para evitar columnas vacías
+        let payload;
+        if(sheet==='tienda'){
+          payload = { sheet, action:'update', idValue: oldId || it.id, id: it.id, codigo: it.codigo||'', nombre: it.nombre||'' };
+        } else if(sheet==='categoria'){
+          payload = { sheet, action:'update', idValue: oldId || it.id, id: it.id, nombre: it.nombre||'' };
+        } else if(sheet==='inventario'){
+          payload = { sheet, action:'update', idValue: oldId || it.id, id: it.id,
+                      codigo: it.codigo||'', serie: it.serie||'', equipo: it.equipo||'', marca: it.marca||'', modelo: it.modelo||'', categoria: it.categoria||'', tienda: it.tienda||'' };
+        } else {
+          payload = { sheet, action:'update', idValue: oldId || it.id, id: it.id, ...it };
+        }
+
+        fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams(payload) })
+          .then(rr=>rr.json())
+          .then(rrr=>{ if(!rrr.success) console.log('Error reestructurando App Web:', rrr.msg); })
+          .catch(e=>console.log('Error reestructurando App Web:', e.message));
+      });
+    })
+    .catch(e=>{
+      console.log('Error eliminando App Web:', e.message);
+      // intentar actualizar remotos igualmente (opcional) — aquí lo hacemos
+      dataStore[sheet].forEach((it, idx)=>{
+        const oldId = remainingOriginalIds[idx];
+        let payload;
+        if(sheet==='tienda'){
+          payload = { sheet, action:'update', idValue: oldId || it.id, id: it.id, codigo: it.codigo||'', nombre: it.nombre||'' };
+        } else if(sheet==='categoria'){
+          payload = { sheet, action:'update', idValue: oldId || it.id, id: it.id, nombre: it.nombre||'' };
+        } else if(sheet==='inventario'){
+          payload = { sheet, action:'update', idValue: oldId || it.id, id: it.id,
+                      codigo: it.codigo||'', serie: it.serie||'', equipo: it.equipo||'', marca: it.marca||'', modelo: it.modelo||'', categoria: it.categoria||'', tienda: it.tienda||'' };
+        } else {
+          payload = { sheet, action:'update', idValue: oldId || it.id, id: it.id, ...it };
+        }
+
+        fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams(payload) })
+          .then(rr=>rr.json())
+          .then(rrr=>{ if(!rrr.success) console.log('Error reestructurando App Web (fallback):', rrr.msg); })
+          .catch(e2=>console.log('Error reestructurando App Web (fallback):', e2.message));
+      });
+    });
+}
+
+// Dashboard
+function renderDashboard(){
+  const cardsDiv=document.getElementById('dashboard-cards');
+  cardsDiv.innerHTML='';
+  cardsDiv.innerHTML+=`<div class="card" onclick="nav('inventario')"><i class="fa-solid fa-computer"></i><span>${dataStore.inventario.length}</span>Inventario</div>`;
+  cardsDiv.innerHTML+=`<div class="card" onclick="nav('categoria')"><i class="fa-solid fa-tags"></i><span>${dataStore.categoria.length}</span>Categorias</div>`;
+  cardsDiv.innerHTML+=`<div class="card" onclick="nav('tienda')"><i class="fa-solid fa-store"></i><span>${dataStore.tienda.length}</span>Tiendas</div>`;
+  document.getElementById('main-title').textContent = 'Dashboard';
+  document.getElementById('content').innerHTML='';
+}
+
+// Nav
+function nav(sheet){ renderTable(sheet); }
+
+// Init: cargar todas las hojas y mostrar dashboard
+Promise.all([fetchSheet('tienda'),fetchSheet('categoria'),fetchSheet('inventario')])
   .then(()=>{ renderDashboard(); })
-  .catch(err => console.log('Error inicializando:', err));
+  .catch(err=>{ console.log('Error inicializando:', err); });
 </script>
 </body>
 </html>
