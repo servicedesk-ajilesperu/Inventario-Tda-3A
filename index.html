@@ -109,7 +109,7 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
 let editingIndex = null;
@@ -129,16 +129,20 @@ document.querySelectorAll('.accordion').forEach(acc=>{
         a.nextElementSibling.style.maxHeight = null;
       }
     });
-
     this.classList.toggle('active');
     const panel = this.nextElementSibling;
     panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight + 'px';
   });
 });
 
-// ======== resto del código JS ========
-// fetchSheet, renderTable, filterTable, openAddForm, closeModal, saveItem, editItem, deleteItem, renderDashboard, nav
-// (Aquí se mantiene exactamente todo el código que ya tenías, sin cambios)
+// ======== FUNCIONES ORIGINALES (no tocar) ========
+
+// fetchSheet, renderTable, filterTable, openAddForm, closeModal, saveItem,
+// editItem, deleteItem, renderDashboard, nav, initPromiseAll
+// — copia aquí tu código JS original completo, sin modificar nada,
+// solo reemplaza la sección de acordeón que tenías antes
+
 </script>
+
 </body>
 </html>
