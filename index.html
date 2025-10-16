@@ -3,315 +3,184 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inventario Tiendas 3A</title>
+<title>Inventario Oficina</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
 <style>
+/* === ESTILOS === */
 body, html { margin:0; padding:0; font-family:sans-serif; background:#f7f7f7; }
 * { box-sizing:border-box; }
 
+/* Sidebar */
 .sidebar { width:260px; position:fixed; height:100%; background:#2738F5; color:white; display:flex; flex-direction:column; gap:12px; padding:20px; transition:0.3s; overflow-y:auto; z-index:10; }
 .sidebar.collapsed { width:60px; padding:20px 5px; }
-.brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.2rem; position:relative; margin-bottom:10px; }
+.brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.2rem; position:relative; margin-bottom:10px; cursor:pointer; }
+.brand i { font-size:1.3rem; }
 #toggleSidebar { position:absolute; right:0; top:0; background:#1f2dcc; color:white; border:none; border-radius:6px; padding:4px 8px; cursor:pointer; }
 
-.menu-section .accordion { background:transparent; color:white; border:none; padding:10px; width:100%; display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600; justify-content:space-between; border-radius:4px; }
+/* Accordion */
+.menu-section .accordion { background:none; color:white; border:none; text-align:left; padding:10px; cursor:pointer; font-size:1rem; font-weight:600; border-radius:6px; width:100%; }
 .menu-section .accordion.active, .menu-section .accordion:hover { background-color:#1f2dcc; }
-.menu-section .panel { padding:0 10px; max-height:0; overflow:hidden; transition:max-height 0.3s ease-in-out; background-color:#1f2dcc; display:flex; flex-direction:column; gap:4px; }
-.menu-section .panel button { background:transparent; color:white; border:none; padding:8px; text-align:left; display:flex; align-items:center; gap:6px; cursor:pointer; width:100%; border-radius:4px; }
+.menu-section .panel { display:none; flex-direction:column; gap:8px; padding-left:10px; margin-top:5px; background-color:#1f2dcc; border-radius:6px; }
+.menu-section .panel button { background:none; color:white; border:none; padding:8px; text-align:left; cursor:pointer; border-radius:6px; }
 .menu-section .panel button:hover { background-color:#1924a8; }
-.sidebar.collapsed .brand span, .sidebar.collapsed .accordion span, .sidebar.collapsed .panel button span { display:none; }
-.sidebar.collapsed .accordion { justify-content:center; }
-.sidebar.collapsed .accordion i.fa-chevron-down { display:none; }
 
+/* Main content */
 .main { margin-left:260px; padding:20px; transition:0.3s; }
-.sidebar.collapsed ~ .main { margin-left:60px; }
+.sidebar.collapsed + .main { margin-left:60px; }
 
-.cards { display:flex; gap:20px; margin-top:20px; flex-wrap:wrap; }
+/* Cards */
+.cards { display:flex; flex-wrap:wrap; gap:20px; margin-bottom:20px; }
 .card { flex:1; min-width:150px; background:white; color:#2738F5; padding:20px; border-radius:12px; text-align:center; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.1); transition:0.2s; }
 .card:hover { transform:translateY(-3px); box-shadow:0 6px 12px rgba(0,0,0,0.15); }
-.card span { font-weight:700; font-size:1.3rem; display:block; margin-top:5px; }
-.card i { font-size:2rem; }
 
-.search-bar { margin-bottom:15px; display:flex; gap:10px; }
-.search-bar input { flex-grow:1; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
-
-table { width:100%; border-collapse:collapse; margin-top:20px; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.05); display:block; overflow-x:auto; white-space:nowrap; }
-th, td { border:1px solid #eee; padding:10px; text-align:center; font-size:0.9rem; }
+/* Table */
+table { width:100%; border-collapse:collapse; background:white; border-radius:12px; overflow:hidden; box-shadow:0 4px 8px rgba(0,0,0,0.1); }
+th, td { padding:10px; border-bottom:1px solid #ddd; text-align:left; }
 th { background:#2738F5; color:white; font-weight:600; }
-tr:nth-child(even) { background-color:#f9f9f9; }
+tr:hover { background:#f5f5ff; }
 
-.actions button { margin:0 2px; padding:6px; border-radius:50%; border:none; cursor:pointer; width:32px; height:32px; transition:0.1s; }
-.actions button:hover { opacity:0.8; }
-.btn-edit { background:#ffb86b; color:white; }
-.btn-del { background:#d9534f; color:white; }
+/* Íconos de acción */
+.action-icons i {
+  font-size: 18px;
+  cursor: pointer;
+  margin: 0 6px;
+  color: #2738F5;
+  transition: color 0.2s ease;
+}
+.action-icons i:hover { color: #1f2dcc; }
 
-.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:50; }
-.modal { background:white; padding:25px; border-radius:12px; width:450px; max-width:95%; box-shadow:0 10px 20px rgba(0,0,0,0.2); }
-input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:100%; margin-bottom:12px; font-size:1rem; }
-.modal button { padding:8px 15px; border-radius:6px; cursor:pointer; border:none; font-weight:600; transition:0.1s; }
+/* Modal */
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; }
+.modal-content { background:white; padding:20px; border-radius:12px; width:90%; max-width:500px; box-shadow:0 6px 12px rgba(0,0,0,0.2); }
+.modal-header { font-size:1.2rem; font-weight:600; margin-bottom:10px; color:#2738F5; }
+.modal button { padding:10px 14px; border:none; border-radius:8px; cursor:pointer; font-weight:600; }
 .modal button:last-child { background:#2738F5; color:white; }
 .modal button:last-child:hover { background:#1f2dcc; }
-.modal button:first-child { background:#eee; color:#333; margin-right:10px; }
-.modal button:first-child:hover { background:#ddd; }
 
-@media(max-width:768px){
-  .cards { flex-direction:column; }
-  .card { min-width:100%; }
-  .sidebar { left:-260px; position:fixed; }
-  .sidebar.collapsed { left:0; }
-  .main { margin-left:0; padding:10px; }
-}
+/* Form inputs */
+input, select { width:100%; padding:8px; margin:5px 0 10px; border:1px solid #ccc; border-radius:8px; }
 </style>
 </head>
-<body>
 
-<aside class="sidebar" id="sidebar">
-  <div class="brand">
-    <i class="fa-solid fa-boxes-stacked"></i><span>Inventario 3A</span>
+<body>
+<div class="sidebar">
+  <div class="brand" onclick="window.location.href='index.html'">
+    <i class="fa-solid fa-box-archive"></i>
+    <span>Inventario 3A</span>
     <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
   </div>
-
   <div class="menu-section">
-    <button class="accordion active"><i class="fa-solid fa-house"></i><span>Dashboard</span><i class="fa-solid fa-chevron-down"></i></button>
-    <div class="panel" style="max-height:500px;">
-      <button onclick="renderDashboard()"><i class="fa-solid fa-gauge-high"></i><span>Ver Dashboard</span></button>
-    </div>
-  </div>
-
-  <div class="menu-section">
-    <button class="accordion"><i class="fa-solid fa-computer"></i><span>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
+    <button class="accordion">Inventario</button>
     <div class="panel">
-      <button onclick="openAddForm('inventario-ofc')"><i class="fa-solid fa-plus"></i><span>Agregar Inventario</span></button>
-      <button onclick="nav('inventario-ofc')"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
+      <button onclick="openModal()">➕ Agregar</button>
     </div>
   </div>
-
-  <div class="menu-section">
-    <button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorias</span><i class="fa-solid fa-chevron-down"></i></button>
-    <div class="panel">
-      <button onclick="openAddForm('categotia-ofc')"><i class="fa-solid fa-plus"></i><span>Agregar Categoria</span></button>
-      <button onclick="nav('categotia-ofc')"><i class="fa-solid fa-table"></i><span>Ver Categorias</span></button>
-    </div>
-  </div>
-
-  <div class="menu-section">
-    <button class="accordion"><i class="fa-solid fa-store"></i><span>Oficinas</span><i class="fa-solid fa-chevron-down"></i></button>
-    <div class="panel">
-      <button onclick="openAddForm('oficinas')"><i class="fa-solid fa-plus"></i><span>Agregar Oficina</span></button>
-      <button onclick="nav('oficinas')"><i class="fa-solid fa-table"></i><span>Ver Oficinas</span></button>
-    </div>
-  </div>
-
-</aside>
-
-<div class="main">
-  <h2 id="main-title">Dashboard</h2>
-  <div class="cards" id="dashboard-cards"></div>
-  <div id="content"></div>
 </div>
 
-<div class="modal-backdrop" id="modal">
-  <div class="modal">
-    <h3 id="modal-title"></h3>
-    <div id="modal-form"></div>
-    <div style="text-align:right; margin-top:15px;">
-      <button onclick="closeModal()">Cancelar</button>
-      <button onclick="saveItem()">Guardar</button>
-    </div>
+<div class="main">
+  <div class="cards">
+    <div class="card"><h3>Total Ítems</h3><p id="totalItems">0</p></div>
+  </div>
+
+  <table id="inventarioTable">
+    <thead>
+      <tr>
+        <th>Serie</th>
+        <th>Marca</th>
+        <th>Modelo</th>
+        <th>IMEI</th>
+        <th>Número</th>
+        <th>Serie Cargador</th>
+        <th>Modelo Cargador</th>
+        <th>Categoría</th>
+        <th>Oficina</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="itemModal">
+  <div class="modal-content">
+    <div class="modal-header">Agregar Inventario</div>
+    <form id="itemForm">
+      <input type="hidden" id="itemId">
+      <label>Serie</label>
+      <input type="text" id="serie" required>
+      <label>Marca</label>
+      <input type="text" id="marca" required>
+      <label>Modelo</label>
+      <input type="text" id="modelo" required>
+      <label>IMEI</label>
+      <input type="text" id="imei">
+      <label>Número</label>
+      <input type="text" id="numero" maxlength="9" pattern="[0-9]{9}" 
+             title="Debe contener exactamente 9 dígitos"
+             oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
+      <label>Serie Cargador</label>
+      <input type="text" id="serieCargador">
+      <label>Modelo Cargador</label>
+      <input type="text" id="modeloCargador">
+      <label>Categoría</label>
+      <select id="categoria"></select>
+      <label>Oficina</label>
+      <select id="oficina"></select>
+
+      <div style="text-align:right; margin-top:10px;">
+        <button type="button" onclick="closeModal()">Cancelar</button>
+        <button type="submit">Guardar</button>
+      </div>
+    </form>
   </div>
 </div>
 
 <script>
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
-let dataStore = { 'inventario-ofc':[], 'categotia-ofc':[], 'oficinas':[] };
-let currentSheet = '';
-let editingIndex = null;
+// === LÓGICA JS ===
+document.getElementById("toggleSidebar").onclick = () => {
+  document.querySelector(".sidebar").classList.toggle("collapsed");
+  document.querySelector(".main").classList.toggle("collapsed");
+};
 
-// Sidebar
-document.getElementById('toggleSidebar').addEventListener('click',()=>{ 
-  document.getElementById('sidebar').classList.toggle('collapsed'); 
-});
-document.querySelectorAll('.accordion').forEach(acc=>{
-  acc.addEventListener('click', function(){
-    this.classList.toggle('active');
+document.querySelectorAll(".accordion").forEach(btn=>{
+  btn.onclick = function(){
+    this.classList.toggle("active");
     let panel = this.nextElementSibling;
-    panel.style.maxHeight = panel.style.maxHeight ? null : panel.scrollHeight+'px';
-  });
+    panel.style.display = panel.style.display === "flex" ? "none" : "flex";
+  }
 });
 
-// Fetch Sheet
-function fetchSheet(sheet){
-  return new Promise((resolve,reject)=>{
-    const cb = 'cb_'+Math.random().toString(36).substring(2,15);
-    window[cb] = function(res){
-      if(res.success){
-        dataStore[sheet] = res.data.map((r,i)=>{
-          const copy = {...r};
-          copy.id = copy.id ? Number(copy.id) : (i+1);
-          if(copy.oldId) delete copy.oldId;
-          return copy;
-        });
-        resolve(dataStore[sheet]);
-      } else reject(res.msg);
-      delete window[cb];
-    };
-    const s = document.createElement('script');
-    s.src = `${APP_SCRIPT_URL}?sheet=${sheet}&callback=${cb}`;
-    s.onerror = ()=>reject('Error cargando datos');
-    document.body.appendChild(s);
+function openModal(){ document.getElementById("itemModal").style.display="flex"; }
+function closeModal(){ document.getElementById("itemModal").style.display="none"; }
+
+function renderTable(data=[]){
+  const tbody=document.querySelector("#inventarioTable tbody");
+  tbody.innerHTML="";
+  data.forEach(item=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${item.serie}</td>
+      <td>${item.marca}</td>
+      <td>${item.modelo}</td>
+      <td>${item.imei}</td>
+      <td>${item.numero}</td>
+      <td>${item.serieCargador}</td>
+      <td>${item.modeloCargador}</td>
+      <td>${item.categoria}</td>
+      <td>${item.oficina}</td>
+      <td class="action-icons">
+        <i class="fa-solid fa-pen-to-square" onclick="editItem('${item.id}')"></i>
+        <i class="fa-solid fa-trash" onclick="deleteItem('${item.id}')"></i>
+      </td>`;
+    tbody.appendChild(tr);
   });
+  document.getElementById("totalItems").textContent=data.length;
 }
 
-// Render Table
-function renderTable(sheet){
-  currentSheet=sheet;
-  document.getElementById('main-title').textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
-  document.getElementById('dashboard-cards').innerHTML='';
-  const data = dataStore[sheet] || [];
-  let html = `<div class="search-bar"><input type="text" placeholder="Buscar..." oninput="filterTable(this.value)"></div>`;
-  if(data.length>0){
-    const headers = Object.keys(data[0]).filter(h=>h.toLowerCase()!=='oldid');
-    html += `<table><thead><tr>`;
-    headers.forEach(h=> html+=`<th>${h}</th>`);
-    html += `<th>Acciones</th></tr></thead><tbody>`;
-    data.forEach((r,i)=>{
-      html+=`<tr>`;
-      headers.forEach(k=>{
-        const v = (r[k] !== undefined && r[k] !== null) ? r[k] : '';
-        html+=`<td>${v}</td>`;
-      });
-      html+=`<td class="actions">
-        <button class="btn-edit" onclick="editItem(${i})"><i class="fa-solid fa-pen"></i></button>
-        <button class="btn-del" onclick="deleteItem(${i})"><i class="fa-solid fa-trash"></i></button>
-      </td></tr>`;
-    });
-    html+=`</tbody></table>`;
-  } else {
-    html+=`<table><tr><td colspan="100%">No hay datos</td></tr></table>`;
-  }
-  document.getElementById('content').innerHTML = html;
-}
-
-// Filter Table
-function filterTable(value){
-  const tbody = document.querySelector('tbody');
-  if(!tbody) return;
-  Array.from(tbody.rows).forEach(r=>
-    r.style.display = Array.from(r.cells).some(c=>c.textContent.toLowerCase().includes(value.toLowerCase())) ? '' : 'none'
-  );
-}
-
-// Modal Form
-function openAddForm(sheet,index=null){
-  currentSheet=sheet;
-  editingIndex=index;
-  document.getElementById('modal-title').textContent = index!==null?'Editar '+sheet:'Agregar '+sheet;
-  let html='';
-  if(sheet==='categotia-ofc'){
-    const item=index!==null?dataStore[sheet][index]:{};
-    html=`<input type="text" id="nombre" placeholder="Nombre de Categoria" value="${item.nombre||''}">`;
-  } else if(sheet==='oficinas'){
-    const item=index!==null?dataStore[sheet][index]:{};
-    html=`<input type="text" id="nombre" placeholder="Nombre de Oficina" value="${item.nombre||''}">`;
-  } else if(sheet==='inventario-ofc'){
-    const item=index!==null?dataStore[sheet][index]:{};
-    html=`
-      <input type="text" id="serie" placeholder="Serie" value="${item.serie||''}">
-      <input type="text" id="marca" placeholder="Marca" value="${item.marca||''}">
-      <input type="text" id="modelo" placeholder="Modelo" value="${item.modelo||''}">
-      <input type="text" id="imei" placeholder="IMEI" value="${item.imei||''}">
-      <input type="text" id="numero" placeholder="Número" value="${item.numero||''}">
-      <input type="text" id="serie_cargador" placeholder="Serie Cargador" value="${item['serie cargador']||''}">
-      <input type="text" id="modelo_cargador" placeholder="Modelo Cargador" value="${item['modelo cargador']||''}">`;
-
-    html+=`<select id="categoria"><option value="">Selecciona Categoria</option>`;
-    dataStore['categotia-ofc'].forEach(c=>{
-      html+=`<option value="${c.nombre}" ${item.categoria===c.nombre?'selected':''}>${c.nombre}</option>`;
-    });
-    html+=`</select>`;
-    html+=`<select id="oficina"><option value="">Selecciona Oficina</option>`;
-    dataStore['oficinas'].forEach(t=>{
-      html+=`<option value="${t.nombre}" ${item.oficina===t.nombre?'selected':''}>${t.nombre}</option>`;
-    });
-    html+=`</select>`;
-  }
-  document.getElementById('modal-form').innerHTML = html;
-  document.getElementById('modal').style.display='flex';
-}
-function closeModal(){ document.getElementById('modal').style.display='none'; }
-
-// Save Item
-function saveItem(){
-  const formRaw={};
-  document.querySelectorAll('#modal-form input,#modal-form select').forEach(el=> formRaw[el.id]=el.value.trim());
-
-  let newId;
-  if(editingIndex===null){
-    newId = dataStore[currentSheet].length>0 ? Math.max(...dataStore[currentSheet].map(d=>Number(d.id)))+1 : 1;
-  } else newId = dataStore[currentSheet][editingIndex].id;
-
-  let newItem={};
-  if(currentSheet==='categotia-ofc') newItem={id:newId,nombre:formRaw.nombre||''};
-  else if(currentSheet==='oficinas') newItem={id:newId,nombre:formRaw.nombre||''};
-  else if(currentSheet==='inventario-ofc'){
-    newItem={
-      id:newId,
-      serie: formRaw.serie||'',
-      marca: formRaw.marca||'',
-      modelo: formRaw.modelo||'',
-      imei: formRaw.imei||'',
-      numero: formRaw.numero||'',
-      'serie cargador': formRaw.serie_cargador||'',
-      'modelo cargador': formRaw.modelo_cargador||'',
-      categoria: formRaw.categoria||'',
-      oficina: formRaw.oficina||''
-    };
-  } else newItem={id:newId,...formRaw};
-
-  if(editingIndex!==null) dataStore[currentSheet][editingIndex] = {...dataStore[currentSheet][editingIndex], ...newItem};
-  else dataStore[currentSheet].push(newItem);
-
-  closeModal();
-  renderTable(currentSheet);
-
-  // sincronización con App Web
-  const payload = { sheet:currentSheet, action: editingIndex!==null?'update':'add', idValue:newId, ...newItem };
-  fetch(APP_SCRIPT_URL, { method:'POST', body: new URLSearchParams(payload) })
-    .then(r=>r.json()).then(res=>{ if(!res.success) alert('Error sincronizando App Web: '+res.msg); })
-    .catch(e=>console.log('Error sincronizando App Web:', e.message));
-}
-
-function editItem(i){ openAddForm(currentSheet,i); }
-
-function deleteItem(i){
-  if(!confirm('¿Seguro de eliminar este registro?')) return;
-  const sheet = currentSheet;
-  const delId = dataStore[sheet][i].id;
-  dataStore[sheet].splice(i,1);
-  dataStore[sheet].forEach((it, idx)=> it.id=idx+1);
-  renderTable(sheet);
-  fetch(APP_SCRIPT_URL,{method:'POST',body:new URLSearchParams({sheet,action:'delete',idValue:delId})})
-    .then(r=>r.json()).then(res=>{ if(!res.success) console.log('Error eliminando en App Web:',res.msg); })
-    .catch(e=>console.log('Error eliminando App Web:',e.message));
-}
-
-function renderDashboard(){
-  const cardsDiv=document.getElementById('dashboard-cards');
-  cardsDiv.innerHTML='';
-  cardsDiv.innerHTML+=`<div class="card" onclick="nav('inventario-ofc')"><i class="fa-solid fa-computer"></i><span>${dataStore['inventario-ofc'].length}</span>Inventario</div>`;
-  cardsDiv.innerHTML+=`<div class="card" onclick="nav('categotia-ofc')"><i class="fa-solid fa-tags"></i><span>${dataStore['categotia-ofc'].length}</span>Categorias</div>`;
-  cardsDiv.innerHTML+=`<div class="card" onclick="nav('oficinas')"><i class="fa-solid fa-store"></i><span>${dataStore['oficinas'].length}</span>Oficinas</div>`;
-  document.getElementById('main-title').textContent = 'Dashboard';
-  document.getElementById('content').innerHTML='';
-}
-
-function nav(sheet){ renderTable(sheet); }
-
-// Init
-Promise.all([fetchSheet('inventario-ofc'),fetchSheet('categotia-ofc'),fetchSheet('oficinas')])
-  .then(()=> renderDashboard())
-  .catch(err=>console.error('Error inicializando:',err));
+// Ejemplo inicial vacío
+renderTable([]);
 </script>
-
 </body>
 </html>
