@@ -63,13 +63,14 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
     <button id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
   </div>
 
-  <!-- DASHBOARD SIN SUBMENÚ -->
+  <!-- DASHBOARD -->
   <div class="menu-section">
     <button class="accordion" onclick="renderDashboard()">
       <i class="fa-solid fa-house"></i><span>Dashboard</span>
     </button>
   </div>
 
+  <!-- INVENTARIO -->
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-computer"></i><span>Inventario</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
@@ -77,13 +78,17 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
       <button onclick="nav('inventario')"><i class="fa-solid fa-table"></i><span>Ver Inventario</span></button>
     </div>
   </div>
+
+  <!-- CATEGORIAS -->
   <div class="menu-section">
-    <button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorias</span><i class="fa-solid fa-chevron-down"></i></button>
+    <button class="accordion"><i class="fa-solid fa-tags"></i><span>Categorías</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
-      <button onclick="openAddForm('categoria')"><i class="fa-solid fa-plus"></i><span>Agregar Categoria</span></button>
-      <button onclick="nav('categoria')"><i class="fa-solid fa-table"></i><span>Ver Categorias</span></button>
+      <button onclick="openAddForm('categoria')"><i class="fa-solid fa-plus"></i><span>Agregar Categoría</span></button>
+      <button onclick="nav('categoria')"><i class="fa-solid fa-table"></i><span>Ver Categorías</span></button>
     </div>
   </div>
+
+  <!-- TIENDAS -->
   <div class="menu-section">
     <button class="accordion"><i class="fa-solid fa-store"></i><span>Tiendas</span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="panel">
@@ -111,7 +116,6 @@ input, select { padding:10px; border-radius:6px; border:1px solid #ccc; width:10
 </div>
 
 <script>
-/* === SCRIPT ORIGINAL + MEJORAS === */
 const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZYvau-tS7jCLqsNmwUkxK4wfkcL2AveUVJGUNKw2nPhFsMPt4Yw0dh-PYjsieW2j9HA/exec';
 let dataStore = { inventario:[], categoria:[], tienda:[] };
 let currentSheet = '';
@@ -122,7 +126,7 @@ document.getElementById('toggleSidebar').addEventListener('click',()=>{
   document.getElementById('sidebar').classList.toggle('collapsed'); 
 });
 
-// Acordeón exclusivo: solo uno abierto a la vez
+// Acordeón exclusivo
 document.querySelectorAll('.accordion').forEach(acc=>{
   acc.addEventListener('click', function(){
     if (this.classList.contains('active')) {
@@ -139,10 +143,143 @@ document.querySelectorAll('.accordion').forEach(acc=>{
   });
 });
 
-// --- (el resto del script se mantiene idéntico a tu versión original) ---
+// Renderiza el Dashboard
+function renderDashboard() {
+  currentSheet = '';
+  document.getElementById("main-title").textContent = "Dashboard";
+  const container = document.getElementById("dashboard-cards");
+  const content = document.getElementById("content");
+  content.innerHTML = "";
+  container.innerHTML = "";
 
-// Todas tus funciones: fetchSheet, renderTable, openAddForm, saveItem, deleteItem, renderDashboard, nav, etc.
+  const secciones = ["inventario","categoria","tienda"];
+  secciones.forEach(sec=>{
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <i class="fa-solid fa-table"></i>
+      <span>${sec.charAt(0).toUpperCase()+sec.slice(1)}</span>
+      <div style="font-size:1.6rem;font-weight:700;">${dataStore[sec]?.length || 0}</div>
+    `;
+    card.onclick = ()=>nav(sec);
+    container.appendChild(card);
+  });
+}
+
+function updateDashboardCount() {
+  if (document.getElementById("main-title").textContent === "Dashboard") {
+    renderDashboard();
+  }
+}
+
+async function nav(sheet){
+  currentSheet = sheet;
+  document.getElementById("main-title").textContent = sheet.charAt(0).toUpperCase()+sheet.slice(1);
+  const content = document.getElementById("content");
+  content.innerHTML = "<p>Cargando datos...</p>";
+  const res = await fetch(`${APP_SCRIPT_URL}?sheet=${sheet}`);
+  const data = await res.json();
+  dataStore[sheet] = data;
+  renderTable(sheet);
+}
+
+function renderTable(sheet){
+  const content = document.getElementById("content");
+  let html = `<div class="search-bar"><input id='search' placeholder='Buscar...'></div>`;
+  html += `<table><thead><tr><th>ID</th><th>Código</th><th>Nombre</th><th>Acciones</th></tr></thead><tbody>`;
+  dataStore[sheet].forEach((item,i)=>{
+    html += `<tr>
+      <td>${item.id}</td>
+      <td>${item.codigo}</td>
+      <td>${item.nombre}</td>
+      <td class='actions'>
+        <button class='btn-edit' onclick="editItem('${sheet}',${i})"><i class='fa fa-edit'></i></button>
+        <button class='btn-del' onclick="deleteItem('${sheet}',${i})"><i class='fa fa-trash'></i></button>
+      </td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  content.innerHTML = html;
+  document.getElementById("search").addEventListener("input",(e)=>{
+    const val = e.target.value.toLowerCase();
+    const rows = content.querySelectorAll("tbody tr");
+    rows.forEach(r=>{
+      const text = r.innerText.toLowerCase();
+      r.style.display = text.includes(val)?'':'none';
+    });
+  });
+}
+
+function openAddForm(sheet){
+  currentSheet = sheet;
+  editingIndex = null;
+  document.getElementById("modal").style.display="flex";
+  document.getElementById("modal-title").textContent="Agregar "+sheet;
+  document.getElementById("modal-form").innerHTML=`
+    <input id='codigo' placeholder='Código'>
+    <input id='nombre' placeholder='Nombre'>
+  `;
+}
+
+function closeModal(){
+  document.getElementById("modal").style.display="none";
+}
+
+async function saveItem(){
+  const codigo = document.getElementById('codigo').value.trim();
+  const nombre = document.getElementById('nombre').value.trim();
+  if(!codigo || !nombre){ alert("Complete todos los campos"); return; }
+
+  const sheet = currentSheet;
+  const duplicate = dataStore[sheet].some((d,i)=> d.codigo==codigo && i!==editingIndex);
+  if(duplicate && editingIndex===null){ alert("Código duplicado"); return; }
+
+  let item = { id:dataStore[sheet].length+1, codigo, nombre };
+
+  if(editingIndex!==null){
+    dataStore[sheet][editingIndex]=item;
+  } else {
+    dataStore[sheet].push(item);
+  }
+
+  renderTable(sheet);
+  closeModal();
+  updateDashboardCount(); 
+
+  fetch(APP_SCRIPT_URL, {
+    method:"POST",
+    body:JSON.stringify({sheet, data:item})
+  });
+}
+
+function editItem(sheet,i){
+  editingIndex=i;
+  currentSheet=sheet;
+  const item=dataStore[sheet][i];
+  document.getElementById("modal").style.display="flex";
+  document.getElementById("modal-title").textContent="Editar "+sheet;
+  document.getElementById("modal-form").innerHTML=`
+    <input id='codigo' value='${item.codigo}'>
+    <input id='nombre' value='${item.nombre}'>
+  `;
+}
+
+function deleteItem(sheet,i){
+  if(!confirm("¿Eliminar este registro?")) return;
+  dataStore[sheet].splice(i,1);
+  dataStore[sheet].forEach((it,idx)=>it.id=idx+1);
+  renderTable(sheet);
+  updateDashboardCount();
+  fetch(APP_SCRIPT_URL, {
+    method:"POST",
+    body:JSON.stringify({sheet, delete:true, index:i})
+  });
+}
+
+// MOSTRAR DASHBOARD AL CARGAR
+window.addEventListener("DOMContentLoaded", ()=> {
+  renderDashboard();
+});
 </script>
 </body>
 </html>
-
